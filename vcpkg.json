@@ -1,0 +1,21 @@
+{
+  "name": "instrument-controller",
+  "license": "MPL-2.0",
+  "dependencies": [
+    "falcon-routine",
+    "falcon-core",
+    "instrument-script-server",
+    "gtest"
+  ],
+  "builtin-baseline": "e5a1490e1409d175932ef6014519e9ae149ddb7c",
+  "overrides": [
+    {
+      "name": "xtensor",
+      "version": "0.25.0"
+    },
+    {
+      "name": "xtl",
+      "version": "0.7.5"
+    }
+  ]
+}
