@@ -9,7 +9,7 @@
       "features": [
         "c-api"
       ],
-      "version>=": "1.2.3"
+      "version>=": "1.2.4"
     },
     "instrument-script-server",
     "gtest"
