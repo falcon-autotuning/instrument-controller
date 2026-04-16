@@ -15,8 +15,6 @@ endif
 # Default compilers (user can override from environment)
 ifeq ($(PLATFORM),windows)
   # prefer clang-cl when available; user can pass CC/ CXX to override
-  CC ?= clang-cl
-	CXX ?= clang-cl
   CMAKE_GENERATOR := Ninja
   VCPKG_TRIPLET := x64-windows
   VCPKG_DEBUG_BIN := $(PWD)/vcpkg_installed/x64-windows/bin
@@ -28,6 +26,8 @@ ifeq ($(PLATFORM),windows)
 	SUDO ?= sudo
   PYTHON_EXECUTABLE ?= python
   # On Windows, Ninja + clang-cl: still pass CMAKE_C_COMPILER / CMAKE_CXX_COMPILER
+  export CC=clang-cl
+	export CXX=clang-cl
 else
   CMAKE_GENERATOR := Ninja
   VCPKG_TRIPLET := x64-linux-dynamic
