@@ -1,146 +1,118 @@
 #!/bin/bash
 # ============================================================================
-# Falcon Instrument Controller Installer (Bash wrapper)
-# Supports: Linux (native), Windows (via pwsh if available)
+# Falcon Instrument Controller Installer
+# Supports: Linux (native bash), Windows (Git Bash/WSL/MSYS2)
 #
 # Usage:
-#   Linux:   bash install.sh
-#   Windows: bash install.sh (requires Git Bash or WSL)
+#   curl -fsSL https://github.com/falcon-autotuning/instrument-controller/releases/download/v1.0.0/install.sh | bash
+#   Or with custom version:
+#   bash install.sh v1.0.1
 # ============================================================================
 
-set -e
+set -euo pipefail
 
+# Configuration
 RELEASE_VERSION="${1:-v1.0.0}"
-SHOW_HELP="${2:-}"
-
-if [[ "$SHOW_HELP" == "-h" ]] || [[ "$SHOW_HELP" == "--help" ]]; then
-  cat <<EOF
-Falcon Instrument Controller Installer
-
-Usage:
-  bash install.sh [VERSION]
-
-Arguments:
-  VERSION    Release version to install (default: v1.0.0)
-
-Examples:
-  bash install.sh
-  bash install.sh v1.0.1
-
-Environment Variables:
-  FALCON_INSTALL_DIR    Override installation directory
-
-For Windows, use: powershell -ExecutionPolicy Bypass -File install.ps1
-EOF
-  exit 0
-fi
-
-# Detect platform
-UNAME_S="$(uname -s)"
-IS_WINDOWS=0
-
-case "$UNAME_S" in
-MINGW* | MSYS* | CYGWIN*)
-  IS_WINDOWS=1
-  ;;
-Linux)
-  IS_WINDOWS=0
-  ;;
-*)
-  echo "❌ Unsupported platform: $UNAME_S"
-  exit 1
-  ;;
-esac
-
-# Set default install directory
-if [ -z "$FALCON_INSTALL_DIR" ]; then
-  if [ $IS_WINDOWS -eq 1 ]; then
-    INSTALL_DIR="C:/falcon"
-  else
-    INSTALL_DIR="/opt/falcon"
-  fi
-else
-  INSTALL_DIR="$FALCON_INSTALL_DIR"
-fi
-
-# Repository info
 REPO_OWNER="falcon-autotuning"
 REPO_NAME="instrument-controller"
 RELEASE_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/$RELEASE_VERSION"
 
-if [ $IS_WINDOWS -eq 1 ]; then
+# Detect platform
+detect_platform() {
+  local uname_s
+  uname_s="$(uname -s 2>/dev/null || echo "Unknown")"
+
+  case "$uname_s" in
+  Linux)
+    echo "linux"
+    ;;
+  MINGW* | MSYS* | CYGWIN*)
+    echo "windows"
+    ;;
+  *)
+    echo "unsupported"
+    ;;
+  esac
+}
+
+PLATFORM="$(detect_platform)"
+
+if [ "$PLATFORM" = "unsupported" ]; then
+  echo "❌ Unsupported platform"
+  exit 1
+fi
+
+# Platform-specific configuration
+if [ "$PLATFORM" = "windows" ]; then
   PACKAGE_FILE="falcon-instrument-controller-${RELEASE_VERSION}-win64.zip"
+  INSTALL_DIR="${FALCON_INSTALL_DIR:-C:/falcon}"
+  EXTRACT_CMD="unzip -q -o"
 else
   PACKAGE_FILE="falcon-instrument-controller-${RELEASE_VERSION}-Linux.tar.gz"
+  INSTALL_DIR="${FALCON_INSTALL_DIR:-/opt/falcon}"
+  EXTRACT_CMD="tar --strip-components=1 -xzf"
 fi
 
 PACKAGE_URL="$RELEASE_URL/$PACKAGE_FILE"
 
+# Display info
 echo "🔧 Falcon Instrument Controller Installer"
 echo "=========================================="
 echo ""
 echo "📍 Installation Directory: $INSTALL_DIR"
-echo "📦 Platform: $([ $IS_WINDOWS -eq 1 ] && echo 'Windows (Git Bash)' || echo 'Linux')"
-echo "📥 Downloading: $PACKAGE_FILE"
+echo "📦 Platform: $([ "$PLATFORM" = "windows" ] && echo "Windows" || echo "Linux")"
+echo "📥 Package: $PACKAGE_FILE"
 echo ""
 
 # Create install directory
-mkdir -p "$INSTALL_DIR"
+mkdir -p "$INSTALL_DIR" || {
+  echo "❌ Failed to create installation directory: $INSTALL_DIR"
+  exit 1
+}
 
-# Download package
-TEMP_FILE="$INSTALL_DIR/installer_temp"
+# Download and extract in one step
+TEMP_FILE="$(mktemp)" || {
+  echo "❌ Failed to create temporary file"
+  exit 1
+}
 
-echo "⏳ Downloading from: $PACKAGE_URL"
-if ! curl -fSL "$PACKAGE_URL" -o "$TEMP_FILE"; then
-  echo "❌ Download failed"
+trap "rm -f '$TEMP_FILE'" EXIT
+
+echo "⏳ Downloading and extracting..."
+if ! curl -fsSL "$PACKAGE_URL" -o "$TEMP_FILE"; then
+  echo "❌ Download failed: $PACKAGE_URL"
   exit 1
 fi
 
-echo "✅ Download complete"
-
-# Extract
-echo "📦 Extracting..."
-if [ $IS_WINDOWS -eq 1 ]; then
-  # Windows: use PowerShell or 7z if available
-  if command -v pwsh &>/dev/null; then
-    pwsh -Command "Expand-Archive -Path '$TEMP_FILE' -DestinationPath '$INSTALL_DIR' -Force"
-  elif command -v 7z &>/dev/null; then
-    7z x "$TEMP_FILE" -o"$INSTALL_DIR" -y
-  else
-    echo "❌ No extraction tool found (requires PowerShell Core or 7-Zip)"
-    rm -f "$TEMP_FILE"
-    exit 1
-  fi
-else
-  # Linux: use tar
-  tar -xzf "$TEMP_FILE" -C "$INSTALL_DIR" --strip-components=1
+# Extract based on platform
+if ! $EXTRACT_CMD "$TEMP_FILE" -C "$INSTALL_DIR"; then
+  echo "❌ Extraction failed"
+  exit 1
 fi
 
-rm -f "$TEMP_FILE"
-echo "✅ Extraction complete"
-
-# Display post-install instructions
-echo ""
 echo "✅ Installation successful!"
 echo "📍 Location: $INSTALL_DIR"
 echo ""
-echo "📋 Next steps:"
-echo ""
 
-if [ $IS_WINDOWS -eq 1 ]; then
-  echo "  1. Add to your PATH (PowerShell):"
-  echo "     \$env:PATH = \"$INSTALL_DIR\\bin;\" + \$env:PATH"
+# Platform-specific next steps
+if [ "$PLATFORM" = "windows" ]; then
+  echo "📋 Next steps (PowerShell):"
   echo ""
-  echo "  2. Or cmd.exe:"
-  echo "     set PATH=$INSTALL_DIR\\bin;%PATH%"
+  echo "  Add to PATH:"
+  echo "    \$env:PATH = \"$INSTALL_DIR\\bin;\" + \$env:PATH"
+  echo ""
+  echo "  Or add CMake prefix:"
+  echo "    \$env:CMAKE_PREFIX_PATH = \"$INSTALL_DIR\\lib\\cmake;\" + \$env:CMAKE_PREFIX_PATH"
 else
-  echo "  1. Add to ~/.bashrc or ~/.zshrc:"
-  echo "     export PATH=\"$INSTALL_DIR/bin:\$PATH\""
-  echo "     export LD_LIBRARY_PATH=\"$INSTALL_DIR/lib:\$LD_LIBRARY_PATH\""
-  echo "     export PKG_CONFIG_PATH=\"$INSTALL_DIR/lib/pkgconfig:\$PKG_CONFIG_PATH\""
+  echo "📋 Next steps:"
   echo ""
-  echo "  2. Or source the setup script:"
-  echo "     source $INSTALL_DIR/setup-falcon-env.sh"
+  echo "  Add to ~/.bashrc or ~/.zshrc:"
+  echo "    export PATH=\"$INSTALL_DIR/bin:\$PATH\""
+  echo "    export LD_LIBRARY_PATH=\"$INSTALL_DIR/lib:\$LD_LIBRARY_PATH\""
+  echo "    export PKG_CONFIG_PATH=\"$INSTALL_DIR/lib/pkgconfig:\$PKG_CONFIG_PATH\""
+  echo ""
+  echo "  Then reload:"
+  echo "    source ~/.bashrc"
 fi
 
 echo ""

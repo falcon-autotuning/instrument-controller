@@ -2,69 +2,117 @@ cmake_minimum_required(VERSION 3.20)
 project(
   instrument-controller
   VERSION 1.0.0
-  DESCRIPTION "Instrument Controller - Full instrument control stack for FAlCon"
+  DESCRIPTION "Instrument Controller - Full instrument control stack for Falcon"
   HOMEPAGE_URL "https://github.com/falcon-autotuning/instrument-controller"
   LANGUAGES CXX C
 )
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Build Options
+option(BUILD_TESTS "Build tests" ON)
+option(BUILD_EXAMPLES "Build example plugins" ON)
+
+# Performance options
+option(USE_CCACHE "Enable ccache or sccache if available" ON)
+option(ENABLE_PCH
+       "Enable target_precompile_headers to speed up builds (opt-in)" ON)
+
+# Windows-specific definitions
+if(WIN32)
+  add_compile_definitions(NOMINMAX)
+  add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+endif()
+
+# Try to auto-detect a compiler launcher (prefer sccache if present)
+if(USE_CCACHE)
+  find_program(SCCACHE_PROGRAM sccache)
+  if(SCCACHE_PROGRAM)
+    message(STATUS "Using sccache: ${SCCACHE_PROGRAM}")
+    set(CMAKE_C_COMPILER_LAUNCHER ${SCCACHE_PROGRAM})
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${SCCACHE_PROGRAM})
+  else()
+    find_program(CCACHE_PROGRAM ccache)
+    if(CCACHE_PROGRAM)
+      message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
+      set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+      set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+    else()
+      message(
+        STATUS "No ccache/sccache found (fine, builds will just be normal).")
+    endif()
+  endif()
+endif()
+
+find_package(falcon-core              CONFIG REQUIRED)
+find_package(instrument-script-server CONFIG REQUIRED)
+
+if(BUILD_TESTS)
+  enable_testing()
+  # TODO: write integration tests
+  # add_subdirectory(tests)
+endif()
 # ============================================================================
-# CPack General Settings (shared across all platforms)
+# Installation Prefix Configuration
+# ============================================================================
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  if(WIN32)
+    set(CMAKE_INSTALL_PREFIX "C:/falcon" CACHE PATH "Installation prefix" FORCE)
+  else()
+    set(CMAKE_INSTALL_PREFIX "/opt/falcon" CACHE PATH "Installation prefix" FORCE)
+  endif()
+endif()
+# ============================================================================
+# CPack General Settings
 # ============================================================================
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_SOURCE_IGNORE_FILES
+  build/
+  ".*~$"
+  vcpkg/
+  vcpkg_installed/
+)
+set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
 
 # ============================================================================
 # Platform-Specific CPack Configuration
 # ============================================================================
-
 if(WIN32)
-  set(CPACK_GENERATOR "NSIS")
-  set(CPACK_NSIS_INSTALL_ROOT "C:\\")
-  set(CPACK_NSIS_HELP_LINK "${PROJECT_HOMEPAGE_URL}")
-  set(CPACK_NSIS_URL_INFO_ABOUT "${PROJECT_HOMEPAGE_URL}")
-  set(CPACK_NSIS_CONTACT "tkovach@wisc.edu")
-  set(CPACK_NSIS_CREATE_ICONS_EXTRA "")
-  set(CPACK_NSIS_DELETE_ICONS_EXTRA "")
-  set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/assets/icon-128.png")
-  set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/assets/icon-128.png")
-
-else()
-  set(CPACK_GENERATOR "TXST")
-  set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
+  set(CPACK_GENERATOR "ZIP")
   set(CPACK_ARCHIVE_THREADS 0)
-
+else()
+  # Linux: TGZ format (extractable via curl | tar xz)
+  set(CPACK_GENERATOR "TGZ")
+  set(CPACK_ARCHIVE_THREADS 0)
 endif()
 
+# ============================================================================
 # Installation Directory Structure
+# ============================================================================
+set(INSTALL_BIN_DIR "bin")
 set(INSTALL_LIB_DIR "lib")
 set(INSTALL_INCLUDE_DIR "include")
 set(INSTALL_SHARE_DIR "share")
-set(INSTALL_PKGCONFIG_DIR "lib/pkgconfig")
 set(INSTALL_DOC_DIR "doc")
-if(WIN32)
-  set(INSTALL_BIN_DIR "lib")
-else()
-  set(INSTALL_BIN_DIR "bin")
-endif()
 
 # ============================================================================
 # Install Targets
 # ============================================================================
 
-# Create a dependency information file at configure time
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/CMakeFiles/DependencyInfo.txt.in"
   "${CMAKE_BINARY_DIR}/FALCON_DEPENDENCIES.txt"
   @ONLY
 )
 
-# Install dependency information
 install(
   FILES "${CMAKE_BINARY_DIR}/FALCON_DEPENDENCIES.txt"
   DESTINATION "."
 )
 
-# Install license and readme
 install(
   FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
@@ -72,54 +120,97 @@ install(
   DESTINATION "${INSTALL_DOC_DIR}"
 )
 
+# ============================================================================
+# Install vcpkg dependencies
+# ============================================================================
 if(WIN32)
+  file(GLOB_RECURSE WIN_DLLS "${VCPKG_INSTALLED_DIR}/x64-windows/bin/*.dll")
   install(
-    GLOB_RECURSE
-    PROGRAMS "${VCPKG_INSTALLED_DIR}/x64-windows/bin/*.dll"
+    PROGRAMS ${WIN_DLLS}
     DESTINATION "${INSTALL_BIN_DIR}"
   )
+  file(GLOB_RECURSE WIN_LIBS "${VCPKG_INSTALLED_DIR}/x64-windows/lib/*.lib")
   install(
-    GLOB_RECURSE
-    FILES "${VCPKG_INSTALLED_DIR}/x64-windows/lib/*.lib"
+    FILES ${WIN_LIBS}
     DESTINATION "${INSTALL_LIB_DIR}"
   )
+  file(GLOB_RECURSE WIN_INCLUDES "${VCPKG_INSTALLED_DIR}/x64-windows/include/*")
   install(
-    GLOB_RECURSE
-    FILES "${VCPKG_INSTALLED_DIR}/x64-windows/include/*"
+    FILES ${WIN_INCLUDES}
     DESTINATION "${INSTALL_INCLUDE_DIR}"
   )
+  file(GLOB_RECURSE WIN_SHARE "${VCPKG_INSTALLED_DIR}/x64-windows/share/*")
   install(
-    GLOB_RECURSE
-    FILES "${VCPKG_INSTALLED_DIR}/x64-windows/share/*"
+    FILES ${WIN_SHARE}
     DESTINATION "${INSTALL_SHARE_DIR}"
   )
 else()
+  file(GLOB_RECURSE LINUX_BINS "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/bin/*")
   install(
-    GLOB_RECURSE
-    FILES "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/bin/*"
+    PROGRAMS ${LINUX_BINS}
     DESTINATION "${INSTALL_BIN_DIR}"
   )
+  file(GLOB_RECURSE LINUX_LIBS_A "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/lib/*.a")
+  file(GLOB_RECURSE LINUX_LIBS_SO "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/lib/*.so*")
   install(
-    GLOB_RECURSE
-    FILES
-      "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/lib/*.a"
-      "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/lib/*.so*"
-      "${VCPKG_INSTALLED_DIR}/x64-linux/lib/*.a"
-      "${VCPKG_INSTALLED_DIR}/x64-linux/lib/*.so*"
+    FILES ${LINUX_LIBS_A} ${LINUX_LIBS_SO}
     DESTINATION "${INSTALL_LIB_DIR}"
   )
+  file(GLOB_RECURSE LINUX_INCLUDES "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/include/*")
   install(
-    GLOB_RECURSE
-    FILES
-      "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/include/*"
-      "${VCPKG_INSTALLED_DIR}/x64-linux/include/*"
+    FILES ${LINUX_INCLUDES}
     DESTINATION "${INSTALL_INCLUDE_DIR}"
   )
+  file(GLOB_RECURSE LINUX_SHARE "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/share/*")
   install(
-    GLOB_RECURSE
-    FILES "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/share/*"
+    FILES ${LINUX_SHARE}
     DESTINATION "${INSTALL_SHARE_DIR}"
   )
 endif()
+
+# ============================================================================
+# Install instrument-hub 
+# ============================================================================
+set(GO_HUB_DIR "${CMAKE_BINARY_DIR}/instrument-hub")
+set(GO_HUB_REPO "https://github.com/falcon-autotuning/falcon-instrument-hub.git")
+
+# Clone if not already present
+if(NOT EXISTS "${GO_HUB_DIR}/.git")
+  execute_process(
+    COMMAND git clone ${GO_HUB_REPO} ${GO_HUB_DIR}
+    RESULT_VARIABLE GIT_CLONE_RESULT
+  )
+  if(NOT GIT_CLONE_RESULT EQUAL 0)
+    message(FATAL_ERROR "Failed to clone falcon-instrument-hub repository")
+  endif()
+endif()
+
+# Build the Go binary
+
+execute_process(
+  COMMAND make build-go
+  WORKING_DIRECTORY ${GO_HUB_DIR}
+  RESULT_VARIABLE GO_BUILD_RESULT
+  OUTPUT_VARIABLE GO_BUILD_OUT
+  ERROR_VARIABLE GO_BUILD_ERR
+)
+if(NOT GO_BUILD_RESULT EQUAL 0)
+  message(WARNING "instrument-hub build stdout:\n${GO_BUILD_OUT}")
+  message(WARNING "instrument-hub build stderr:\n${GO_BUILD_ERR}")
+  message(FATAL_ERROR "Failed to build instrument-hub Go program")
+endif()
+
+if(WIN32)
+  install(
+    PROGRAMS ${GO_HUB_DIR}/runtime/bin/instrument-server.exe ${GO_HUB_DIR}/runtime/bin/dataviewer.exe
+    DESTINATION ${INSTALL_BIN_DIR}
+  )
+else()
+  install(
+    PROGRAMS ${GO_HUB_DIR}/runtime/bin/instrument-server ${GO_HUB_DIR}/runtime/bin/dataviewer
+    DESTINATION ${INSTALL_BIN_DIR}
+  )
+endif()
+# Install the Go binary
 
 include(CPack)

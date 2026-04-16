@@ -2,7 +2,7 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO falcon-autotuning/instrument-script-server
     REF v${VERSION}
-    SHA512 33b91e1cf0a2d1610ee404b8d00a046d894cc0f22d012e5eae51f3c635490d2cddea62575523192a7af4b248a5f1b801f53f81d0c2892200eeaecad7637a80c9
+    SHA512 21e17c014c1ba2e1f8662f6043bb2719361a159a35b55bcd9c2d2edca6c1aeda16e8975ec4e568382adaa9fb83e258fdad341f49fab9cc20256f05d61c3f0933
 )
 
 vcpkg_cmake_configure(

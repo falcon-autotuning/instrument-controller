@@ -1,6 +1,7 @@
 .nuget-credentials
 vcpkg/
 vcpkg_installed/
+falcon-instrument-hub/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

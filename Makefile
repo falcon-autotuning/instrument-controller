@@ -171,9 +171,9 @@ check-vcpkg: vcpkg-bootstrap  vcpkg-install-deps
 	@echo "✓ vcpkg configuration OK"
 
 configure: check-vcpkg
-	@echo "Configuring debug build..."
+	@echo "Configuring build..."
 	@mkdir -p $(BUILD_DIR)
-	cd $(BUILD_DIR) && cmake ../.. \
+	cd $(BUILD_DIR) && cmake .. \
 		-DCMAKE_BUILD_TYPE=Debug \
 		-DCMAKE_TOOLCHAIN_FILE=$(VCPKG_TOOLCHAIN) \
 		-DVCPKG_INSTALLED_DIR=$(VCPKG_INSTALLED_DIR) \
@@ -185,11 +185,11 @@ configure: check-vcpkg
 		-DCMAKE_CXX_COMPILER=clang++ \
 		$(CMAKE_VCPKG_BINARY_SOURCES) \
 		$(LINKER_FLAGS) \
-		-DVCPKG_OVERLAY_PORTS=../../ports \
+		-DVCPKG_OVERLAY_PORTS=../ports \
 		-G $(CMAKE_GENERATOR)
-	@echo "✓ Debug build configured"
+	@echo "✓ Build configured"
 
-build: configure-debug
+build: configure
 	@echo "Building debug..."
 	cmake --build $(BUILD_DIR) -- -j$(NPROC)
 	@echo "✓ Debug build complete"
@@ -266,3 +266,23 @@ test-interactive: docker-up build
 	@echo ""
 	@echo "When done, stop services with: make docker-down"
 
+package: build
+	mkdir -p packaging
+	cp CMakeLists.txt packaging/
+	cp vcpkg.json.release packaging/vcpkg.json
+	cp -r ports/ packaging/ports
+	cp Makefile packaging/Makefile
+	cp README.md packaging/README.md
+	cp LICENSE packaging/LICENSE
+	cp -r CMakeFiles/ packaging/CMakeFiles/
+	cd packaging && $(MAKE) clean build
+	if [ "$$(uname -s | grep -i 'mingw\|msys\|cygwin')" ]; then \
+		cd packaging/build && cpack -G ZIP -C Release; \
+		mv packaging/build/*.zip build/ 2>/dev/null || true; \
+		echo "✓ Windows package moved to build/"; \
+	else \
+		cd packaging/build && cpack -G TGZ -C Release; \
+		mv packaging/build/*.tar.gz build/ 2>/dev/null || true; \
+		echo "✓ Linux package moved to build/"; \
+	fi
+	rm -rf packaging
