@@ -151,8 +151,13 @@ setup-nuget-auth:
 .PHONY: vcpkg-install-deps
 vcpkg-install-deps: setup-nuget-auth 
 	@echo "Installing vcpkg dependencies" 
+ifeq ($(PLATFORM),windows)
+  VCPKG_CMD := vcpkg
+else
+  VCPKG_CMD := $(VCPKG_ROOT)/vcpkg
+endif
 	VCPKG_FEATURE_FLAGS=binarycaching MAKELEVEL=0\
-		$(VCPKG_ROOT)/vcpkg install \
+		$(VCPKG_CMD) install \
 		--overlay-ports=ports \
 		--binarysource="$(VCPKG_BINARY_SOURCES)" \
 		--triplet="$(VCPKG_TRIPLET)"
