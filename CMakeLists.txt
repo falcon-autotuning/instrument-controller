@@ -169,7 +169,7 @@ else()
 endif()
 
 # ============================================================================
-# Install instrument-hub 
+# Install instrument-hub
 # ============================================================================
 set(GO_HUB_DIR "${CMAKE_BINARY_DIR}/instrument-hub")
 set(GO_HUB_REPO "https://github.com/falcon-autotuning/falcon-instrument-hub.git")
@@ -206,20 +206,20 @@ endif()
 # Build the Go binary
 if(WIN32)
   message(STATUS "Building Go program on Windows with CGO (Git Bash environment)")
-  
+
   # Find clang-cl for MSVC-compatible compilation
   find_program(CLANG_CL_BIN clang-cl HINTS "C:/Program Files/LLVM/bin")
-  
+
   if(NOT CLANG_CL_BIN)
     message(FATAL_ERROR "clang-cl not found. Please install LLVM with clang-cl support")
   endif()
-  
+
   message(STATUS "Found clang-cl: ${CLANG_CL_BIN}")
-  
+
   # Convert to forward slashes for bash
   string(REPLACE "\\" "/" CLANG_CL_BASH "${CLANG_CL_BIN}")
   message(STATUS "clang-cl path for bash: ${CLANG_CL_BASH}")
-  
+  # TODO: Fix this build in the Makefile in the instrument-hub
   # Create a bash script - with proper quoting for the CC variable
   set(BUILD_SCRIPT "${GO_HUB_DIR}/build-windows.sh")
   file(WRITE "${BUILD_SCRIPT}"
@@ -239,9 +239,9 @@ if(WIN32)
     "cd runtime && CC="$(CC)" CXX="$(CXX)" go build -o bin/instrument-server.exe cmd/main.go; cd runtime && CC="$(CC)" CXX="$(CXX)" go build -o bin/dataviewer.exe ./cmd/dataviewer/
 \n"
   )
-  
+
   message(STATUS "Created bash build script: ${BUILD_SCRIPT}")
-  
+
   # Run via bash
   message(STATUS "=== Running build via bash ===")
   execute_process(
@@ -250,13 +250,13 @@ if(WIN32)
     OUTPUT_VARIABLE GO_BUILD_OUT
     ERROR_VARIABLE GO_BUILD_ERR
   )
-  
+
   message(STATUS "Build result: ${GO_BUILD_RESULT}")
   message(STATUS "Build stdout:\n${GO_BUILD_OUT}")
   message(STATUS "Build stderr:\n${GO_BUILD_ERR}")
 else()
   execute_process(
-    COMMAND make build-go 
+    COMMAND make build-go
     WORKING_DIRECTORY ${GO_HUB_DIR}
     RESULT_VARIABLE GO_BUILD_RESULT
     OUTPUT_VARIABLE GO_BUILD_OUT
