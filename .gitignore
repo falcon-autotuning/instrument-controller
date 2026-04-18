@@ -1,5 +1,6 @@
 .nuget-credentials
 vcpkg/
+my-vcpkg-triplets/
 vcpkg_installed/
 falcon-instrument-hub/
 # Byte-compiled / optimized / DLL files

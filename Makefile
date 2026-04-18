@@ -5,7 +5,6 @@ UNAME_S := $(shell uname -s 2>/dev/null || echo Unknown)
 IS_MINGW := $(findstring MINGW,$(UNAME_S))
 IS_CYGWIN := $(findstring CYGWIN,$(UNAME_S))
 IS_WINDOWS_NT := $(filter Windows_NT,$(OS))
-GENERATED_MANIFEST := generated_template_manifest.txt
 ifeq ($(or $(IS_MINGW),$(IS_CYGWIN),$(IS_WINDOWS_NT)),)
   PLATFORM := linux
 else
@@ -16,14 +15,14 @@ endif
 ifeq ($(PLATFORM),windows)
   # prefer clang-cl when available; user can pass CC/ CXX to override
   CMAKE_GENERATOR := Ninja
-  VCPKG_TRIPLET := x64-windows
+  VCPKG_TRIPLET := x64-win-llvm
   VCPKG_DEBUG_BIN := $(PWD)/vcpkg_installed/x64-windows/bin
   VCPKG_RELEASE_LIB := $(PWD)/vcpkg_installed/x64-windows/lib
   EXE_SUFFIX := .exe
 	NPROC := $(shell powershell -Command "[Environment]::ProcessorCount" 2>NUL || echo 4)
   STRIP_CMD := # no-op (strip not usually present); set to "llvm-strip" if you have it
 	RUN_PREFIX := PATH=$(VCPKG_DEBUG_BIN):$(VCPKG_RELEASE_LIB):$$PATH
-	SUDO ?= sudo
+	SUDO ?= 
   PYTHON_EXECUTABLE ?= python
   # On Windows, Ninja + clang-cl: still pass CMAKE_C_COMPILER / CMAKE_CXX_COMPILER
   export CC=clang-cl
@@ -37,12 +36,13 @@ else
   NPROC := $(shell nproc 2>/dev/null || echo 4)
   STRIP_CMD := strip
 	RUN_PREFIX := LD_LIBRARY_PATH=$(VCPKG_DEBUG_LIB):$(VCPKG_RELEASE_LIB):$$LD_LIBRARY_PATH
-	SUDO :=
+	SUDO := sudo
 	PYTHON_EXECUTABLE ?= python3
 	export CC=clang
 	export CXX=clang++
 endif
 
+# Paths
 ENV_FILE := .nuget-credentials
 ifeq ($(wildcard $(ENV_FILE)),)
   $(info [Makefile] $(ENV_FILE) not found, skipping environment sourcing)
@@ -59,7 +59,7 @@ FEED_URL ?=
 NUGET_API_KEY ?=
 FEED_NAME ?= 
 USERNAME ?=
-VCPKG_BINARY_SOURCES ?= ""
+VCPKG_BINARY_SOURCES ?= 
 ifeq ($(strip $(FEED_URL)),)
   CMAKE_VCPKG_BINARY_SOURCES :=
 else
@@ -69,6 +69,10 @@ endif
 LINKER_FLAGS ?=
 ifeq ($(PLATFORM),linux)
 	LINKER_FLAGS := -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
+endif
+VCPKG_OVERLAY_TRIPS ?=
+ifeq ($(PLATFORM),windows)
+	VCPKG_OVERLAY_TRIPS := -DVCPKG_OVERLAY_TRIPLETS=../my-vcpkg-triplets
 endif
 
 BUILD_DIR := build
@@ -118,11 +122,16 @@ vcpkg-bootstrap:
 		echo "Cloning vcpkg..."; \
 		git clone https://github.com/microsoft/vcpkg.git $(VCPKG_ROOT); \
 	fi
-	@if [ ! -f "$(VCPKG_ROOT)/vcpkg" ]; then \
+	@if [ ! -f "$(VCPKG_ROOT)/vcpkg" ] && [ ! -f "$(VCPKG_ROOT)/vcpkg.exe" ]; then \
 		echo "Bootstrapping vcpkg..."; \
-		if [ "$$(uname -s | grep -i 'mingw\|msys\|cygwin')" ]; then \
-			echo "Skipping since on windows"; \
+		UNAME="$$(uname -s 2>/dev/null || echo Unknown)"; \
+		if echo "$$UNAME" | grep -i -q 'mingw\|msys\|cygwin'; then \
+			echo "Detected Windows bash environment ($$UNAME). Using cmd.exe to launch bootstrap-vcpkg.bat"; \
+			BAT_PATH="$$(cygpath -w "$(VCPKG_ROOT)/bootstrap-vcpkg.bat")"; \
+			cmd.exe //C "$$BAT_PATH"; \
+			git clone https://github.com/Neumann-A/my-vcpkg-triplets.git || true; \
 		else \
+			echo "Detected Unix environment ($$UNAME). Using bootstrap-vcpkg.sh"; \
 			cd $(VCPKG_ROOT) && ./bootstrap-vcpkg.sh; \
 		fi \
 	fi
@@ -151,16 +160,12 @@ setup-nuget-auth:
 .PHONY: vcpkg-install-deps
 vcpkg-install-deps: setup-nuget-auth 
 	@echo "Installing vcpkg dependencies" 
-ifeq ($(PLATFORM),windows)
-  VCPKG_CMD := vcpkg
-else
-  VCPKG_CMD := $(VCPKG_ROOT)/vcpkg
-endif
-	VCPKG_FEATURE_FLAGS=binarycaching MAKELEVEL=0\
-		$(VCPKG_CMD) install \
+	VCPKG_FEATURE_FLAGS=binarycaching VCPKG_OVERLAY_TRIPLETS=my-vcpkg-triplets \
+		$(VCPKG_ROOT)/vcpkg install \
 		--overlay-ports=ports \
 		--binarysource="$(VCPKG_BINARY_SOURCES)" \
-		--triplet="$(VCPKG_TRIPLET)"
+		--triplet="$(VCPKG_TRIPLET)" \
+		--vcpkg-root="$(VCPKG_ROOT)"
 
 check-vcpkg: vcpkg-bootstrap  vcpkg-install-deps
 	@echo "Checking vcpkg configuration..."
@@ -182,6 +187,7 @@ configure: check-vcpkg
 		-DCMAKE_BUILD_TYPE=Debug \
 		-DCMAKE_TOOLCHAIN_FILE=$(VCPKG_TOOLCHAIN) \
 		-DVCPKG_INSTALLED_DIR=$(VCPKG_INSTALLED_DIR) \
+		$(VCPKG_OVERLAY_TRIPS) \
 		-DVCPKG_TARGET_TRIPLET=$(VCPKG_TRIPLET) \
 		-DBUILD_TESTS=ON \
 		-DUSE_CCACHE=ON \
