@@ -1,6 +1,6 @@
 {
   "name": "falcon-core",
-  "version": "1.2.4",
+  "version": "1.2.11",
   "features": {
     "c-api": {
       "description": "Builds the optional C-API library for falcon-core."
@@ -29,16 +29,15 @@
       "name": "hdf5",
       "version>=": "1.14.6#0",
       "features": [
-        "cpp"
+        "hl",
+        "cpp",
+        "szip",
+        "zlib"
       ]
     },
     {
       "name": "exprtk",
       "version>=": "0.0.3#0"
-    },
-    {
-      "name": "gtest",
-      "version>=": "1.16.0"
     },
     {
       "name": "yaml-cpp",

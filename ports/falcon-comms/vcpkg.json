@@ -1,6 +1,6 @@
 {
   "name": "falcon-comms",
-  "version": "1.0.0",
+  "version": "1.0.7",
   "description": "NATS communication API for falcon network DSL interactions",
   "homepage": "https://github.com/falcon-autotuning/falcon-comms",
   "license": "MPL-2.0",
@@ -18,10 +18,6 @@
     {
       "name": "nlohmann-json",
       "version>=": "3.11.2"
-    },
-    {
-      "name": "gtest",
-      "version>=": "1.16.0"
     },
     {
       "name": "spdlog"
