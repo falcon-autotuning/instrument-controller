@@ -51,8 +51,7 @@ find_package(instrument-script-server CONFIG REQUIRED)
 
 if(BUILD_TESTS)
   enable_testing()
-  # TODO: write integration tests
-  # add_subdirectory(tests)
+  add_subdirectory(tests)
 endif()
 # ============================================================================
 # Installation Prefix Configuration
