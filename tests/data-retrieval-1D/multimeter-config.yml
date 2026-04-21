@@ -1,0 +1,4 @@
+name: MockInstrument1
+api_ref: ../source-api.yml
+connection:
+  type: Custom

@@ -20,23 +20,27 @@ channel_groups:
         type: float
         role: output
         description: "Voltage to set"
+        suffix: voltage
         unit: "V"
       - name: measured_voltage
         type: float
         role: input
         description: "Measured DC voltage"
+        suffix: measured_voltage
         unit: "V"
 io: []
 commands:
   SET_VOLTAGE:
     template: "SOUR:VOLT:{analog}:{voltage}"
     description: "Set output voltage"
+    channel_group: analog
     parameters:
       - io: voltage
     outputs: []
   GET_VOLTAGE:
     template: "MEAS:VOLT:{analog}:DC?"
     description: "Measure DC voltage"
+    channel_group: analog
     parameters: []
     outputs: [measured_voltage]
   RESET:
