@@ -22,7 +22,7 @@ static const int INVALID_PARAMETER_TYPE_ERROR = -3;
 static const int CHANNEL_OUT_OF_RANGE_ERROR = -4;
 static const int UNKNOWN_COMMAND_ERROR = -5;
 
-static float g_stored_voltage[MAX_CHANNEL] = {NULL_VOLTAGE};
+static float g_stored_voltage[MAX_CHANNEL - MIN_CHANNEL] = {NULL_VOLTAGE};
 static int g_initialized = 0;
 // Produces the matching array index for a given analog channel from config
 static int getArrayIndex(int channel) {
@@ -103,14 +103,12 @@ static int check_param_type(const PluginCommand *cmd, const char *param_name,
 static int handle_set(const PluginCommand *cmd, PluginResponse *resp) {
   int voltage_idx, channel_idx;
   if (check_param_count(cmd, 2, resp) |
-      get_param_index(cmd, VOLTAGE_IO_NAME, &voltage_idx, resp,
-                      MISSING_PARAMETERS_ERROR) |
-      get_param_index(cmd, ANALOG_IO_NAME, &channel_idx, resp,
-                      MISSING_PARAMETERS_ERROR) |
-      check_param_type(cmd, voltage_idx, PARAM_TYPE_FLOAT, resp,
-                       VOLTAGE_IO_NAME, INVALID_PARAMETER_TYPE_ERROR) |
-      check_param_type(cmd, channel_idx, PARAM_TYPE_INT, resp, ANALOG_IO_NAME,
-                       INVALID_PARAMETER_TYPE_ERROR)) {
+      get_param_index(cmd, VOLTAGE_IO_NAME, voltage_idx, resp) |
+      get_param_index(cmd, ANALOG_IO_NAME, channel_idx, resp) |
+      check_param_type(cmd, VOLTAGE_IO_NAME, voltage_idx, resp,
+                       PARAM_TYPE_FLOAT) |
+      check_param_type(cmd, ANALOG_IO_NAME, channel_idx, resp,
+                       PARAM_TYPE_INT32)) {
     return resp->error_code;
   }
   float voltage = cmd->params[voltage_idx].value.value.f_val;
@@ -131,10 +129,9 @@ static int handle_set(const PluginCommand *cmd, PluginResponse *resp) {
 static int handle_get(const PluginCommand *cmd, PluginResponse *resp) {
   int channel_idx;
   if (check_param_count(cmd, 1, resp) |
-      get_param_index(cmd, ANALOG_IO_NAME, &channel_idx, resp,
-                      MISSING_PARAMETERS_ERROR) |
-      check_param_type(cmd, channel_idx, PARAM_TYPE_INT, resp, ANALOG_IO_NAME,
-                       INVALID_PARAMETER_TYPE_ERROR)) {
+      get_param_index(cmd, ANALOG_IO_NAME, channel_idx, resp) |
+      check_param_type(cmd, ANALOG_IO_NAME, channel_idx, resp,
+                       PARAM_TYPE_INT32)) {
     return resp->error_code;
   }
   int channel = cmd->params[channel_idx].value.value.i_val;
@@ -156,9 +153,7 @@ static int handle_reset(const PluginCommand *cmd, PluginResponse *resp) {
   if (check_param_count(cmd, 0, resp)) {
     return resp->error_code;
   }
-  for (int i = 0; i < MAX_CHANNEL; ++i) {
-    g_stored_voltage[i] = NULL_VOLTAGE;
-  }
+  g_stored_voltage[MAX_CHANNEL - MIN_CHANNEL] = {NULL_VOLTAGE};
   resp->success = true;
   payloadCopy(resp->text_response, "All channel voltages reset to 0.0 V");
   return resp->error_code;
