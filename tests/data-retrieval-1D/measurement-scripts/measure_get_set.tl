@@ -31,4 +31,3 @@ local function Measure_Get_Set(ctx: RuntimeContext, getters: {InstrumentTarget},
   return ""
 end
 
-r

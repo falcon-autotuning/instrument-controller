@@ -1,5 +1,5 @@
 name: MockInstrument2
-api_ref: ../source-api.yml
+api_ref: ../generated-source-api.yml
 connection:
   type: Custom
 io_config:

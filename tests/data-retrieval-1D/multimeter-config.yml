@@ -1,5 +1,5 @@
 name: MockInstrument1
-api_ref: ../multimeter-api.yml
+api_ref: ../generated-multimeter-api.yml
 connection:
   type: Custom
 io_config:
