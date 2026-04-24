@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static const int PLUGIN_MAX_PAYLOAD =
+static const int MOCK_PLUGIN_MAX_PAYLOAD =
     PLUGIN_MAX_STRING_LEN - 1; // since null terminator takes 1 char
 static const int MAX_CHANNEL = 32;
 static const int MIN_CHANNEL = 1;
@@ -34,14 +34,14 @@ static int getArrayIndex(int channel) {
 // Copies a message into the target buffer with proper null-termination,
 // ensuring it does not exceed the maximum payload size
 static void payloadCopy(char *target, char *message) {
-  strncpy(target, message, PLUGIN_MAX_PAYLOAD);
-  target[PLUGIN_MAX_PAYLOAD] = '\0'; // Ensure null-termination
+  strncpy(target, message, MOCK_PLUGIN_MAX_PAYLOAD);
+  target[MOCK_PLUGIN_MAX_PAYLOAD] = '\0'; // Ensure null-termination
 }
 // Sets an error message and code in the response struct, and returns the error
 // code
-static int setPluginError(const PluginResponse *resp, const char *msg,
+static int setPluginError(PluginResponse *resp, const char *msg,
                           int error_code) {
-  strncpy(resp->error_message, msg, PLUGIN_MAX_PAYLOAD);
+  strncpy(resp->error_message, msg, MOCK_PLUGIN_MAX_PAYLOAD);
   resp->error_code = error_code;
   return error_code;
 }
@@ -52,15 +52,15 @@ static int setPluginError(const PluginResponse *resp, const char *msg,
 // desc: a description of the expected parameters for error messages
 // error_code: the error code to set in case of parameter count mismatch
 static int check_param_count(const PluginCommand *cmd, const int expected,
-                             const PluginResponse *resp) {
+                             PluginResponse *resp) {
   if (cmd->param_count == expected) {
     return 0;
   }
-  char msg[PLUGIN_MAX_PAYLOAD];
-  int count = snprintf(msg, PLUGIN_MAX_PAYLOAD,
+  char msg[MOCK_PLUGIN_MAX_PAYLOAD];
+  int count = snprintf(msg, MOCK_PLUGIN_MAX_PAYLOAD,
                        "Invalid number of parameters, found %d but expected %d",
                        cmd->param_count, expected);
-  if (count < 0 || count >= PLUGIN_MAX_PAYLOAD) {
+  if (count < 0 || count >= MOCK_PLUGIN_MAX_PAYLOAD) {
     // Handle snprintf error or truncation if needed
     payloadCopy(msg, "Parameters names too long");
   }
@@ -73,12 +73,12 @@ static int get_param_index(const PluginCommand *cmd, const char *param_name,
                            int out_index, PluginResponse *resp) {
   for (uint32_t i = 0; i < cmd->param_count; i++) {
     if (strcmp(cmd->params[i].name, param_name) == 0) {
-      *out_index = (int)i;
+      out_index = (int)i;
       return 0;
     }
   }
-  char msg[PLUGIN_MAX_PAYLOAD];
-  snprintf(msg, PLUGIN_MAX_PAYLOAD, "No %s parameter found", param_name);
+  char msg[MOCK_PLUGIN_MAX_PAYLOAD];
+  snprintf(msg, MOCK_PLUGIN_MAX_PAYLOAD, "No %s parameter found", param_name);
   return setPluginError(resp, msg, MISSING_PARAMETERS_ERROR);
 }
 // Checks that the parameter at cmd->params[idx] has the expected type.
@@ -88,11 +88,11 @@ static int get_param_index(const PluginCommand *cmd, const char *param_name,
 // check in cmd->params expected_type is the expected PARAM_TYPE_* value for the
 // parameter
 static int check_param_type(const PluginCommand *cmd, const char *param_name,
-                            const int idx, const PluginResponse *resp,
+                            const int idx, PluginResponse *resp,
                             const int expected_type) {
   if (cmd->params[idx].value.type != expected_type) {
-    char msg[PLUGIN_MAX_PAYLOAD];
-    snprintf(msg, PLUGIN_MAX_PAYLOAD, "%s parameter has unsupported type",
+    char msg[MOCK_PLUGIN_MAX_PAYLOAD];
+    snprintf(msg, MOCK_PLUGIN_MAX_PAYLOAD, "%s parameter has unsupported type",
              param_name);
     return setPluginError(resp, msg, INVALID_PARAMETER_TYPE_ERROR);
   }
@@ -112,7 +112,7 @@ static int handle_set(const PluginCommand *cmd, PluginResponse *resp) {
     return resp->error_code;
   }
   float voltage = cmd->params[voltage_idx].value.value.f_val;
-  int channel = cmd->params[channel_idx].value.value.i_val;
+  int channel = cmd->params[channel_idx].value.value.i32_val;
   int index = getArrayIndex(channel);
   if (index == NULL_CHANNEL) {
     return setPluginError(resp, "Channel out of range (must be 1-32)",
@@ -120,7 +120,7 @@ static int handle_set(const PluginCommand *cmd, PluginResponse *resp) {
   }
   g_stored_voltage[index] = voltage;
   resp->success = true;
-  snprintf(resp->text_response, PLUGIN_MAX_PAYLOAD,
+  snprintf(resp->text_response, MOCK_PLUGIN_MAX_PAYLOAD,
            "Channel %d voltage set to %.6f V", channel, voltage);
   return resp->error_code;
 }
@@ -134,7 +134,7 @@ static int handle_get(const PluginCommand *cmd, PluginResponse *resp) {
                        PARAM_TYPE_INT32)) {
     return resp->error_code;
   }
-  int channel = cmd->params[channel_idx].value.value.i_val;
+  int channel = cmd->params[channel_idx].value.value.i32_val;
   int index = getArrayIndex(channel);
   if (index == NULL_CHANNEL) {
     return setPluginError(resp, "Channel out of range (must be 1-32)",
@@ -143,7 +143,7 @@ static int handle_get(const PluginCommand *cmd, PluginResponse *resp) {
   resp->success = true;
   resp->return_value.type = PARAM_TYPE_FLOAT;
   resp->return_value.value.d_val = g_stored_voltage[index];
-  snprintf(resp->text_response, PLUGIN_MAX_PAYLOAD, "%.6f",
+  snprintf(resp->text_response, MOCK_PLUGIN_MAX_PAYLOAD, "%.6f",
            g_stored_voltage[index]);
   return resp->error_code;
 }
@@ -153,7 +153,9 @@ static int handle_reset(const PluginCommand *cmd, PluginResponse *resp) {
   if (check_param_count(cmd, 0, resp)) {
     return resp->error_code;
   }
-  g_stored_voltage[MAX_CHANNEL - MIN_CHANNEL] = {NULL_VOLTAGE};
+  for (int i = 0; i < MAX_CHANNEL - MIN_CHANNEL; ++i) {
+    g_stored_voltage[i] = NULL_VOLTAGE;
+  }
   resp->success = true;
   payloadCopy(resp->text_response, "All channel voltages reset to 0.0 V");
   return resp->error_code;
@@ -172,7 +174,9 @@ INSTRUMENT_PLUGIN_API PluginMetadata plugin_get_metadata(void) {
 
 INSTRUMENT_PLUGIN_API int32_t plugin_initialize(const PluginConfig *config) {
   // Initialize with zero voltage
-  g_stored_voltage = 0.0;
+  for (int i = 0; i < MAX_CHANNEL - MIN_CHANNEL; ++i) {
+    g_stored_voltage[i] = NULL_VOLTAGE;
+  }
   g_initialized = 1;
   (void)config; // Unused in this simple mock
   return 0;

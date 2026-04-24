@@ -48,6 +48,7 @@ endif()
 
 find_package(falcon-core              CONFIG REQUIRED)
 find_package(instrument-script-server CONFIG REQUIRED)
+find_package(teal-api-gen             CONFIG REQUIRED)
 
 if(BUILD_TESTS)
   enable_testing()

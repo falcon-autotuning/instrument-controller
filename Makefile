@@ -180,8 +180,8 @@ check-vcpkg: vcpkg-bootstrap  vcpkg-install-deps
 	fi
 	@echo "✓ vcpkg configuration OK"
 
-configure: check-vcpkg
-	@echo "Configuring build..."
+configure-debug : check-vcpkg
+	@echo "Configuring debug build..."
 	@mkdir -p $(BUILD_DIR)
 	cd $(BUILD_DIR) && cmake .. \
 		-DCMAKE_BUILD_TYPE=Debug \
@@ -200,7 +200,32 @@ configure: check-vcpkg
 		-G $(CMAKE_GENERATOR)
 	@echo "✓ Build configured"
 
-build: configure
+configure-release: check-vcpkg
+	@echo "Configuring debug build..."
+	@mkdir -p $(BUILD_DIR)
+	cd $(BUILD_DIR) && cmake .. \
+		-DCMAKE_BUILD_TYPE=Release\
+		-DCMAKE_TOOLCHAIN_FILE=$(VCPKG_TOOLCHAIN) \
+		-DVCPKG_INSTALLED_DIR=$(VCPKG_INSTALLED_DIR) \
+		$(VCPKG_OVERLAY_TRIPS) \
+		-DVCPKG_TARGET_TRIPLET=$(VCPKG_TRIPLET) \
+		-DUSE_CCACHE=ON \
+		-DENABLE_PCH=ON \
+		-DCMAKE_C_COMPILER=$(CC) \
+		-DCMAKE_CXX_COMPILER=$(CXX) \
+		$(CMAKE_VCPKG_BINARY_SOURCES) \
+		$(LINKER_FLAGS) \
+		-DVCPKG_OVERLAY_PORTS=../ports \
+		-G $(CMAKE_GENERATOR)
+	@echo "✓ Build configured"
+
+build-debug: configure-debug
+	@echo "Building debug..."
+	cmake --build $(BUILD_DIR) -- -j$(NPROC)
+	@echo "✓ Debug build complete"
+	@$(MAKE) clangd-helpers
+
+build-release: configure-release
 	@echo "Building debug..."
 	cmake --build $(BUILD_DIR) -- -j$(NPROC)
 	@echo "✓ Debug build complete"
@@ -277,7 +302,7 @@ test-interactive: docker-up build
 	@echo ""
 	@echo "When done, stop services with: make docker-down"
 
-package: build
+package: 
 	mkdir -p packaging
 	cp CMakeLists.txt packaging/
 	cp vcpkg.json.release packaging/vcpkg.json
@@ -286,7 +311,7 @@ package: build
 	cp README.md packaging/README.md
 	cp LICENSE packaging/LICENSE
 	cp -r CMakeFiles/ packaging/CMakeFiles/
-	cd packaging && $(MAKE) clean build
+	cd packaging && $(MAKE) clean build-release
 	if [ "$$(uname -s | grep -i 'mingw\|msys\|cygwin')" ]; then \
 		cd packaging/build && cpack -G ZIP -C Release; \
 		mv packaging/build/*.zip build/ 2>/dev/null || true; \

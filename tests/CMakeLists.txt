@@ -1,17 +1,18 @@
 find_package(instrument-script-server CONFIG REQUIRED)
 find_package(GTest                    CONFIG REQUIRED)
+find_package(falcon-routine           CONFIG REQUIRED)
 include(GoogleTest)
 
 message(STATUS "Building mock instrument plugins...")
 add_instrument_plugin(mock_multimeter
-  SOURCES plugins/mock_multimeter.c
+  SOURCES instrument-plugins/mock-multimeter.c
 )
 add_instrument_plugin(mock_voltage_source
-  SOURCES plugins/mock_voltage_source.c
+  SOURCES instrument-plugins/mock-voltage-source.c
 )
 
 set(TEST_SOURCES
-  data-retrieval.cpp
+  data-retrieval-1D/data-retrieval.cpp
 )
 add_executable(integration_tests ${TEST_SOURCES})
 target_link_libraries(integration_tests
@@ -19,6 +20,8 @@ target_link_libraries(integration_tests
     GTest::gtest
     GTest::gtest_main
     instrument-script-server::instrument-script-server-core
+    falcon::falcon-routine
+    falcon-core::falcon-core
 )
 target_compile_definitions(integration_tests
   PRIVATE

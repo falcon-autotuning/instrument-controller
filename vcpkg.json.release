@@ -10,7 +10,8 @@
       ],
       "version>=": "1.2.4"
     },
-    "instrument-script-server"
+    "instrument-script-server",
+    "teal-api-gen"
   ],
   "builtin-baseline": "e5a1490e1409d175932ef6014519e9ae149ddb7c",
   "overrides": [
