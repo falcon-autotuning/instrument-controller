@@ -1,9 +1,8 @@
 {
   "name": "instrument-controller",
-  "description": "For running integration tests",
+  "description": "The packaging requirements",
   "license": "MPL-2.0",
   "dependencies": [
-    "falcon-routine",
     {
       "name": "falcon-core",
       "features": [
@@ -12,10 +11,8 @@
       "version>=": "1.2.4"
     },
     "instrument-script-server",
-    "gtest",
     "teal-api-gen",
-    "falcon-instrument-hub",
-    "falcon-measurement-lib"
+    "falcon-instrument-hub"
   ],
   "builtin-baseline": "e5a1490e1409d175932ef6014519e9ae149ddb7c",
   "overrides": [

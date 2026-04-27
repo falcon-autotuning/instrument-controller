@@ -5,6 +5,7 @@
 #include <falcon-core/physics/device_structures/Connection.hpp>
 #include <falcon-routine/hub.hpp>
 #include <filesystem>
+#include <fstream>
 #include <gtest/gtest.h>
 #include <string>
 #ifdef _WIN32
@@ -32,15 +33,15 @@ const int TIMEOUT_MS = 1000;
 namespace fs = std::filesystem;
 const fs::path DATA_1D_DIR = fs::path(__FILE__).parent_path();
 const fs::path TEST_ROOT_DIR = DATA_1D_DIR.parent_path();
-const fs::path TEST_DATA_DIR = TEST_ROOT_DIR / "test-data";
-const fs::path TEST_DATA_FILE = TEST_DATA_DIR / "gaussian-1d.txt";
-const fs::path TEST_DATA_SCRIPT = TEST_DATA_DIR / "gen_data.cpp";
-const fs::path TEST_DATA_GENERATOR = TEST_DATA_DIR / "gen_data";
-const fs::path TEST_CONFIG_FILE = DATA_1D_DIR / "test-config.yaml";
-const fs::path VCPKG_BIN_DIR =
-    std::get_env("VCPKG_INSTALLED_DIR") / std::get_env("VCPKG_TRIPLET") / "bin";
-const fs::path VCPKG_LIB_DIR =
-    std::get_env("VCPKG_INSTALLED_DIR") / std::get_env("VCPKG_TRIPLET") / "lib";
+const fs::path TEST_DATA_DIR_PATH = TEST_ROOT_DIR / "test-data";
+const fs::path TEST_DATA_FILE = TEST_DATA_DIR_PATH / "gaussian-1d.txt";
+const fs::path VCPKG_BIN_DIR = fs::path(std::getenv("VCPKG_INSTALLED_DIR")) /
+                               std::string(std::getenv("VCPKG_TRIPLET")) /
+                               "bin";
+const fs::path VCPKG_LIB_DIR = fs::path(std::getenv("VCPKG_INSTALLED_DIR")) /
+                               std::string(std::getenv("VCPKG_TRIPLET")) /
+                               "lib";
+const fs::path LUA_LIB_DIR = VCPKG_LIB_DIR / "lua";
 const fs::path INSTRUMENT_APIS_DIR =
     TEST_ROOT_DIR / fs::path("instrument-apis");
 const fs::path TEAL_APIS_DIR = TEST_ROOT_DIR / "teal";
@@ -53,9 +54,10 @@ const fs::path WORKING_DIR = TEST_ROOT_DIR / "hub";
 class DataRetrievalTest : public ::testing::Test {
 protected:
   void SetUp() override {
-    BuildTestData(TEST_DATA_SCRIPT, TEST_DATA_GENERATOR);
-    RunTestDataGenerator(TEST_DATA_GENERATOR);
-    WriteConfigFile(TEST_CONFIG_FILE);
+    BuildTestData(TEST_DATA_DIR_PATH / "gen_data.cpp",
+                  TEST_DATA_DIR_PATH / "gen_data");
+    RunTestDataGenerator(TEST_DATA_DIR_PATH / "gen_data");
+    WriteConfigFile(DATA_1D_DIR / "test-config.yaml");
     ExtendInstrumentApis(
         (INSTRUMENT_APIS_DIR / "multimeter-api.yml.tmpl").string(),
         (INSTRUMENT_APIS_DIR / "generated-multimeter-api.yml").string());
@@ -78,11 +80,10 @@ protected:
                 (LUA_SCRIPTS_DIR / "set_voltage.lua").string());
     SetISSLuaLibs(std::vector<std::filesystem::path>{
         INSTRUMENT_LUA_LIBS_DIR / "multimeter.lua",
-        INSTRUMENT_LUA_LIBS_DIR / "source.lua",
-        // TODO: Insert the library from the measurement-lib
-    });
-    // TODO: Make sure that the instrument-hub is actually in the bin directory
-    StartInstrumentHub(VCPKG_BIN_DIR / "instrument-hub");
+        INSTRUMENT_LUA_LIBS_DIR / "source.lua", LUA_LIB_DIR});
+    StartInstrumentHub(VCPKG_BIN_DIR / "instrument-server",
+                       DATA_1D_DIR / "test-config.yaml", VCPKG_LIB_DIR,
+                       WORKING_DIR, VCPKG_BIN_DIR);
     setenv("MOCK_MULTIMETER_DATA_FILE", TEST_DATA_FILE.c_str(), 1);
   }
 
@@ -92,7 +93,7 @@ protected:
     // TODO: Uncomment these when no more debugging necessary - currently we
     // want to inspect the generated files after the test runs
     //   fs::remove(TEST_DATA_FILE);
-    //   fs::remove(TEST_DATA_GENERATOR);
+    //   fs::remove(TEST_DATA_DIR_PATH / "gen_data");
     //   fs::remove(INSTRUMENT_APIS_DIR / "generated-multimeter-api.yml");
     //   fs::remove(INSTRUMENT_APIS_DIR / "generated-source-api.yml");
     //   fs::remove_all(TEAL_APIS_DIR);
@@ -100,14 +101,38 @@ protected:
     //   fs::remove_all(DATA_DIR);
     //   fs::remove_all(INSTUMENT_LUA_LIBS_DIR);
   }
-  void StartInstrumentHub(const std::filesystem::path &hub_executable) {
+  void StartInstrumentHub(const std::filesystem::path &hub_executable,
+                          const std::filesystem::path &config_path,
+                          const std::filesystem::path &vcpkg_lib_dir,
+                          const std::filesystem::path &working_dir,
+                          const std::filesystem::path &vcpkg_bin_dir) {
+    // Build argument list as std::string
+    std::vector<std::string> args = {
+        hub_executable.string(),
+        "start",
+        "--hub-config",
+        config_path.string(),
+        "--iss-lib-path",
+        vcpkg_lib_dir.string(),
+        "--working-dir",
+        working_dir.string(),
+        "--iss-binary",
+        (vcpkg_bin_dir / "instrument-script-server").string()};
+
+    // Build char* array for execv
+    std::vector<char *> argv;
+    for (auto &arg : args)
+      argv.push_back(const_cast<char *>(arg.c_str()));
+    argv.push_back(nullptr);
+
 #ifdef _WIN32
-    std::string exe = hub_executable.string() + ".exe";
-    std::string cmd = exe + "start --hub-config " + TEST_CONFIG_FILE.string() +
-                      " --iss-lib-path " + VCPKG_LIB_DIR.string() +
-                      " --working-dir " + WORKING_DIR.string() +
-                      " --iss-binary " +
-                      (VCPKG_BIN_DIR / "instrument-script-server").string();
+    // Join arguments for Windows command line
+    std::string cmd;
+    for (size_t i = 0; i < args.size(); ++i) {
+      if (i > 0)
+        cmd += " ";
+      cmd += args[i];
+    }
     STARTUPINFOA si = {sizeof(si)};
     PROCESS_INFORMATION pi;
     if (!CreateProcessA(NULL, cmd.data(), NULL, NULL, FALSE, 0, NULL, NULL, &si,
@@ -120,12 +145,7 @@ protected:
 #else
     pid_t pid = fork();
     if (pid == 0) {
-      execl(hub_executable.c_str(), hub_executable.c_str(), "start",
-            "--hub-config", config_path.c_str(), "--iss-lib-path",
-            VCPKG_LIB_DIR.string(), "--working-dir", WORKING_DIR.string(),
-            "--iss-binary",
-            (VCPKG_BIN_DIR / "instrument-script-server").string(),
-            (char *)NULL);
+      execv(argv[0], argv.data());
       std::cerr << "Failed to exec Instrument Hub\n";
       std::exit(1);
     } else if (pid > 0) {
@@ -168,7 +188,7 @@ protected:
     }
   }
   void WriteConfigFile(fs::path configLocation) {
-    std::ofstream ofs(config_path);
+    std::ofstream ofs(configLocation);
     ofs << "wiremap: "
         << (DATA_1D_DIR / "2-dot-1-chargesensor-wiremap.yml").string() << "\n";
     ofs << "quantum-dot-config: "
@@ -242,7 +262,7 @@ protected:
   }
   void CompileTeal(const std::string &teal_path, const std::string &out_path) {
     std::string cmd = "tl gen " + teal_path + " -o " + out_path;
-    std::system(cmd.c_str());
+    int ret = std::system(cmd.c_str());
     if (ret != 0) {
       std::cerr << "Teal compilation failed with code " << ret << std::endl;
       std::exit(1);

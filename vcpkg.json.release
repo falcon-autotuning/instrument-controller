@@ -11,7 +11,9 @@
       "version>=": "1.2.4"
     },
     "instrument-script-server",
-    "teal-api-gen"
+    "teal-api-gen",
+    "falcon-instrument-hub",
+    "falcon-measurement-lib"
   ],
   "builtin-baseline": "e5a1490e1409d175932ef6014519e9ae149ddb7c",
   "overrides": [

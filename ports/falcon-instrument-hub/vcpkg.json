@@ -1,21 +1,16 @@
 {
-  "name": "instrument-controller",
-  "description": "For running integration tests",
-  "license": "MPL-2.0",
+  "name": "falcon-instrument-hub",
+  "version": "1.0.0",
+  "description": "Falcon Instrument Hub Go binary",
+  "license": "BSD-3-Clause",
   "dependencies": [
-    "falcon-routine",
     {
       "name": "falcon-core",
       "features": [
         "c-api"
       ],
-      "version>=": "1.2.4"
-    },
-    "instrument-script-server",
-    "gtest",
-    "teal-api-gen",
-    "falcon-instrument-hub",
-    "falcon-measurement-lib"
+      "version>=": "1.2.3"
+    }
   ],
   "builtin-baseline": "e5a1490e1409d175932ef6014519e9ae149ddb7c",
   "overrides": [
