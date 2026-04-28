@@ -51,8 +51,8 @@ VCPKG_BINARY_SOURCES ?=
 ifeq ($(strip $(FEED_URL)),)
   CMAKE_VCPKG_BINARY_SOURCES :=
 else
-	VCPKG_BINARY_SOURCES := "nuget,$(FEED_URL),readwrite"
-  CMAKE_VCPKG_BINARY_SOURCES := -DVCPKG_BINARY_SOURCES=$(VCPKG_BINARY_SOURCES)
+	VCPKG_BINARY_SOURCES := nuget,$(FEED_URL),readwrite
+  CMAKE_VCPKG_BINARY_SOURCES := -DVCPKG_BINARY_SOURCES="$(VCPKG_BINARY_SOURCES)"
 endif
 LINKER_FLAGS ?=
 ifeq ($(PLATFORM),linux)
@@ -136,7 +136,7 @@ setup-nuget-auth:
 			exit 1; \
 		fi; \
 	fi
-	@NUGET_EXE=$$(vcpkg fetch nuget | tail -n1); \
+	@NUGET_EXE=$$($(VCPKG_ROOT)/vcpkg fetch nuget | tail -n1); \
 	if [ "$$(uname -s 2>/dev/null)" = "Linux" ]; then \
 		MONO_PREFIX="mono "; \
 	else \
@@ -270,25 +270,12 @@ docker-clean:
 docker-logs:
 	@docker-compose -f docker-compose.test.yml logs -f
 
-# Test with Docker (recommended)
-test: docker-up build
+test: docker-up build-release
 	@echo "Running tests with Docker services..."
 	@$(MAKE) test-local \
 		TEST_NATS_URL="nats://localhost:4222"
 	@$(MAKE) docker-down
 	@echo "✓ Tests complete, services stopped"
-
-# Keep services running for interactive testing
-test-interactive: docker-up build
-	@echo "Services are running. Run tests manually with:"
-	@echo "  export TEST_NATS_URL=nats://localhost:4222"
-	@echo "  cd $(BUILD_DIR) && ctest"
-	@echo ""
-	@echo "Or run individual test executables:"
-	@echo "  $(BUILD_DIR)/tests/falcon_routine_unit_tests"
-	@echo "  $(BUILD_DIR)/tests/falcon_routine_integration_tests"
-	@echo ""
-	@echo "When done, stop services with: make docker-down"
 
 package: 
 	mkdir -p packaging
