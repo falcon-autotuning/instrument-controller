@@ -124,22 +124,22 @@ install(
 # Install vcpkg dependencies
 # ============================================================================
 if(WIN32)
-  file(GLOB_RECURSE WIN_DLLS "${VCPKG_INSTALLED_DIR}/x64-windows/bin/*.dll")
+  file(GLOB_RECURSE WIN_DLLS "${VCPKG_INSTALLED_DIR}/x64-win-llvm/bin/*.dll")
   install(
     PROGRAMS ${WIN_DLLS}
     DESTINATION "${INSTALL_BIN_DIR}"
   )
-  file(GLOB_RECURSE WIN_LIBS "${VCPKG_INSTALLED_DIR}/x64-windows/lib/*.lib")
+  file(GLOB_RECURSE WIN_LIBS "${VCPKG_INSTALLED_DIR}/x64-win-llvm/lib/*.lib")
   install(
     FILES ${WIN_LIBS}
     DESTINATION "${INSTALL_LIB_DIR}"
   )
-  file(GLOB_RECURSE WIN_INCLUDES "${VCPKG_INSTALLED_DIR}/x64-windows/include/*")
+  file(GLOB_RECURSE WIN_INCLUDES "${VCPKG_INSTALLED_DIR}/x64-win-llvm/include/*")
   install(
     FILES ${WIN_INCLUDES}
     DESTINATION "${INSTALL_INCLUDE_DIR}"
   )
-  file(GLOB_RECURSE WIN_SHARE "${VCPKG_INSTALLED_DIR}/x64-windows/share/*")
+  file(GLOB_RECURSE WIN_SHARE "${VCPKG_INSTALLED_DIR}/x64-win-llvm/share/*")
   install(
     FILES ${WIN_SHARE}
     DESTINATION "${INSTALL_SHARE_DIR}"
