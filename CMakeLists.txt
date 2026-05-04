@@ -53,6 +53,23 @@ find_package(teal-api-gen             CONFIG REQUIRED)
 if(BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests)
+  # At the top level CMakeLists.txt, after your configuration presets are processed
+  configure_file(
+    "${CMAKE_SOURCE_DIR}/cmake/env.sh.in"
+    "${CMAKE_BINARY_DIR}/env.sh"
+    @ONLY
+  )
+
+  # Also generate a JSON file for other tools
+  file(WRITE "${CMAKE_BINARY_DIR}/build-info.json"
+    "{
+      \"VCPKG_INSTALLED_DIR\": \"${VCPKG_INSTALLED_DIR}\",
+      \"VCPKG_TRIPLET\": \"${VCPKG_TARGET_TRIPLET}\",
+      \"CMAKE_BUILD_TYPE\": \"${CMAKE_BUILD_TYPE}\",
+      \"PRESET_NAME\": \"${CMAKE_PRESET_NAME}\"
+    }")
+
+  message(STATUS "Generated env.sh and build-info.json in ${CMAKE_BINARY_DIR}")
 endif()
 # ============================================================================
 # Installation Prefix Configuration

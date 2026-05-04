@@ -1,0 +1,6 @@
+wiremap: /home/tylerk/falcon-dev/instrument-controller/tests/data-retrieval-1D/2-dot-1-chargesensor-wiremap.yml
+quantum-dot-config: /home/tylerk/falcon-dev/instrument-controller/tests/device-configs/2-dot-1-chargesensor.yml
+inst-config: /home/tylerk/falcon-dev/instrument-controller/tests/data-retrieval-1D/multimeter-config.yml;/home/tylerk/falcon-dev/instrument-controller/tests/data-retrieval-1D/source-config.yml
+instrument-server-port: 5555
+local-database: /home/tylerk/falcon-dev/instrument-controller/tests/data
+user-measurement-luas: /home/tylerk/falcon-dev/instrument-controller/tests/lua

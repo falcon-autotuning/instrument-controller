@@ -2,7 +2,7 @@
   "name": "falcon-instrument-hub",
   "version": "1.0.0",
   "description": "Falcon Instrument Hub Go binary",
-  "license": "MPL-2.0",
+  "license": "BSD-3-Clause",
   "dependencies": [
     {
       "name": "falcon-core",

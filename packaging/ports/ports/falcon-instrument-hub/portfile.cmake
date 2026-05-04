@@ -22,7 +22,11 @@ vcpkg_execute_required_process(
        LOGNAME build-go
    )
 vcpkg_execute_required_process(
-       COMMAND go build -o "${GO_OUTPUT}" ./cmd/dataviewer/
+       COMMAND go build -o "${DATAVIEWER_OUTPUT}" ./cmd/dataviewer/
        WORKING_DIRECTORY "${SOURCE_PATH}/runtime"
        LOGNAME build-go
    )
+file(INSTALL "${SOURCE_PATH}/LICENSE"
+     DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}"
+     RENAME copyright
+)

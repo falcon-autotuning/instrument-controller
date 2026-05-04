@@ -35,13 +35,13 @@ const fs::path DATA_1D_DIR = fs::path(__FILE__).parent_path();
 const fs::path TEST_ROOT_DIR = DATA_1D_DIR.parent_path();
 const fs::path TEST_DATA_DIR_PATH = TEST_ROOT_DIR / "test-data";
 const fs::path TEST_DATA_FILE = TEST_DATA_DIR_PATH / "gaussian-1d.txt";
-const fs::path VCPKG_BIN_DIR = fs::path(std::getenv("VCPKG_INSTALLED_DIR")) /
-                               std::string(std::getenv("VCPKG_TRIPLET")) /
-                               "bin";
-const fs::path VCPKG_LIB_DIR = fs::path(std::getenv("VCPKG_INSTALLED_DIR")) /
-                               std::string(std::getenv("VCPKG_TRIPLET")) /
-                               "lib";
-const fs::path LUA_LIB_DIR = VCPKG_LIB_DIR / "lua";
+
+// These will be initialized in SetUp() since they depend on environment
+// variables
+fs::path VCPKG_BIN_DIR;
+fs::path VCPKG_LIB_DIR;
+fs::path LUA_LIB_DIR;
+
 const fs::path INSTRUMENT_APIS_DIR =
     TEST_ROOT_DIR / fs::path("instrument-apis");
 const fs::path TEAL_APIS_DIR = TEST_ROOT_DIR / "teal";
@@ -54,6 +54,22 @@ const fs::path WORKING_DIR = TEST_ROOT_DIR / "hub";
 class DataRetrievalTest : public ::testing::Test {
 protected:
   void SetUp() override {
+    // Initialize paths from environment variables here, not at global scope
+    const char *vcpkg_installed = std::getenv("VCPKG_INSTALLED_DIR");
+    const char *vcpkg_triplet = std::getenv("VCPKG_TRIPLET");
+
+    if (!vcpkg_installed || !*vcpkg_installed || !vcpkg_triplet ||
+        !*vcpkg_triplet) {
+      FAIL() << "Required environment variables not set: VCPKG_INSTALLED_DIR "
+                "or VCPKG_TRIPLET";
+    }
+    std::cout << "Using vcpkg installed dir: " << vcpkg_installed << std::endl;
+    std::cout << "Using vcpkg triplet: " << vcpkg_triplet << std::endl;
+
+    VCPKG_BIN_DIR = fs::path(vcpkg_installed) / vcpkg_triplet / "bin";
+    VCPKG_LIB_DIR = fs::path(vcpkg_installed) / vcpkg_triplet / "lib";
+    LUA_LIB_DIR = VCPKG_LIB_DIR / "lua";
+
     BuildTestData(TEST_DATA_DIR_PATH / "gen_data.cpp",
                   TEST_DATA_DIR_PATH / "gen_data");
     RunTestDataGenerator(TEST_DATA_DIR_PATH / "gen_data");
@@ -233,12 +249,10 @@ protected:
   void RunTestDataGenerator(const std::string &out_base) {
 #ifdef _WIN32
     std::string exe_path = out_base + ".exe";
-    std::string cmd = exe_path;
 #else
     std::string exe_path = out_base;
-    std::string cmd = "./" + exe_path;
 #endif
-    int ret = std::system(cmd.c_str());
+    int ret = std::system(exe_path.c_str());
     if (ret != 0) {
       std::cerr << "Data generation failed with code " << ret << std::endl;
       std::exit(1);
@@ -249,11 +263,10 @@ protected:
     std::string out_base = VCPKG_BIN_DIR / "template-expander";
 #ifdef _WIN32
     std::string exe_path = out_base + ".exe";
-    std::string cmd = exe_path + " " + local_path + " " + out_path;
 #else
     std::string exe_path = out_base;
-    std::string cmd = "./" + exe_path + " " + local_path + " " + out_path;
 #endif
+    std::string cmd = exe_path + " " + local_path + " " + out_path;
     int ret = std::system(cmd.c_str());
     if (ret != 0) {
       std::cerr << "API extension failed with code " << ret << std::endl;
