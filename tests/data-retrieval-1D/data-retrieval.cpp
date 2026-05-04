@@ -107,11 +107,14 @@ protected:
                        DATA_1D_DIR / "test-config.yaml", VCPKG_LIB_DIR,
                        WORKING_DIR, VCPKG_BIN_DIR);
     setenv("MOCK_MULTIMETER_DATA_FILE", TEST_DATA_FILE.c_str(), 1);
+    // TODO: What does instrument hub expect?
+    // setenv("NATS_URL", )
     std::cout << "Setup complete, starting test" << std::endl;
   }
 
   void TearDown() override {
     unsetenv("MOCK_MULTIMETER_DATA_FILE");
+    unsetenv("NATS_URL");
     StopInstrumentHub();
     // TODO: Uncomment these when no more debugging necessary - currently we
     // want to inspect the generated files after the test runs
