@@ -42,7 +42,7 @@ test: build
 		echo "ERROR: $(CMAKE_BUILD_DIR)/env.sh not found."; \
 		exit 1; \
 	fi
-	source $(CMAKE_BUILD_DIR)/env.sh && ctest --preset $(PRESET) --output-on-failure
+	source $(CMAKE_BUILD_DIR)/env.sh && LD_LIBRARY_PATH=$(VCPKG_INSTALLED_DIR)/$(VCPKG_TRIPLET)/lib:$(LD_LIBRARY_PATH) ctest --preset $(PRESET) --output-on-failure
 
 install: build
 	@echo "Installing $(PRESET) to system..."
