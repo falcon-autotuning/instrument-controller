@@ -69,6 +69,12 @@ protected:
     VCPKG_BIN_DIR = fs::path(vcpkg_installed) / vcpkg_triplet / "bin";
     VCPKG_LIB_DIR = fs::path(vcpkg_installed) / vcpkg_triplet / "lib";
     LUA_LIB_DIR = VCPKG_LIB_DIR / "lua";
+    fs::create_directories(LUA_LIB_DIR);
+    fs::create_directories(TEAL_APIS_DIR);
+    fs::create_directories(LUA_SCRIPTS_DIR);
+    fs::create_directories(INSTRUMENT_LUA_LIBS_DIR);
+    fs::create_directories(WORKING_DIR);
+    fs::create_directories(DATA_DIR);
 
     BuildTestData(TEST_DATA_DIR_PATH / "gen_data.cpp",
                   TEST_DATA_DIR_PATH / "gen_data");
@@ -192,11 +198,10 @@ protected:
     std::string out_base = VCPKG_BIN_DIR / "teal-api-gen-cli";
 #ifdef _WIN32
     std::string exe_path = out_base + ".exe";
-    std::string cmd = exe_path + " " + local_path + " " + out_path;
 #else
     std::string exe_path = out_base;
-    std::string cmd = "./" + exe_path + " " + local_path + " " + out_path;
 #endif
+    std::string cmd = exe_path + " " + local_path + " " + out_path;
     int ret = std::system(cmd.c_str());
     if (ret != 0) {
       std::cerr << "Teal API Generator failed with code " << ret << std::endl;
