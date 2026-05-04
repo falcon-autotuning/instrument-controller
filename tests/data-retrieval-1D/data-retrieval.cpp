@@ -223,6 +223,7 @@ protected:
         << ";" << (DATA_1D_DIR / "source-config.yml").string() << "\n";
     ofs << "instrument-server-port: 5555\n";
     ofs << "local-database: " << (DATA_DIR).string() << "\n";
+    ofs << "start-embedded-nats: true\n";
     ofs << "user-measurement-luas: " << (LUA_SCRIPTS_DIR).string() << "\n";
     ofs.close();
   }
