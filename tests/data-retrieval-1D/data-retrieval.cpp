@@ -103,7 +103,7 @@ protected:
     SetISSLuaLibs(std::vector<std::filesystem::path>{
         INSTRUMENT_LUA_LIBS_DIR / "multimeter.lua",
         INSTRUMENT_LUA_LIBS_DIR / "source.lua", LUA_LIB_DIR});
-    StartInstrumentHub(VCPKG_BIN_DIR / "instrument-server",
+    StartInstrumentHub(VCPKG_BIN_DIR / "instrument-hub",
                        DATA_1D_DIR / "test-config.yaml", VCPKG_LIB_DIR,
                        WORKING_DIR, VCPKG_BIN_DIR);
     setenv("MOCK_MULTIMETER_DATA_FILE", TEST_DATA_FILE.c_str(), 1);

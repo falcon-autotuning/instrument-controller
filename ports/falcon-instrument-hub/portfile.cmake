@@ -7,10 +7,10 @@ vcpkg_from_github(
 
 # Build the Go binary
 if(VCPKG_TARGET_IS_WINDOWS)
-  set(GO_OUTPUT "${CURRENT_PACKAGES_DIR}/bin/instrument-server.exe")
+  set(GO_OUTPUT "${CURRENT_PACKAGES_DIR}/bin/instrument-hub.exe")
   set(DATAVIEWER_OUTPUT "${CURRENT_PACKAGES_DIR}/bin/dataviewer.exe")
 else()
-  set(GO_OUTPUT "${CURRENT_PACKAGES_DIR}/bin/instrument-server")
+  set(GO_OUTPUT "${CURRENT_PACKAGES_DIR}/bin/instrument-hub")
   set(DATAVIEWER_OUTPUT "${CURRENT_PACKAGES_DIR}/bin/dataviewer")
 endif()
 
