@@ -107,6 +107,7 @@ protected:
                        DATA_1D_DIR / "test-config.yaml", VCPKG_LIB_DIR,
                        WORKING_DIR, VCPKG_BIN_DIR);
     setenv("MOCK_MULTIMETER_DATA_FILE", TEST_DATA_FILE.c_str(), 1);
+    std::cout << "Setup complete, starting test" << std::endl;
   }
 
   void TearDown() override {
