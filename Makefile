@@ -1,4 +1,4 @@
-.PHONY: help configure build test clean install vcpkg-bootstrap docker-up docker-down
+.PHONY: help configure build test clean install vcpkg-bootstrap 
 
 # Build preset (user can override: make build PRESET=linux-gcc-release)
 PRESET ?= linux-clang-release
@@ -14,7 +14,7 @@ help:
 	@echo "Usage:"
 	@echo "  make configure PRESET=<preset>  - Configure build (default: $(PRESET))"
 	@echo "  make build PRESET=<preset>      - Build (default: $(PRESET))"
-	@echo "  make test PRESET=<preset>       - Run tests with Docker (default: $(PRESET))"
+	@echo "  make test PRESET=<preset>       - Run tests (default: $(PRESET))"
 	@echo "  make install PRESET=<preset>    - Install to system"
 	@echo "  make clean                      - Clean all build artifacts"
 	@echo ""
