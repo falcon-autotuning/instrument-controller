@@ -1,6 +1,4 @@
 .PHONY: help configure build test clean install vcpkg-bootstrap 
-SHELL := /bin/bash
-
 # Build preset (user can override: make build PRESET=linux-gcc-release)
 PRESET ?= linux-clang-release
 CMAKE_BUILD_DIR := build/$(PRESET)
