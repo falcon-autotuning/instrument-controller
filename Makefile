@@ -2,6 +2,11 @@
 # Build preset (user can override: make build PRESET=linux-gcc-release)
 PRESET ?= linux-clang-release
 CMAKE_BUILD_DIR := build/$(PRESET)
+ifeq ($(OS),Windows_NT)
+  SUDO :=
+else
+  SUDO := sudo
+endif
 
 help:
 	@echo "Instrument Controller Build System"
@@ -45,7 +50,7 @@ test: build
 
 install: build
 	@echo "Installing $(PRESET) to system..."
-	sudo cmake --install $(CMAKE_BUILD_DIR)
+	$(SUDO) cmake --install $(CMAKE_BUILD_DIR)
 
 clean:
 	@echo "Cleaning all build artifacts..."
