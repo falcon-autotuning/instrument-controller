@@ -1,8 +1,8 @@
 vcpkg_from_github(
        OUT_SOURCE_PATH SOURCE_PATH
        REPO falcon-autotuning/falcon-instrument-hub
-       REF main
-       SHA512 b626a2de69e20b36cb6fdad1bcffcb8df8173f4f33745b8fdcf8017b82cb635b46fd0aa519ecb21add6125cb5b3c85d72449fed2226c72ed3ec025ca00d1aef1
+       REF v${VERSION}
+       SHA512 9b3eec2baa3ebfb7481ccc782223653f54f884e35443b3e7f316f728da81162ef4e67d1b913dbfe1b76be5e1b1df5432ec5807b31a712ba993a3e6565b88f9ef
    )
 
 # Build the Go binary

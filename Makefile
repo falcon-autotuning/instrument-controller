@@ -1,4 +1,5 @@
 .PHONY: help configure build test clean install vcpkg-bootstrap 
+SHELL := /bin/bash
 
 # Build preset (user can override: make build PRESET=linux-gcc-release)
 PRESET ?= linux-clang-release
@@ -30,7 +31,7 @@ vcpkg-bootstrap:
 
 configure: vcpkg-bootstrap
 	@echo "Configuring $(PRESET)..."
-	cmake --preset $(PRESET)
+	MAKELEVEL=0 cmake --preset $(PRESET)
 
 build: configure
 	@echo "Building $(PRESET)..."
@@ -42,11 +43,11 @@ test: build
 		echo "ERROR: $(CMAKE_BUILD_DIR)/env.sh not found."; \
 		exit 1; \
 	fi
-	source $(CMAKE_BUILD_DIR)/env.sh && LD_LIBRARY_PATH=$(VCPKG_INSTALLED_DIR)/$(VCPKG_TRIPLET)/lib:$(LD_LIBRARY_PATH) ctest --preset $(PRESET) --output-on-failure
+	source $(CMAKE_BUILD_DIR)/env.sh && LD_LIBRARY_PATH=$$VCPKG_INSTALLED_DIR/$$VCPKG_TRIPLET/lib:$$LD_LIBRARY_PATH ctest --preset $(PRESET) --output-on-failure
 
 install: build
 	@echo "Installing $(PRESET) to system..."
-	cmake --install $(CMAKE_BUILD_DIR)
+	sudo cmake --install $(CMAKE_BUILD_DIR)
 
 clean:
 	@echo "Cleaning all build artifacts..."

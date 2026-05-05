@@ -12,6 +12,9 @@
 #include <windows.h>
 #else
 #include <signal.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/types.h>
 #include <unistd.h>
 #endif
@@ -29,7 +32,7 @@ using namespace falcon_core::instrument_interfaces::names;
 using namespace falcon_core::autotuner_interfaces::names;
 using namespace falcon_core::math::domains;
 using namespace falcon_core::generic;
-const int TIMEOUT_MS = 1000;
+const int TIMEOUT_MS = 5000;
 namespace fs = std::filesystem;
 const fs::path DATA_1D_DIR = fs::path(__FILE__).parent_path();
 const fs::path TEST_ROOT_DIR = DATA_1D_DIR.parent_path();
@@ -106,6 +109,7 @@ protected:
     StartInstrumentHub(VCPKG_BIN_DIR / "instrument-hub",
                        DATA_1D_DIR / "test-config.yaml", VCPKG_LIB_DIR,
                        WORKING_DIR, VCPKG_BIN_DIR);
+    WaitForNats("127.0.0.1", 4222, 10000);
     setenv("MOCK_MULTIMETER_DATA_FILE", TEST_DATA_FILE.c_str(), 1);
     setenv("NATS_URL", "nats://localhost:4222", 1);
     std::cout << "Setup complete, starting test" << std::endl;
@@ -289,6 +293,38 @@ protected:
       std::cerr << "Teal compilation failed with code " << ret << std::endl;
       std::exit(1);
     }
+  }
+  void WaitForNats(const char *host, int port, int timeout_ms) {
+    int waited = 0;
+    while (waited < timeout_ms) {
+#ifdef _WIN32
+      SOCKET s = socket(AF_INET, SOCK_STREAM, 0);
+      sockaddr_in addr{};
+      addr.sin_family = AF_INET;
+      addr.sin_port = htons(port);
+      inet_pton(AF_INET, host, &addr.sin_addr);
+      if (connect(s, (sockaddr *)&addr, sizeof(addr)) == 0) {
+        closesocket(s);
+        return;
+      }
+      closesocket(s);
+      Sleep(100);
+#else
+      int s = socket(AF_INET, SOCK_STREAM, 0);
+      struct sockaddr_in addr{};
+      addr.sin_family = AF_INET;
+      addr.sin_port = htons(port);
+      inet_pton(AF_INET, host, &addr.sin_addr);
+      if (connect(s, (struct sockaddr *)&addr, sizeof(addr)) == 0) {
+        close(s);
+        return;
+      }
+      close(s);
+      usleep(100000);
+#endif
+      waited += 100;
+    }
+    std::cerr << "NATS did not become available within " << timeout_ms << "ms\n";
   }
 #ifdef _WIN32
   PROCESS_INFORMATION hub_process_info_{};
