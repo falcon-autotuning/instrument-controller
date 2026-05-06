@@ -3,4 +3,5 @@ quantum-dot-config: /home/tylerk/falcon-dev/instrument-controller/tests/device-c
 inst-config: /home/tylerk/falcon-dev/instrument-controller/tests/data-retrieval-1D/multimeter-config.yml;/home/tylerk/falcon-dev/instrument-controller/tests/data-retrieval-1D/source-config.yml
 instrument-server-port: 5555
 local-database: /home/tylerk/falcon-dev/instrument-controller/tests/data
+start-embedded-nats: true
 user-measurement-luas: /home/tylerk/falcon-dev/instrument-controller/tests/lua
