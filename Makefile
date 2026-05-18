@@ -1,4 +1,8 @@
 .PHONY: help configure build test clean install vcpkg-bootstrap 
+
+# Default to using standard system shell  
+SHELL ?= /bin/sh
+
 # Build preset (user can override: make build PRESET=linux-gcc-release)
 PRESET ?= linux-clang-release
 CMAKE_BUILD_DIR := build/$(PRESET)
@@ -40,13 +44,14 @@ build: configure
 	@echo "Building $(PRESET)..."
 	cmake --build --preset $(PRESET)
 
+# use POSIX . instead of source to ensure compatibility with /bin/sh on all platforms
 test: build
 	@echo "Running tests for $(PRESET)..."
 	@if [ ! -f "$(CMAKE_BUILD_DIR)/env.sh" ]; then \
 		echo "ERROR: $(CMAKE_BUILD_DIR)/env.sh not found."; \
 		exit 1; \
 	fi
-	source $(CMAKE_BUILD_DIR)/env.sh && LD_LIBRARY_PATH=$$VCPKG_INSTALLED_DIR/$$VCPKG_TRIPLET/lib:$$LD_LIBRARY_PATH ctest --preset $(PRESET) --output-on-failure
+	. $(CMAKE_BUILD_DIR)/env.sh && LD_LIBRARY_PATH=$$VCPKG_INSTALLED_DIR/$$VCPKG_TRIPLET/lib:$$LD_LIBRARY_PATH ctest --preset $(PRESET) --output-on-failure
 
 install: build
 	@echo "Installing $(PRESET) to system..."

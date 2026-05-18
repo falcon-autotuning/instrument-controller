@@ -4,10 +4,13 @@
 #include <falcon-core/instrument_interfaces/names/InstrumentTypes.hpp>
 #include <falcon-core/physics/device_structures/Connection.hpp>
 #include <falcon-routine/hub.hpp>
+#include <falcon-comms/runtime_comms.hpp>
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <string>
+#include <chrono>
+#include <future>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -16,6 +19,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #endif
 
@@ -54,15 +58,18 @@ const fs::path MEASUREMENT_SCRIPTS_DIR = DATA_1D_DIR / "measurement-scripts";
 const fs::path INSTRUMENT_LUA_LIBS_DIR = TEST_ROOT_DIR / "instrument-lua-libs";
 const fs::path WORKING_DIR = TEST_ROOT_DIR / "hub";
 
-class DataRetrievalTest : public ::testing::Test {
+class DataRetrievalTest : public ::testing::Test
+{
 protected:
-  void SetUp() override {
+  void SetUp() override
+  {
     // Initialize paths from environment variables here, not at global scope
     const char *vcpkg_installed = std::getenv("VCPKG_INSTALLED_DIR");
     const char *vcpkg_triplet = std::getenv("VCPKG_TRIPLET");
 
     if (!vcpkg_installed || !*vcpkg_installed || !vcpkg_triplet ||
-        !*vcpkg_triplet) {
+        !*vcpkg_triplet)
+    {
       FAIL() << "Required environment variables not set: VCPKG_INSTALLED_DIR "
                 "or VCPKG_TRIPLET";
     }
@@ -106,16 +113,21 @@ protected:
     SetISSLuaLibs(std::vector<std::filesystem::path>{
         INSTRUMENT_LUA_LIBS_DIR / "multimeter.lua",
         INSTRUMENT_LUA_LIBS_DIR / "source.lua", LUA_LIB_DIR});
+
+    // Ensure spawned hub/ISS processes inherit test-specific runtime variables.
+    setenv("MOCK_MULTIMETER_DATA_FILE", TEST_DATA_FILE.c_str(), 1);
+    setenv("NATS_URL", "nats://localhost:4222", 1);
+
     StartInstrumentHub(VCPKG_BIN_DIR / "instrument-hub",
                        DATA_1D_DIR / "test-config.yaml", VCPKG_LIB_DIR,
                        WORKING_DIR, VCPKG_BIN_DIR);
     WaitForNats("127.0.0.1", 4222, 10000);
-    setenv("MOCK_MULTIMETER_DATA_FILE", TEST_DATA_FILE.c_str(), 1);
-    setenv("NATS_URL", "nats://localhost:4222", 1);
+    WaitForHubReady(10000);  // Wait for hub to finish setting up handlers
     std::cout << "Setup complete, starting test" << std::endl;
   }
 
-  void TearDown() override {
+  void TearDown() override
+  {
     unsetenv("MOCK_MULTIMETER_DATA_FILE");
     unsetenv("NATS_URL");
     StopInstrumentHub();
@@ -134,7 +146,8 @@ protected:
                           const std::filesystem::path &config_path,
                           const std::filesystem::path &vcpkg_lib_dir,
                           const std::filesystem::path &working_dir,
-                          const std::filesystem::path &vcpkg_bin_dir) {
+                          const std::filesystem::path &vcpkg_bin_dir)
+  {
     // Build argument list as std::string
     std::vector<std::string> args = {
         hub_executable.string(),
@@ -157,7 +170,8 @@ protected:
 #ifdef _WIN32
     // Join arguments for Windows command line
     std::string cmd;
-    for (size_t i = 0; i < args.size(); ++i) {
+    for (size_t i = 0; i < args.size(); ++i)
+    {
       if (i > 0)
         cmd += " ";
       cmd += args[i];
@@ -165,7 +179,8 @@ protected:
     STARTUPINFOA si = {sizeof(si)};
     PROCESS_INFORMATION pi;
     if (!CreateProcessA(NULL, cmd.data(), NULL, NULL, FALSE, 0, NULL, NULL, &si,
-                        &pi)) {
+                        &pi))
+    {
       std::cerr << "Failed to start Instrument Hub, error: " << GetLastError()
                 << std::endl;
       std::exit(1);
@@ -173,35 +188,50 @@ protected:
     hub_process_info_ = pi;
 #else
     pid_t pid = fork();
-    if (pid == 0) {
+    if (pid == 0)
+    {
       execv(argv[0], argv.data());
       std::cerr << "Failed to exec Instrument Hub\n";
       std::exit(1);
-    } else if (pid > 0) {
+    }
+    else if (pid > 0)
+    {
       hub_pid_ = pid;
-    } else {
+    }
+    else
+    {
       std::cerr << "Failed to fork for Instrument Hub\n";
       std::exit(1);
     }
 #endif
   }
-  void StopInstrumentHub() {
+  void StopInstrumentHub()
+  {
 #ifdef _WIN32
-    if (hub_process_info_.hProcess) {
+    if (hub_process_info_.hProcess)
+    {
       TerminateProcess(hub_process_info_.hProcess, 0);
       CloseHandle(hub_process_info_.hProcess);
       CloseHandle(hub_process_info_.hThread);
       hub_process_info_ = {};
     }
 #else
-    if (hub_pid_ > 0) {
+    if (hub_pid_ > 0)
+    {
       kill(hub_pid_, SIGTERM);
+      // Wait for the hub to fully exit so its cleanup (stopISSDaemon) completes
+      // before the next test run tries to start a new daemon. Without this,
+      // a stale ISS daemon from the previous run causes "Instrument already
+      // exists" errors in subsequent test runs.
+      int status = 0;
+      waitpid(hub_pid_, &status, 0);
       hub_pid_ = -1;
     }
 #endif
   }
   void GenerateTealInstrumentLibs(const std::string &local_path,
-                                  const std::string &out_path) {
+                                  const std::string &out_path)
+  {
     std::string out_base = VCPKG_BIN_DIR / "teal-api-gen-cli";
 #ifdef _WIN32
     std::string exe_path = out_base + ".exe";
@@ -210,12 +240,14 @@ protected:
 #endif
     std::string cmd = exe_path + " " + local_path + " " + out_path;
     int ret = std::system(cmd.c_str());
-    if (ret != 0) {
+    if (ret != 0)
+    {
       std::cerr << "Teal API Generator failed with code " << ret << std::endl;
       std::exit(1);
     }
   }
-  void WriteConfigFile(fs::path configLocation) {
+  void WriteConfigFile(fs::path configLocation)
+  {
     std::ofstream ofs(configLocation);
     ofs << "wiremap: "
         << (DATA_1D_DIR / "2-dot-1-chargesensor-wiremap.yml").string() << "\n";
@@ -225,13 +257,18 @@ protected:
         << "\n";
     ofs << "inst-config: " << (DATA_1D_DIR / "multimeter-config.yml").string()
         << ";" << (DATA_1D_DIR / "source-config.yml").string() << "\n";
+    ofs << "inst-plugins: "
+        << (fs::path(PLUGIN_OUTPUT_DIR) / "mock_multimeter.so").string() << ";"
+        << (fs::path(PLUGIN_OUTPUT_DIR) / "mock_voltage_source.so").string()
+        << "\n";
     ofs << "instrument-server-port: 5555\n";
     ofs << "local-database: " << (DATA_DIR).string() << "\n";
     ofs << "start-embedded-nats: true\n";
     ofs << "user-measurement-luas: " << (LUA_SCRIPTS_DIR).string() << "\n";
     ofs.close();
   }
-  void BuildTestData(const std::string &cpp_path, const std::string &out_base) {
+  void BuildTestData(const std::string &cpp_path, const std::string &out_base)
+  {
 #ifdef _WIN32
     std::string out_path = out_base + ".exe";
     const char *compiler = std::getenv("CXX");
@@ -244,14 +281,17 @@ protected:
     cmd += " -std=c++17 -o " + out_path + " " + cpp_path;
 #endif
     int ret = std::system(cmd.c_str());
-    if (ret != 0) {
+    if (ret != 0)
+    {
       std::cerr << "Build failed with code " << ret << std::endl;
       std::exit(1);
     }
   }
-  void SetISSLuaLibs(const std::vector<std::filesystem::path> &paths) {
+  void SetISSLuaLibs(const std::vector<std::filesystem::path> &paths)
+  {
     std::string libs;
-    for (size_t i = 0; i < paths.size(); ++i) {
+    for (size_t i = 0; i < paths.size(); ++i)
+    {
       libs += paths[i].string();
       if (i + 1 < paths.size())
         libs += ";";
@@ -259,20 +299,23 @@ protected:
     setenv("INSTRUMENT_SCRIPT_SERVER_OPT_LUA_LIB", libs.c_str(), 1);
   }
 
-  void RunTestDataGenerator(const std::string &out_base) {
+  void RunTestDataGenerator(const std::string &out_base)
+  {
 #ifdef _WIN32
     std::string exe_path = out_base + ".exe";
 #else
     std::string exe_path = out_base;
 #endif
     int ret = std::system(exe_path.c_str());
-    if (ret != 0) {
+    if (ret != 0)
+    {
       std::cerr << "Data generation failed with code " << ret << std::endl;
       std::exit(1);
     }
   }
   void ExtendInstrumentApis(const std::string &local_path,
-                            const std::string &out_path) {
+                            const std::string &out_path)
+  {
     std::string out_base = VCPKG_BIN_DIR / "template-expander";
 #ifdef _WIN32
     std::string exe_path = out_base + ".exe";
@@ -281,29 +324,35 @@ protected:
 #endif
     std::string cmd = exe_path + " " + local_path + " " + out_path;
     int ret = std::system(cmd.c_str());
-    if (ret != 0) {
+    if (ret != 0)
+    {
       std::cerr << "API extension failed with code " << ret << std::endl;
       std::exit(1);
     }
   }
-  void CompileTeal(const std::string &teal_path, const std::string &out_path) {
+  void CompileTeal(const std::string &teal_path, const std::string &out_path)
+  {
     std::string cmd = "tl gen " + teal_path + " -o " + out_path;
     int ret = std::system(cmd.c_str());
-    if (ret != 0) {
+    if (ret != 0)
+    {
       std::cerr << "Teal compilation failed with code " << ret << std::endl;
       std::exit(1);
     }
   }
-  void WaitForNats(const char *host, int port, int timeout_ms) {
+  void WaitForNats(const char *host, int port, int timeout_ms)
+  {
     int waited = 0;
-    while (waited < timeout_ms) {
+    while (waited < timeout_ms)
+    {
 #ifdef _WIN32
       SOCKET s = socket(AF_INET, SOCK_STREAM, 0);
       sockaddr_in addr{};
       addr.sin_family = AF_INET;
       addr.sin_port = htons(port);
       inet_pton(AF_INET, host, &addr.sin_addr);
-      if (connect(s, (sockaddr *)&addr, sizeof(addr)) == 0) {
+      if (connect(s, (sockaddr *)&addr, sizeof(addr)) == 0)
+      {
         closesocket(s);
         return;
       }
@@ -315,7 +364,8 @@ protected:
       addr.sin_family = AF_INET;
       addr.sin_port = htons(port);
       inet_pton(AF_INET, host, &addr.sin_addr);
-      if (connect(s, (struct sockaddr *)&addr, sizeof(addr)) == 0) {
+      if (connect(s, (struct sockaddr *)&addr, sizeof(addr)) == 0)
+      {
         close(s);
         return;
       }
@@ -326,13 +376,44 @@ protected:
     }
     std::cerr << "NATS did not become available within " << timeout_ms << "ms\n";
   }
+  void WaitForHubReady(int timeout_ms)
+  {
+    // Subscribe to STATUS.instrument-server which the hub publishes after
+    // all handlers are set up (completing Phase 3 of hub startup).
+    // This ensures DeviceConfigRequest and other handler subscriptions are ready.
+    std::promise<bool> prom;
+    auto fut = prom.get_future();
+    std::atomic<bool> done{false};
+
+    falcon::comms::NatsManager &nm = falcon::comms::NatsManager::instance();
+    
+    nm.subscribe("STATUS.instrument-server", 
+                 [&prom, &done](const std::string &) {
+        if (!done.exchange(true)) {
+          try {
+            prom.set_value(true);
+          } catch (const std::future_error &) {
+            // promise already set
+          }
+        }
+      });
+
+    auto status = fut.wait_for(std::chrono::milliseconds(timeout_ms));
+    nm.unsubscribe("STATUS.instrument-server");
+
+    if (status != std::future_status::ready) {
+      throw std::runtime_error(
+          "Timeout waiting for hub ready signal (STATUS.instrument-server)");
+    }
+  }
 #ifdef _WIN32
   PROCESS_INFORMATION hub_process_info_{};
 #else
   pid_t hub_pid_ = -1;
 #endif
 };
-TEST_F(DataRetrievalTest, Gaussian1D) {
+TEST_F(DataRetrievalTest, Gaussian1D)
+{
   const int NUM_POINTS = 100;
   const double START_TIME_SECONDS = 0.0;
   const double MAX_TIME_SECONDS = 1.0;
@@ -343,31 +424,24 @@ TEST_F(DataRetrievalTest, Gaussian1D) {
   ConfigSP config = request_config(TIMEOUT_MS);
   ASSERT_NE(config, nullptr) << "Failed to get config from request_config";
 
-  std::tuple<Ports, Ports> ports_ = request_port_payload(TIMEOUT_MS);
-  Ports totalKnobs = std::get<0>(ports_);
-  Ports totalMeters = std::get<1>(ports_);
-  PortsSP getters = std::make_shared<Ports>();
-  for (const auto &port : totalMeters) {
-    if (*port->pseudo_name() == *Connection::Ohmic(GETTER_NAME)) {
-      getters->push_back(port);
-      break;
-    }
-  }
-  ConnectionSP independant = Connection::PlungerGate(DEPENDANT_NAME);
-  InstrumentPortSP independantKnob;
-  for (const auto &port : totalKnobs) {
-    if (*port->pseudo_name() == *independant) {
-      independantKnob = port;
-      break;
-    }
-  }
-  InstrumentPortSP clock;
-  for (const auto &port : totalKnobs) {
-    if (port->instrument_type() == InstrumentTypes::CLOCK) {
-      clock = port;
-      break;
-    }
-  }
+  InstrumentPortSP getter = InstrumentPort::Meter(
+      "analog1_stream", Connection::Ohmic(GETTER_NAME),
+      InstrumentTypes::VOLTMETER, SymbolUnit::MilliVolt(),
+      "Mock multimeter getter");
+  PortsSP getters =
+      std::make_shared<Ports>(std::vector<InstrumentPortSP>{getter});
+
+  // TODO(port_payload): These ports are manually constructed rather than
+  // fetched from the hub via the PORT_PAYLOAD protocol
+  // (RuntimeComms::subscribe_port_payload / FALCON.PORT_PAYLOAD NATS subject).
+  // Once port_payload serialization is stable end-to-end, replace this block
+  // with a request_port_payload() call and remove the manual construction.
+  InstrumentPortSP independantKnob = InstrumentPort::Knob(
+      "analog4_voltage", Connection::PlungerGate(DEPENDANT_NAME),
+      InstrumentTypes::DC_VOLTAGE_SOURCE, SymbolUnit::Volt(),
+      "Mock voltage source knob");
+  InstrumentPortSP clock = InstrumentPort::ExecutionClock();
+
   MapSP<InstrumentPort, PortTransform> transforms =
       std::make_shared<Map<InstrumentPort, PortTransform>>(
           std::vector<std::pair<InstrumentPortSP, PortTransformSP>>{
@@ -385,6 +459,7 @@ TEST_F(DataRetrievalTest, Gaussian1D) {
       std::make_shared<Map<std::string, bool>>(
           std::vector<std::pair<std::string, bool>>{
               {independantKnob->default_name(), true}});
+              
   auto waveform = Waveform::CartesianIdentityWaveform1D(
       NUM_POINTS, coupledDomain, increasing);
   ListSP<Waveform> waveforms =

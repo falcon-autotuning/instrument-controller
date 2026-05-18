@@ -26,7 +26,7 @@ target_link_libraries(integration_tests
 target_compile_definitions(integration_tests
   PRIVATE
     TEST_DATA_DIR="${CMAKE_BINARY_DIR}/test-data"
-    PLUGIN_OUTPUT_DIR="${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
+    PLUGIN_OUTPUT_DIR="${CMAKE_CURRENT_BINARY_DIR}"
 )
 set(PLUGIN_SEARCH_PATHS
     "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}"

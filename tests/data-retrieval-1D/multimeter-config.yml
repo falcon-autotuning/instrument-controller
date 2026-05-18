@@ -1,7 +1,7 @@
 name: MockInstrument1
-api_ref: ../generated-multimeter-api.yml
+api_ref: ../instrument-apis/generated-multimeter-api.yml
 connection:
-  type: Custom
+  type: MockMultimeter
 io_config:
   analog1_stream:
     type: array
