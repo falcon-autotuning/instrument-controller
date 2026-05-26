@@ -29,7 +29,7 @@ local function _int_keep_significant(v: number, n: number): number
   return res
 end
 
-local Mock1Source1 = {}
+Mock1Source1 = {}
 
 --- Set output voltage
 --- @param id string Instrument instance identifier
@@ -47,7 +47,7 @@ function Mock1Source1:setVoltage(id: string, channel: number, voltage: any): any
     context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
   end
   channel = math.floor(channel)
-  return context:call(id .. ':' .. tostring(channel) .. '.SET_VOLTAGE', voltage)
+  return context:call(id .. '.SET_VOLTAGE', {analog = channel, voltage = voltage})
 end
 
 --- Measure DC voltage
@@ -65,7 +65,7 @@ function Mock1Source1:getVoltage(id: string, channel: number): number
     context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
   end
   channel = math.floor(channel)
-  return context:call(id .. ':' .. tostring(channel) .. '.GET_VOLTAGE')
+  return context:call(id .. '.GET_VOLTAGE', {analog = channel})
 end
 
 --- resets the mock instrument

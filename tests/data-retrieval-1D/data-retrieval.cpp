@@ -110,6 +110,8 @@ protected:
                 (LUA_SCRIPTS_DIR / "measure_get_set.lua").string());
     CompileTeal((MEASUREMENT_SCRIPTS_DIR / "set_voltage.tl").string(),
                 (LUA_SCRIPTS_DIR / "set_voltage.lua").string());
+    CompileTeal((MEASUREMENT_SCRIPTS_DIR / "1D Gaussian Noise.tl").string(),
+                (LUA_SCRIPTS_DIR / "1D Gaussian Noise.lua").string());
     SetISSLuaLibs(std::vector<std::filesystem::path>{
         INSTRUMENT_LUA_LIBS_DIR / "multimeter.lua",
         INSTRUMENT_LUA_LIBS_DIR / "source.lua", LUA_LIB_DIR});
@@ -332,7 +334,7 @@ protected:
   }
   void CompileTeal(const std::string &teal_path, const std::string &out_path)
   {
-    std::string cmd = "tl gen " + teal_path + " -o " + out_path;
+    std::string cmd = "tl gen \"" + teal_path + "\" -o \"" + out_path + "\"";
     int ret = std::system(cmd.c_str());
     if (ret != 0)
     {

@@ -1,4 +1,4 @@
-name: MockInstrument1
+name: Meter1
 api_ref: ../instrument-apis/generated-multimeter-api.yml
 connection:
   type: MockMultimeter

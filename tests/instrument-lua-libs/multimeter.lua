@@ -29,7 +29,7 @@ local function _int_keep_significant(v, n)
    return res
 end
 
-local Mock5Meter1 = {}
+Mock5Meter1 = {}
 
 
 
@@ -47,7 +47,7 @@ function Mock5Meter1:setSampleRate(id, channel, sample_rate)
       context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
    end
    channel = math.floor(channel)
-   return context:call(id .. ':' .. tostring(channel) .. '.SET_SAMPLE_RATE', sample_rate)
+   return context:call(id .. '.SET_SAMPLE_RATE', { analog = channel, sample_rate = sample_rate })
 end
 
 
@@ -66,7 +66,7 @@ function Mock5Meter1:setBins(id, channel, bins)
       context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
    end
    channel = math.floor(channel)
-   return context:call(id .. ':' .. tostring(channel) .. '.SET_BINS', bins)
+   return context:call(id .. '.SET_BINS', { analog = channel, bins = bins })
 end
 
 
@@ -84,7 +84,7 @@ function Mock5Meter1:measureStream(id, channel)
       context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
    end
    channel = math.floor(channel)
-   return context:call(id .. ':' .. tostring(channel) .. '.MEASURE_STREAM')
+   return context:call(id .. '.MEASURE_STREAM', { analog = channel })
 end
 
 
@@ -102,7 +102,7 @@ function Mock5Meter1:getDatapoint(id, channel)
       context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
    end
    channel = math.floor(channel)
-   return context:call(id .. ':' .. tostring(channel) .. '.GET_DATAPOINT')
+   return context:call(id .. '.GET_DATAPOINT', { analog = channel })
 end
 
 

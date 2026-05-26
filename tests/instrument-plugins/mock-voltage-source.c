@@ -70,10 +70,10 @@ static int check_param_count(const PluginCommand *cmd, const int expected,
 // Returns 0 on success and sets *out_index, or returns error_code and sets
 // error in resp.
 static int get_param_index(const PluginCommand *cmd, const char *param_name,
-                           int out_index, PluginResponse *resp) {
+                           int *out_index, PluginResponse *resp) {
   for (uint32_t i = 0; i < cmd->param_count; i++) {
     if (strcmp(cmd->params[i].name, param_name) == 0) {
-      out_index = (int)i;
+      *out_index = (int)i;
       return 0;
     }
   }
@@ -90,7 +90,17 @@ static int get_param_index(const PluginCommand *cmd, const char *param_name,
 static int check_param_type(const PluginCommand *cmd, const char *param_name,
                             const int idx, PluginResponse *resp,
                             const int expected_type) {
-  if (cmd->params[idx].value.type != expected_type) {
+  int actual = cmd->params[idx].value.type;
+  // Accept INT64 wherever INT32 is expected (ISS sends INT64 for Lua integers)
+  if (expected_type == PARAM_TYPE_INT32 && actual == PARAM_TYPE_INT64)
+    return 0;
+  // Accept DOUBLE wherever INT32 is expected (ISS sends DOUBLE for all Lua numbers)
+  if (expected_type == PARAM_TYPE_INT32 && actual == PARAM_TYPE_DOUBLE)
+    return 0;
+  // Accept DOUBLE wherever FLOAT is expected (ISS sends DOUBLE for Lua floats)
+  if (expected_type == PARAM_TYPE_FLOAT && actual == PARAM_TYPE_DOUBLE)
+    return 0;
+  if (actual != expected_type) {
     char msg[MOCK_PLUGIN_MAX_PAYLOAD];
     snprintf(msg, MOCK_PLUGIN_MAX_PAYLOAD, "%s parameter has unsupported type",
              param_name);
@@ -98,21 +108,35 @@ static int check_param_type(const PluginCommand *cmd, const char *param_name,
   }
   return 0;
 }
+// Read an integer param that may be INT32, INT64, or DOUBLE
+static int read_int_param(const PluginCommand *cmd, const int idx) {
+  if (cmd->params[idx].value.type == PARAM_TYPE_INT64)
+    return (int)cmd->params[idx].value.value.i64_val;
+  if (cmd->params[idx].value.type == PARAM_TYPE_DOUBLE)
+    return (int)cmd->params[idx].value.value.d_val;
+  return cmd->params[idx].value.value.i32_val;
+}
+// Read a float param that may be FLOAT or DOUBLE
+static float read_float_param(const PluginCommand *cmd, const int idx) {
+  if (cmd->params[idx].value.type == PARAM_TYPE_DOUBLE)
+    return (float)cmd->params[idx].value.value.d_val;
+  return cmd->params[idx].value.value.f_val;
+}
 // Handler for the SET_VOLTAGE command. Expects parameters "voltage" (float) and
 // "analog" (int). Stores the voltage for the specified channel.
 static int handle_set(const PluginCommand *cmd, PluginResponse *resp) {
   int voltage_idx, channel_idx;
   if (check_param_count(cmd, 2, resp) |
-      get_param_index(cmd, VOLTAGE_IO_NAME, voltage_idx, resp) |
-      get_param_index(cmd, ANALOG_IO_NAME, channel_idx, resp) |
+      get_param_index(cmd, VOLTAGE_IO_NAME, &voltage_idx, resp) |
+      get_param_index(cmd, ANALOG_IO_NAME, &channel_idx, resp) |
       check_param_type(cmd, VOLTAGE_IO_NAME, voltage_idx, resp,
                        PARAM_TYPE_FLOAT) |
       check_param_type(cmd, ANALOG_IO_NAME, channel_idx, resp,
                        PARAM_TYPE_INT32)) {
     return resp->error_code;
   }
-  float voltage = cmd->params[voltage_idx].value.value.f_val;
-  int channel = cmd->params[channel_idx].value.value.i32_val;
+  float voltage = read_float_param(cmd, voltage_idx);
+  int channel = read_int_param(cmd, channel_idx);
   int index = getArrayIndex(channel);
   if (index == NULL_CHANNEL) {
     return setPluginError(resp, "Channel out of range (must be 1-32)",
@@ -129,12 +153,12 @@ static int handle_set(const PluginCommand *cmd, PluginResponse *resp) {
 static int handle_get(const PluginCommand *cmd, PluginResponse *resp) {
   int channel_idx;
   if (check_param_count(cmd, 1, resp) |
-      get_param_index(cmd, ANALOG_IO_NAME, channel_idx, resp) |
+      get_param_index(cmd, ANALOG_IO_NAME, &channel_idx, resp) |
       check_param_type(cmd, ANALOG_IO_NAME, channel_idx, resp,
                        PARAM_TYPE_INT32)) {
     return resp->error_code;
   }
-  int channel = cmd->params[channel_idx].value.value.i32_val;
+  int channel = read_int_param(cmd, channel_idx);
   int index = getArrayIndex(channel);
   if (index == NULL_CHANNEL) {
     return setPluginError(resp, "Channel out of range (must be 1-32)",

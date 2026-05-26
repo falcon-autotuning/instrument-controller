@@ -29,7 +29,7 @@ local function _int_keep_significant(v, n)
    return res
 end
 
-local Mock1Source1 = {}
+Mock1Source1 = {}
 
 
 
@@ -47,7 +47,7 @@ function Mock1Source1:setVoltage(id, channel, voltage)
       context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
    end
    channel = math.floor(channel)
-   return context:call(id .. ':' .. tostring(channel) .. '.SET_VOLTAGE', voltage)
+   return context:call(id .. '.SET_VOLTAGE', { analog = channel, voltage = voltage })
 end
 
 
@@ -65,7 +65,7 @@ function Mock1Source1:getVoltage(id, channel)
       context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
    end
    channel = math.floor(channel)
-   return context:call(id .. ':' .. tostring(channel) .. '.GET_VOLTAGE')
+   return context:call(id .. '.GET_VOLTAGE', { analog = channel })
 end
 
 

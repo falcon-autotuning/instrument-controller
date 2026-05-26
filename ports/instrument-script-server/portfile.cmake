@@ -1,16 +1,18 @@
-vcpkg_from_github(
-    OUT_SOURCE_PATH SOURCE_PATH
-    REPO falcon-autotuning/instrument-script-server
-    REF v${VERSION}
-    SHA512 b303f1ab4d7051b7df81c5f7f80328fd68a457ea17236ea1ed616fd69738dc10470d2d11a5461a3fd798e50de9eda42ac71f40f703aff34b114d24ff6b8f2ac7
-)
-
-# Local workspace override for shutdown-order stability fix in ProcessManager singleton.
-# Keep the overlay port self-contained by injecting the patched source file.
+# Use the local workspace source when available, otherwise download from GitHub.
+# This avoids needing a new GitHub release every time the ISS changes locally.
 get_filename_component(WORKSPACE_ROOT "${CURRENT_PORT_DIR}/../../.." ABSOLUTE)
-set(ISS_PROXY_SRC_OVERRIDE "${WORKSPACE_ROOT}/instrument-script-server/src/server/InstrumentWorkerProxy.cpp")
-if(EXISTS "${ISS_PROXY_SRC_OVERRIDE}")
-    file(COPY "${ISS_PROXY_SRC_OVERRIDE}" DESTINATION "${SOURCE_PATH}/src/server")
+set(_LOCAL_ISS_DIR "${WORKSPACE_ROOT}/instrument-script-server")
+if(EXISTS "${_LOCAL_ISS_DIR}/CMakeLists.txt")
+    message(STATUS "instrument-script-server: using local workspace source at ${_LOCAL_ISS_DIR}")
+    set(SOURCE_PATH "${_LOCAL_ISS_DIR}")
+else()
+    message(STATUS "instrument-script-server: local workspace not found, downloading v${VERSION} from GitHub")
+    vcpkg_from_github(
+        OUT_SOURCE_PATH SOURCE_PATH
+        REPO falcon-autotuning/instrument-script-server
+        REF v${VERSION}
+        SHA512 b303f1ab4d7051b7df81c5f7f80328fd68a457ea17236ea1ed616fd69738dc10470d2d11a5461a3fd798e50de9eda42ac71f40f703aff34b114d24ff6b8f2ac7
+    )
 endif()
 
 vcpkg_cmake_configure(

@@ -29,7 +29,7 @@ local function _int_keep_significant(v: number, n: number): number
   return res
 end
 
-local Mock5Meter1 = {}
+Mock5Meter1 = {}
 
 --- Set the sample rate
 --- @param id string Instrument instance identifier
@@ -47,7 +47,7 @@ function Mock5Meter1:setSampleRate(id: string, channel: number, sample_rate: any
     context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
   end
   channel = math.floor(channel)
-  return context:call(id .. ':' .. tostring(channel) .. '.SET_SAMPLE_RATE', sample_rate)
+  return context:call(id .. '.SET_SAMPLE_RATE', {analog = channel, sample_rate = sample_rate})
 end
 
 --- Set the number of bins to average for each data point
@@ -66,7 +66,7 @@ function Mock5Meter1:setBins(id: string, channel: number, bins: any): any
     context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
   end
   channel = math.floor(channel)
-  return context:call(id .. ':' .. tostring(channel) .. '.SET_BINS', bins)
+  return context:call(id .. '.SET_BINS', {analog = channel, bins = bins})
 end
 
 --- Set output voltage
@@ -84,7 +84,7 @@ function Mock5Meter1:measureStream(id: string, channel: number): MeasureResponse
     context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
   end
   channel = math.floor(channel)
-  return context:call(id .. ':' .. tostring(channel) .. '.MEASURE_STREAM')
+  return context:call(id .. '.MEASURE_STREAM', {analog = channel})
 end
 
 --- Measure a single data point
@@ -102,7 +102,7 @@ function Mock5Meter1:getDatapoint(id: string, channel: number): number
     context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
   end
   channel = math.floor(channel)
-  return context:call(id .. ':' .. tostring(channel) .. '.GET_DATAPOINT')
+  return context:call(id .. '.GET_DATAPOINT', {analog = channel})
 end
 
 --- resets the mock instrument
