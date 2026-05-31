@@ -15,6 +15,7 @@
       "version>=": "1.2.4"
     },
     "instrument-script-server",
+    "instrument-data",
     "gtest",
     "teal-api-gen",
     "falcon-instrument-hub",

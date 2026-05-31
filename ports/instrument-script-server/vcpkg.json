@@ -1,7 +1,7 @@
 {
   "name": "instrument-script-server",
   "version-string": "1.1.7",
-  "port-version": 8,
+  "port-version": 13,
   "description": "a modular, process-isolated system for controlling scientific instruments for FAlCon use",
   "builtin-baseline": "e5a1490e1409d175932ef6014519e9ae149ddb7c",
   "dependencies": [
@@ -13,6 +13,7 @@
     "sol2",
     "yaml-cpp",
     "boost-interprocess",
-    "boost-date-time"
+    "boost-date-time",
+    "instrument-data"
   ]
 }
