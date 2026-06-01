@@ -1,0 +1,1704 @@
+Bootstrapping vcpkg...
+MAKELEVEL=0 cmake -P cmake/bootstrap/bootstrap-vcpkg.cmake
+-- Using local project vcpkg: /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg
+-- ✓ vcpkg executable found at: /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/vcpkg
+-- ✓ vcpkg triplets found at: /home/zdm2/Documents/github/FAlCon/instrument-controller/my-vcpkg-triplets
+-- Reading preset 'linux-clang-release' from CMakePresets.json...
+-- ✓ Found triplet from preset: x64-linux-dynamic
+-- ✓ Found C compiler: clang
+-- ✓ Found CXX compiler: clang++
+-- Loading NuGet credentials from /home/zdm2/Documents/github/FAlCon/instrument-controller/.nuget-credentials
+-- Setting up NuGet authentication for vcpkg binary caching...
+-- ==== DEBUG: NUGET_EXE (parsed) = /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/downloads/tools/nuget-7.3.1-linux/nuget.exe
+Package source with Name: cpp-cache removed successfully.
+Package source with Name: cpp-cache added successfully.
+-- ✓ NuGet authentication configured
+-- Installing vcpkg dependencies for triplet: x64-linux-dynamic...
+-- Using overlay ports from: /home/zdm2/Documents/github/FAlCon/instrument-controller/ports
+-- Using overlay triplets from: /home/zdm2/Documents/github/FAlCon/instrument-controller/my-vcpkg-triplets
+Detecting compiler hash for triplet x64-linux...
+Compiler found: /usr/bin/clang++
+Detecting compiler hash for triplet x64-linux-dynamic...
+Compiler found: /usr/bin/clang++
+The following packages will be rebuilt:
+  * abseil:x64-linux@20250814.1
+  * abseil:x64-linux-dynamic@20250814.1
+  * boost-algorithm:x64-linux-dynamic@1.90.0#1
+  * boost-align:x64-linux-dynamic@1.90.0#1
+  * boost-array:x64-linux-dynamic@1.90.0#1
+  * boost-assert:x64-linux-dynamic@1.90.0#1
+  * boost-atomic:x64-linux-dynamic@1.90.0#1
+  * boost-bind:x64-linux-dynamic@1.90.0#1
+  * boost-cmake:x64-linux-dynamic@1.90.0#1
+  * boost-concept-check:x64-linux-dynamic@1.90.0#1
+  * boost-config:x64-linux-dynamic@1.90.0#1
+  * boost-container:x64-linux-dynamic@1.90.0#1
+  * boost-container-hash:x64-linux-dynamic@1.90.0#1
+  * boost-conversion:x64-linux-dynamic@1.90.0#1
+  * boost-core:x64-linux-dynamic@1.90.0#1
+  * boost-date-time:x64-linux-dynamic@1.90.0#1
+  * boost-describe:x64-linux-dynamic@1.90.0#1
+  * boost-detail:x64-linux-dynamic@1.90.0#1
+  * boost-exception:x64-linux-dynamic@1.90.0#1
+  * boost-filesystem:x64-linux-dynamic@1.90.0#1
+  * boost-function:x64-linux-dynamic@1.90.0#1
+  * boost-function-types:x64-linux-dynamic@1.90.0#1
+  * boost-functional:x64-linux-dynamic@1.90.0#1
+  * boost-fusion:x64-linux-dynamic@1.90.0#1
+  * boost-headers:x64-linux-dynamic@1.90.0#1
+  * boost-interprocess:x64-linux-dynamic@1.90.0#1
+  * boost-intrusive:x64-linux-dynamic@1.90.0#1
+  * boost-io:x64-linux-dynamic@1.90.0#1
+  * boost-iterator:x64-linux-dynamic@1.90.0#1
+  * boost-lexical-cast:x64-linux-dynamic@1.90.0#1
+  * boost-move:x64-linux-dynamic@1.90.0#1
+  * boost-mp11:x64-linux-dynamic@1.90.0#1
+  * boost-mpl:x64-linux-dynamic@1.90.0#1
+  * boost-numeric-conversion:x64-linux-dynamic@1.90.0#1
+  * boost-optional:x64-linux-dynamic@1.90.0#1
+  * boost-predef:x64-linux-dynamic@1.90.0#1
+  * boost-preprocessor:x64-linux-dynamic@1.90.0#1
+  * boost-range:x64-linux-dynamic@1.90.0#1
+  * boost-regex:x64-linux-dynamic@1.90.0#1
+  * boost-scope:x64-linux-dynamic@1.90.0#1
+  * boost-smart-ptr:x64-linux-dynamic@1.90.0#1
+  * boost-static-assert:x64-linux-dynamic@1.90.0#1
+  * boost-system:x64-linux-dynamic@1.90.0#1
+  * boost-throw-exception:x64-linux-dynamic@1.90.0#1
+  * boost-tokenizer:x64-linux-dynamic@1.90.0#1
+  * boost-tuple:x64-linux-dynamic@1.90.0#1
+  * boost-type-traits:x64-linux-dynamic@1.90.0#1
+  * boost-typeof:x64-linux-dynamic@1.90.0#1
+  * boost-uninstall:x64-linux-dynamic@1.90.0#1
+  * boost-unordered:x64-linux-dynamic@1.90.0#1
+  * boost-utility:x64-linux-dynamic@1.90.0#1
+  * boost-uuid:x64-linux-dynamic@1.90.0#1
+  * boost-variant2:x64-linux-dynamic@1.90.0#1
+  * boost-winapi:x64-linux-dynamic@1.90.0#1
+  * cereal:x64-linux-dynamic@1.3.2#1
+  * cereal-xtensor:x64-linux-dynamic@1.3.2 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/cereal-xtensor
+  * cnats:x64-linux-dynamic@3.12.0
+  * dirent:x64-linux-dynamic@1.26
+  * exprtk:x64-linux-dynamic@0.0.3
+  * falcon-comms:x64-linux-dynamic@1.0.10#8 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-comms
+    falcon-core[c-api,core]:x64-linux-dynamic@1.2.13 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-core
+  * falcon-database:x64-linux-dynamic@1.0.7 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-database
+    falcon-instrument-hub:x64-linux-dynamic@1.0.18#32 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-instrument-hub
+    falcon-measurement-lib:x64-linux-dynamic@1.0.2 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-measurement-lib
+    falcon-routine:x64-linux-dynamic@1.0.5#3 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-routine
+  * fmt:x64-linux-dynamic@12.1.0
+  * gettext[core,tools]:x64-linux@0.22.5#4
+  * gettext-libintl:x64-linux@0.22.5#4
+  * gettext-libintl:x64-linux-dynamic@0.22.5#4
+    glib:x64-linux-dynamic@2.86.3
+    gtest:x64-linux-dynamic@1.17.0#2
+  * hdf5[core,cpp,hl,szip,zlib]:x64-linux-dynamic@2.0.0
+  * highfive:x64-linux-dynamic@3.3.0
+    instrument-data:x64-linux-dynamic@1.0.2 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/instrument-data
+    instrument-script-server:x64-linux-dynamic@1.1.7#13 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/instrument-script-server
+    isa-test-utils:x64-linux-dynamic@1.0.4 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/isa-test-utils
+  * libaec:x64-linux-dynamic@1.1.5
+  * libffi:x64-linux-dynamic@3.5.2
+  * libiconv:x64-linux-dynamic@1.18#3
+  * libiconv:x64-linux@1.18#3
+  * libpq[core,lz4,openssl,zlib]:x64-linux-dynamic@16.9#3
+  * libpqxx:x64-linux-dynamic@7.10.5
+  * libsodium:x64-linux-dynamic@1.0.21
+  * lua:x64-linux-dynamic@5.5.0#1
+  * lz4:x64-linux-dynamic@1.10.0
+  * nlohmann-json:x64-linux-dynamic@3.12.0#2
+  * openssl:x64-linux-dynamic@3.6.1#2
+  * pcre2[core,jit,platform-default-features]:x64-linux-dynamic@10.47
+  * protobuf:x64-linux-dynamic@6.33.4#1
+  * protobuf:x64-linux@6.33.4#1
+  * protobuf-c:x64-linux-dynamic@1.5.2
+  * sol2:x64-linux-dynamic@3.5.0#1
+  * spdlog[core,fmt,tz-offset]:x64-linux-dynamic@1.17.0
+    teal-api-gen:x64-linux-dynamic@1.0.1#1 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/teal-api-gen
+  * utf8-range:x64-linux@6.33.4
+  * utf8-range:x64-linux-dynamic@6.33.4
+  * uthash:x64-linux-dynamic@2.3.0
+  * vcpkg-boost:x64-linux@2025-03-29
+  * vcpkg-cmake:x64-linux@2024-04-23
+  * vcpkg-cmake:x64-linux-dynamic@2024-04-23
+  * vcpkg-cmake-config:x64-linux@2024-05-23
+  * vcpkg-cmake-config:x64-linux-dynamic@2024-05-23
+  * vcpkg-cmake-get-vars:x64-linux@2025-05-29
+  * vcpkg-make:x64-linux@2026-01-01
+  * vcpkg-tool-meson:x64-linux@1.9.0#3
+  * xsimd:x64-linux-dynamic@14.0.0
+  * xtensor:x64-linux-dynamic@0.25.0
+  * xtensor-io:x64-linux-dynamic@0.13.0#1
+  * xtl:x64-linux-dynamic@0.7.5
+  * yaml-cpp:x64-linux-dynamic@0.9.0
+  * zlib:x64-linux-dynamic@1.3.1
+Additional packages (*) will be modified to complete this operation.
+Restored 110 package(s) from /home/zdm2/.cache/vcpkg/archives in 2.7 s. Use --debug to see more details.
+warning: /usr/bin/mono /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/downloads/tools/nuget-7.3.1-linux/nuget.exe install -ForceEnglishOutput -Verbosity detailed -NonInteractive /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/buildtrees/packages.config -OutputDirectory /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/packages -ExcludeVersion -PreRelease -PackageSaveMode nupkg -DirectDownload -NoCache -Source https://pkgs.dev.azure.com/falcon-autotuning/falcon/_packaging/cpp-cache/nuget/v3/index.json failed with exit code 1
+note: One or more NuGet credential providers failed to authenticate. See 'https://learn.microsoft.com/vcpkg/users/binarycaching-troubleshooting?WT.mc_id=vcpkg_inproduct_cli' for more details on how to provide credentials.
+Restored 0 package(s) from NuGet in 16 s. Use --debug to see more details.
+Removing 1/222 instrument-script-server:x64-linux-dynamic
+Elapsed time to handle instrument-script-server:x64-linux-dynamic: 3.32 ms
+Removing 2/222 instrument-data:x64-linux-dynamic
+Elapsed time to handle instrument-data:x64-linux-dynamic: 2.06 ms
+Removing 3/222 uthash:x64-linux-dynamic
+Elapsed time to handle uthash:x64-linux-dynamic: 420 us
+Removing 4/222 isa-test-utils:x64-linux-dynamic
+Elapsed time to handle isa-test-utils:x64-linux-dynamic: 2.31 ms
+Removing 5/222 glib:x64-linux-dynamic
+Elapsed time to handle glib:x64-linux-dynamic: 13.2 ms
+Removing 6/222 dirent:x64-linux-dynamic
+Elapsed time to handle dirent:x64-linux-dynamic: 291 us
+Removing 7/222 gettext:x64-linux
+Elapsed time to handle gettext:x64-linux: 6.1 ms
+Removing 8/222 gettext-libintl:x64-linux
+Elapsed time to handle gettext-libintl:x64-linux: 246 us
+Removing 9/222 libiconv:x64-linux
+Elapsed time to handle libiconv:x64-linux: 309 us
+Removing 10/222 gettext-libintl:x64-linux-dynamic
+Elapsed time to handle gettext-libintl:x64-linux-dynamic: 243 us
+Removing 11/222 libffi:x64-linux-dynamic
+Elapsed time to handle libffi:x64-linux-dynamic: 727 us
+Removing 12/222 vcpkg-make:x64-linux
+Elapsed time to handle vcpkg-make:x64-linux: 647 us
+Removing 13/222 libiconv:x64-linux-dynamic
+Elapsed time to handle libiconv:x64-linux-dynamic: 225 us
+Removing 14/222 pcre2:x64-linux-dynamic
+Elapsed time to handle pcre2:x64-linux-dynamic: 2.22 ms
+Removing 15/222 vcpkg-tool-meson:x64-linux
+Elapsed time to handle vcpkg-tool-meson:x64-linux: 530 us
+Removing 16/222 teal-api-gen:x64-linux-dynamic
+Elapsed time to handle teal-api-gen:x64-linux-dynamic: 1.61 ms
+Removing 17/222 boost-date-time:x64-linux-dynamic
+Elapsed time to handle boost-date-time:x64-linux-dynamic: 4.14 ms
+Removing 18/222 boost-algorithm:x64-linux-dynamic
+Elapsed time to handle boost-algorithm:x64-linux-dynamic: 4.96 ms
+Removing 19/222 boost-exception:x64-linux-dynamic
+Elapsed time to handle boost-exception:x64-linux-dynamic: 611 us
+Removing 20/222 boost-unordered:x64-linux-dynamic
+Elapsed time to handle boost-unordered:x64-linux-dynamic: 953 us
+Removing 21/222 boost-lexical-cast:x64-linux-dynamic
+Elapsed time to handle boost-lexical-cast:x64-linux-dynamic: 449 us
+Removing 22/222 boost-numeric-conversion:x64-linux-dynamic
+Elapsed time to handle boost-numeric-conversion:x64-linux-dynamic: 1.73 ms
+Removing 23/222 boost-range:x64-linux-dynamic
+Elapsed time to handle boost-range:x64-linux-dynamic: 2.8 ms
+Removing 24/222 boost-array:x64-linux-dynamic
+Elapsed time to handle boost-array:x64-linux-dynamic: 528 us
+Removing 25/222 boost-conversion:x64-linux-dynamic
+Elapsed time to handle boost-conversion:x64-linux-dynamic: 289 us
+Removing 26/222 boost-regex:x64-linux-dynamic
+Elapsed time to handle boost-regex:x64-linux-dynamic: 2.52 ms
+Removing 27/222 boost-tokenizer:x64-linux-dynamic
+Elapsed time to handle boost-tokenizer:x64-linux-dynamic: 1.05 ms
+Removing 28/222 boost-interprocess:x64-linux-dynamic
+Elapsed time to handle boost-interprocess:x64-linux-dynamic: 9.65 ms
+Removing 29/222 boost-container:x64-linux-dynamic
+Elapsed time to handle boost-container:x64-linux-dynamic: 3.86 ms
+Removing 30/222 boost-intrusive:x64-linux-dynamic
+Elapsed time to handle boost-intrusive:x64-linux-dynamic: 3.87 ms
+Removing 31/222 boost-move:x64-linux-dynamic
+Elapsed time to handle boost-move:x64-linux-dynamic: 1.04 ms
+Removing 32/222 lua:x64-linux-dynamic
+Elapsed time to handle lua:x64-linux-dynamic: 443 us
+Removing 33/222 sol2:x64-linux-dynamic
+Elapsed time to handle sol2:x64-linux-dynamic: 2.77 ms
+Removing 34/222 gtest:x64-linux-dynamic
+Elapsed time to handle gtest:x64-linux-dynamic: 1.16 ms
+Removing 35/222 falcon-routine:x64-linux-dynamic
+Elapsed time to handle falcon-routine:x64-linux-dynamic: 420 us
+Removing 36/222 falcon-comms:x64-linux-dynamic
+Elapsed time to handle falcon-comms:x64-linux-dynamic: 500 us
+Removing 37/222 cnats:x64-linux-dynamic
+Elapsed time to handle cnats:x64-linux-dynamic: 1.78 ms
+Removing 38/222 libsodium:x64-linux-dynamic
+Elapsed time to handle libsodium:x64-linux-dynamic: 1.37 ms
+Removing 39/222 protobuf-c:x64-linux-dynamic
+Elapsed time to handle protobuf-c:x64-linux-dynamic: 621 us
+Removing 40/222 protobuf:x64-linux-dynamic
+Elapsed time to handle protobuf:x64-linux-dynamic: 9.33 ms
+Removing 41/222 protobuf:x64-linux
+Elapsed time to handle protobuf:x64-linux: 17 ms
+Removing 42/222 utf8-range:x64-linux
+Elapsed time to handle utf8-range:x64-linux: 441 us
+Removing 43/222 abseil:x64-linux
+Elapsed time to handle abseil:x64-linux: 24.1 ms
+Removing 44/222 utf8-range:x64-linux-dynamic
+Elapsed time to handle utf8-range:x64-linux-dynamic: 1.14 ms
+Removing 45/222 abseil:x64-linux-dynamic
+Elapsed time to handle abseil:x64-linux-dynamic: 42 ms
+Removing 46/222 falcon-database:x64-linux-dynamic
+Elapsed time to handle falcon-database:x64-linux-dynamic: 1.44 ms
+Removing 47/222 libpqxx:x64-linux-dynamic
+Elapsed time to handle libpqxx:x64-linux-dynamic: 4.69 ms
+Removing 48/222 libpq:x64-linux-dynamic
+Elapsed time to handle libpq:x64-linux-dynamic: 25.6 ms
+Removing 49/222 lz4:x64-linux-dynamic
+Elapsed time to handle lz4:x64-linux-dynamic: 491 us
+Removing 50/222 openssl:x64-linux-dynamic
+Elapsed time to handle openssl:x64-linux-dynamic: 3.61 ms
+Removing 51/222 vcpkg-cmake-get-vars:x64-linux
+Elapsed time to handle vcpkg-cmake-get-vars:x64-linux: 254 us
+Removing 52/222 spdlog:x64-linux-dynamic
+Elapsed time to handle spdlog:x64-linux-dynamic: 2.62 ms
+Removing 53/222 fmt:x64-linux-dynamic
+Elapsed time to handle fmt:x64-linux-dynamic: 1.17 ms
+Removing 54/222 falcon-measurement-lib:x64-linux-dynamic
+Elapsed time to handle falcon-measurement-lib:x64-linux-dynamic: 689 us
+Removing 55/222 falcon-instrument-hub:x64-linux-dynamic
+Elapsed time to handle falcon-instrument-hub:x64-linux-dynamic: 834 us
+Removing 56/222 falcon-core:x64-linux-dynamic
+Elapsed time to handle falcon-core:x64-linux-dynamic: 43.1 ms
+Removing 57/222 boost-filesystem:x64-linux-dynamic
+Elapsed time to handle boost-filesystem:x64-linux-dynamic: 578 us
+Removing 58/222 boost-atomic:x64-linux-dynamic
+Elapsed time to handle boost-atomic:x64-linux-dynamic: 1.63 ms
+Removing 59/222 boost-align:x64-linux-dynamic
+Elapsed time to handle boost-align:x64-linux-dynamic: 1.13 ms
+Removing 60/222 boost-iterator:x64-linux-dynamic
+Elapsed time to handle boost-iterator:x64-linux-dynamic: 1.41 ms
+Removing 61/222 boost-concept-check:x64-linux-dynamic
+Elapsed time to handle boost-concept-check:x64-linux-dynamic: 470 us
+Removing 62/222 boost-fusion:x64-linux-dynamic
+Elapsed time to handle boost-fusion:x64-linux-dynamic: 28 ms
+Removing 63/222 boost-container-hash:x64-linux-dynamic
+Elapsed time to handle boost-container-hash:x64-linux-dynamic: 829 us
+Removing 64/222 boost-describe:x64-linux-dynamic
+Elapsed time to handle boost-describe:x64-linux-dynamic: 536 us
+Removing 65/222 boost-functional:x64-linux-dynamic
+Elapsed time to handle boost-functional:x64-linux-dynamic: 389 us
+Removing 66/222 boost-function:x64-linux-dynamic
+Elapsed time to handle boost-function:x64-linux-dynamic: 1.82 ms
+Removing 67/222 boost-bind:x64-linux-dynamic
+Elapsed time to handle boost-bind:x64-linux-dynamic: 1.33 ms
+Removing 68/222 boost-function-types:x64-linux-dynamic
+Elapsed time to handle boost-function-types:x64-linux-dynamic: 1.83 ms
+Removing 69/222 boost-detail:x64-linux-dynamic
+Elapsed time to handle boost-detail:x64-linux-dynamic: 1.6 ms
+Removing 70/222 boost-tuple:x64-linux-dynamic
+Elapsed time to handle boost-tuple:x64-linux-dynamic: 2.94 ms
+Removing 71/222 boost-typeof:x64-linux-dynamic
+Elapsed time to handle boost-typeof:x64-linux-dynamic: 2.58 ms
+Removing 72/222 boost-mpl:x64-linux-dynamic
+Elapsed time to handle boost-mpl:x64-linux-dynamic: 76.1 ms
+Removing 73/222 boost-optional:x64-linux-dynamic
+Elapsed time to handle boost-optional:x64-linux-dynamic: 3.15 ms
+Removing 74/222 boost-utility:x64-linux-dynamic
+Elapsed time to handle boost-utility:x64-linux-dynamic: 6.77 ms
+Removing 75/222 boost-io:x64-linux-dynamic
+Elapsed time to handle boost-io:x64-linux-dynamic: 2.69 ms
+Removing 76/222 boost-preprocessor:x64-linux-dynamic
+Elapsed time to handle boost-preprocessor:x64-linux-dynamic: 33.8 ms
+Removing 77/222 boost-scope:x64-linux-dynamic
+Elapsed time to handle boost-scope:x64-linux-dynamic: 3.77 ms
+Removing 78/222 boost-smart-ptr:x64-linux-dynamic
+Elapsed time to handle boost-smart-ptr:x64-linux-dynamic: 7.12 ms
+Removing 79/222 boost-core:x64-linux-dynamic
+Elapsed time to handle boost-core:x64-linux-dynamic: 7.65 ms
+Removing 80/222 boost-system:x64-linux-dynamic
+Elapsed time to handle boost-system:x64-linux-dynamic: 3.98 ms
+Removing 81/222 boost-variant2:x64-linux-dynamic
+Elapsed time to handle boost-variant2:x64-linux-dynamic: 1.78 ms
+Removing 82/222 boost-mp11:x64-linux-dynamic
+Elapsed time to handle boost-mp11:x64-linux-dynamic: 3.62 ms
+Removing 83/222 boost-winapi:x64-linux-dynamic
+Elapsed time to handle boost-winapi:x64-linux-dynamic: 10.2 ms
+Removing 84/222 boost-predef:x64-linux-dynamic
+Elapsed time to handle boost-predef:x64-linux-dynamic: 21 ms
+Removing 85/222 boost-uuid:x64-linux-dynamic
+Elapsed time to handle boost-uuid:x64-linux-dynamic: 7.84 ms
+Removing 86/222 boost-throw-exception:x64-linux-dynamic
+Elapsed time to handle boost-throw-exception:x64-linux-dynamic: 2.58 ms
+Removing 87/222 boost-assert:x64-linux-dynamic
+Elapsed time to handle boost-assert:x64-linux-dynamic: 3.1 ms
+Removing 88/222 boost-type-traits:x64-linux-dynamic
+Elapsed time to handle boost-type-traits:x64-linux-dynamic: 24 ms
+Removing 89/222 boost-static-assert:x64-linux-dynamic
+Elapsed time to handle boost-static-assert:x64-linux-dynamic: 1.38 ms
+Removing 90/222 boost-config:x64-linux-dynamic
+Elapsed time to handle boost-config:x64-linux-dynamic: 19.8 ms
+Removing 91/222 boost-headers:x64-linux-dynamic
+Elapsed time to handle boost-headers:x64-linux-dynamic: 1.9 ms
+Removing 92/222 boost-cmake:x64-linux-dynamic
+Elapsed time to handle boost-cmake:x64-linux-dynamic: 1.33 ms
+Removing 93/222 boost-uninstall:x64-linux-dynamic
+Elapsed time to handle boost-uninstall:x64-linux-dynamic: 1.23 ms
+Removing 94/222 vcpkg-boost:x64-linux
+Elapsed time to handle vcpkg-boost:x64-linux: 1.2 ms
+Removing 95/222 cereal-xtensor:x64-linux-dynamic
+Elapsed time to handle cereal-xtensor:x64-linux-dynamic: 3.58 ms
+Removing 96/222 cereal:x64-linux-dynamic
+Elapsed time to handle cereal:x64-linux-dynamic: 5.51 ms
+Removing 97/222 exprtk:x64-linux-dynamic
+Elapsed time to handle exprtk:x64-linux-dynamic: 838 us
+Removing 98/222 highfive:x64-linux-dynamic
+Elapsed time to handle highfive:x64-linux-dynamic: 4.67 ms
+Removing 99/222 hdf5:x64-linux-dynamic
+Elapsed time to handle hdf5:x64-linux-dynamic: 17.9 ms
+Removing 100/222 libaec:x64-linux-dynamic
+Elapsed time to handle libaec:x64-linux-dynamic: 3.18 ms
+Removing 101/222 zlib:x64-linux-dynamic
+Elapsed time to handle zlib:x64-linux-dynamic: 2.79 ms
+Removing 102/222 vcpkg-cmake:x64-linux-dynamic
+Elapsed time to handle vcpkg-cmake:x64-linux-dynamic: 749 us
+Removing 103/222 vcpkg-cmake-config:x64-linux-dynamic
+Elapsed time to handle vcpkg-cmake-config:x64-linux-dynamic: 632 us
+Removing 104/222 xsimd:x64-linux-dynamic
+Elapsed time to handle xsimd:x64-linux-dynamic: 9.97 ms
+Removing 105/222 xtensor-io:x64-linux-dynamic
+Elapsed time to handle xtensor-io:x64-linux-dynamic: 4.5 ms
+Removing 106/222 xtensor:x64-linux-dynamic
+Elapsed time to handle xtensor:x64-linux-dynamic: 3.88 ms
+Removing 107/222 xtl:x64-linux-dynamic
+Elapsed time to handle xtl:x64-linux-dynamic: 1.9 ms
+Removing 108/222 nlohmann-json:x64-linux-dynamic
+Elapsed time to handle nlohmann-json:x64-linux-dynamic: 3.32 ms
+Removing 109/222 yaml-cpp:x64-linux-dynamic
+Elapsed time to handle yaml-cpp:x64-linux-dynamic: 9.27 ms
+Removing 110/222 vcpkg-cmake:x64-linux
+Elapsed time to handle vcpkg-cmake:x64-linux: 788 us
+Removing 111/222 vcpkg-cmake-config:x64-linux
+Elapsed time to handle vcpkg-cmake-config:x64-linux: 740 us
+Installing 112/222 vcpkg-cmake-config:x64-linux@2024-05-23...
+vcpkg-cmake-config:x64-linux@2024-05-23 package ABI: 269c07e1fc6da55e8fb9ea476feac2ba09ebe12cd09b1c3abaaa239ebb70cb4a
+Elapsed time to handle vcpkg-cmake-config:x64-linux: 3.04 ms
+Installing 113/222 vcpkg-cmake:x64-linux@2024-04-23...
+vcpkg-cmake:x64-linux@2024-04-23 package ABI: 4ccd4d175aeba43321eb8ca45e4acffc4933901d57d822c9173f5c360a6ae918
+Elapsed time to handle vcpkg-cmake:x64-linux: 5.75 ms
+Installing 114/222 yaml-cpp:x64-linux-dynamic@0.9.0...
+yaml-cpp:x64-linux-dynamic@0.9.0 package ABI: f2444cd75ef5656113000b9b1e23ddaaeace433409e51e2b91cd5d8bfac58c53
+Elapsed time to handle yaml-cpp:x64-linux-dynamic: 6.12 ms
+Installing 115/222 nlohmann-json:x64-linux-dynamic@3.12.0#2...
+nlohmann-json:x64-linux-dynamic@3.12.0#2 package ABI: c3d389a236aeab3f4e7abf5baafcf11a48f88ac32a12bbad3779f21759ab1c7c
+Elapsed time to handle nlohmann-json:x64-linux-dynamic: 3.66 ms
+Installing 116/222 xtl:x64-linux-dynamic@0.7.5...
+xtl:x64-linux-dynamic@0.7.5 package ABI: ab0436b9b23dac9b6f3b8dacf855cf1ce85c1224051b5d2ee13946f810b8c119
+Elapsed time to handle xtl:x64-linux-dynamic: 3.75 ms
+Installing 117/222 xtensor:x64-linux-dynamic@0.25.0...
+xtensor:x64-linux-dynamic@0.25.0 package ABI: 825ca1b1d626715bbf1d2486e03603e091f2d9bad2314ef76377d920623f308e
+Elapsed time to handle xtensor:x64-linux-dynamic: 8.28 ms
+Installing 118/222 xtensor-io:x64-linux-dynamic@0.13.0#1...
+xtensor-io:x64-linux-dynamic@0.13.0#1 package ABI: b1e8b627dac3a1f0e631b9ebe7a752021a91fed1dc4eb3cbe8662bef83cb416d
+Elapsed time to handle xtensor-io:x64-linux-dynamic: 2.77 ms
+Installing 119/222 xsimd:x64-linux-dynamic@14.0.0...
+xsimd:x64-linux-dynamic@14.0.0 package ABI: 0c6b315a85f9b2393211a3a0bd10bd907a851071dd46c653c5ad6d939277a360
+Elapsed time to handle xsimd:x64-linux-dynamic: 13.6 ms
+Installing 120/222 vcpkg-cmake-config:x64-linux-dynamic@2024-05-23...
+vcpkg-cmake-config:x64-linux-dynamic@2024-05-23 package ABI: a72a2c243ff988c5deffa101d3b67b28f89f7bf86d02159e44ff0b4c27bf10ec
+Elapsed time to handle vcpkg-cmake-config:x64-linux-dynamic: 4.59 ms
+Installing 121/222 vcpkg-cmake:x64-linux-dynamic@2024-04-23...
+vcpkg-cmake:x64-linux-dynamic@2024-04-23 package ABI: 340b1b141b1a1ea6b3016cd0508d1c1976a8cdd6217f78e31fcc6d248cd293cd
+Elapsed time to handle vcpkg-cmake:x64-linux-dynamic: 6.59 ms
+Installing 122/222 zlib:x64-linux-dynamic@1.3.1...
+zlib:x64-linux-dynamic@1.3.1 package ABI: c9238679cc94e78566cf60ddf66ddd146c82e46b289073aa8d007188eb45fe5b
+Elapsed time to handle zlib:x64-linux-dynamic: 5.98 ms
+Installing 123/222 libaec:x64-linux-dynamic@1.1.5...
+libaec:x64-linux-dynamic@1.1.5 package ABI: 06ff42ee76f17529d8a10f1553209b4a615ffac0c6e0dc545072c6a77e5173ec
+Elapsed time to handle libaec:x64-linux-dynamic: 3.83 ms
+Installing 124/222 hdf5[core,cpp,hl,szip,zlib]:x64-linux-dynamic@2.0.0...
+hdf5[core,cpp,hl,szip,zlib]:x64-linux-dynamic@2.0.0 package ABI: 2983b6eb7a90fcdad088972e26c56952fc97d89f572844e16a82d1ebc0d8c426
+Elapsed time to handle hdf5:x64-linux-dynamic: 17.9 ms
+Installing 125/222 highfive:x64-linux-dynamic@3.3.0...
+highfive:x64-linux-dynamic@3.3.0 package ABI: 0189e2162476b3978fb3247115dd1847ef4b1a76d203222170ee6ad921cd86b3
+Elapsed time to handle highfive:x64-linux-dynamic: 12.2 ms
+Installing 126/222 exprtk:x64-linux-dynamic@0.0.3...
+exprtk:x64-linux-dynamic@0.0.3 package ABI: c43bf09ed8dfa6d167a19f4b7ad5b8b943041744615525e469fa11659ee20492
+Elapsed time to handle exprtk:x64-linux-dynamic: 5.65 ms
+Installing 127/222 cereal:x64-linux-dynamic@1.3.2#1...
+cereal:x64-linux-dynamic@1.3.2#1 package ABI: 9acb5d9675e00b6639dc6f88ff6c0b0d59045630ed3afdc243d0c8293ac484bf
+Elapsed time to handle cereal:x64-linux-dynamic: 11.7 ms
+Installing 128/222 cereal-xtensor:x64-linux-dynamic@1.3.2...
+cereal-xtensor:x64-linux-dynamic@1.3.2 package ABI: 7cf9143becebc593b590048f767d02fc6b1173b4c47dffdc9da9cfc69baf291a
+Elapsed time to handle cereal-xtensor:x64-linux-dynamic: 5.46 ms
+Installing 129/222 vcpkg-boost:x64-linux@2025-03-29...
+vcpkg-boost:x64-linux@2025-03-29 package ABI: fed281108ac0e5a1cb0676214f834676962cf143274bcdb6a7f124b11a965e86
+Elapsed time to handle vcpkg-boost:x64-linux: 7.81 ms
+Installing 130/222 boost-uninstall:x64-linux-dynamic@1.90.0#1...
+boost-uninstall:x64-linux-dynamic@1.90.0#1 package ABI: c6c3a564f7607e0055078ca80ee6e6ab21394f0633629fdb2e23519ed3b1fadc
+Elapsed time to handle boost-uninstall:x64-linux-dynamic: 7.75 ms
+Installing 131/222 boost-cmake:x64-linux-dynamic@1.90.0#1...
+boost-cmake:x64-linux-dynamic@1.90.0#1 package ABI: 2946f16e42d97adc38dfe00fbf0972ba4e495c47b423324e918f96e194928c58
+Elapsed time to handle boost-cmake:x64-linux-dynamic: 11.4 ms
+Installing 132/222 boost-headers:x64-linux-dynamic@1.90.0#1...
+boost-headers:x64-linux-dynamic@1.90.0#1 package ABI: 485db02381ebd9e87ed403a6dc0488dea91698dc3019454bfb20aa649fcceb62
+Elapsed time to handle boost-headers:x64-linux-dynamic: 9.58 ms
+Installing 133/222 boost-config:x64-linux-dynamic@1.90.0#1...
+boost-config:x64-linux-dynamic@1.90.0#1 package ABI: 47b12bca6555b6cad1039b270b13da01986524abb6428b89c67e7fc3ea3a0971
+Elapsed time to handle boost-config:x64-linux-dynamic: 29.6 ms
+Installing 134/222 boost-static-assert:x64-linux-dynamic@1.90.0#1...
+boost-static-assert:x64-linux-dynamic@1.90.0#1 package ABI: 1aa659c11c1dbf268e79ec28bac2b2bd0f077370c667b493506b47f384989749
+Elapsed time to handle boost-static-assert:x64-linux-dynamic: 9.82 ms
+Installing 135/222 boost-type-traits:x64-linux-dynamic@1.90.0#1...
+boost-type-traits:x64-linux-dynamic@1.90.0#1 package ABI: 531a98d13ef3a9cca939e7dd345643d040b06434003ac93d809a58c49944c16b
+Elapsed time to handle boost-type-traits:x64-linux-dynamic: 33.4 ms
+Installing 136/222 boost-assert:x64-linux-dynamic@1.90.0#1...
+boost-assert:x64-linux-dynamic@1.90.0#1 package ABI: 99955a19394255c4607409aaaf4de88d95249ca1d7bec045c67328076eed051f
+Elapsed time to handle boost-assert:x64-linux-dynamic: 10.3 ms
+Installing 137/222 boost-throw-exception:x64-linux-dynamic@1.90.0#1...
+boost-throw-exception:x64-linux-dynamic@1.90.0#1 package ABI: 6569ec11dfdb6ce369a706f24d30126e1f481549d29ebebc68a528cad5338664
+Elapsed time to handle boost-throw-exception:x64-linux-dynamic: 8.53 ms
+Installing 138/222 boost-uuid:x64-linux-dynamic@1.90.0#1...
+boost-uuid:x64-linux-dynamic@1.90.0#1 package ABI: a606420b5f144e8a6135b9b6a704c82b9518df1049a73008ef877c3cd7157125
+Elapsed time to handle boost-uuid:x64-linux-dynamic: 7.72 ms
+Installing 139/222 boost-predef:x64-linux-dynamic@1.90.0#1...
+boost-predef:x64-linux-dynamic@1.90.0#1 package ABI: efb301e62a135587d104260086f898966751076c74996849bc87cd72ee10a009
+Elapsed time to handle boost-predef:x64-linux-dynamic: 7.23 ms
+Installing 140/222 boost-winapi:x64-linux-dynamic@1.90.0#1...
+boost-winapi:x64-linux-dynamic@1.90.0#1 package ABI: e4e11f4cd2f4faaf96a5978b721d31d8fd611c64ca1359155db22e59094d5f7a
+Elapsed time to handle boost-winapi:x64-linux-dynamic: 4.3 ms
+Installing 141/222 boost-mp11:x64-linux-dynamic@1.90.0#1...
+boost-mp11:x64-linux-dynamic@1.90.0#1 package ABI: 07ef0fbc4d8919ef4157416476a1f8307fdf99d42eaa913da829eb883684e5ce
+Elapsed time to handle boost-mp11:x64-linux-dynamic: 3.78 ms
+Installing 142/222 boost-variant2:x64-linux-dynamic@1.90.0#1...
+boost-variant2:x64-linux-dynamic@1.90.0#1 package ABI: a1684592829c32f13b47607b533f5f98b82f673ffdc3bd75f5932614064b1b83
+Elapsed time to handle boost-variant2:x64-linux-dynamic: 4.39 ms
+Installing 143/222 boost-system:x64-linux-dynamic@1.90.0#1...
+boost-system:x64-linux-dynamic@1.90.0#1 package ABI: 96889695664b77bdd39081bb677a0ccc19af42857d0d5daa4a2e5dc60dbe6f71
+Elapsed time to handle boost-system:x64-linux-dynamic: 5.41 ms
+Installing 144/222 boost-core:x64-linux-dynamic@1.90.0#1...
+boost-core:x64-linux-dynamic@1.90.0#1 package ABI: bc941bd27ef87f66003a67c69a53f99c9efe75a2d4408bde4900c07d8f661518
+Elapsed time to handle boost-core:x64-linux-dynamic: 7.7 ms
+Installing 145/222 boost-smart-ptr:x64-linux-dynamic@1.90.0#1...
+boost-smart-ptr:x64-linux-dynamic@1.90.0#1 package ABI: e749589da126bcc6b8e29a9c27abad5eba53aeef260862050ba372a9f1412db7
+Elapsed time to handle boost-smart-ptr:x64-linux-dynamic: 7.37 ms
+Installing 146/222 boost-scope:x64-linux-dynamic@1.90.0#1...
+boost-scope:x64-linux-dynamic@1.90.0#1 package ABI: 9b9d325a5b2c54377834edc2267c9685a3c9d73dae450a3c6022c79bb39431c5
+Elapsed time to handle boost-scope:x64-linux-dynamic: 3.59 ms
+Installing 147/222 boost-preprocessor:x64-linux-dynamic@1.90.0#1...
+boost-preprocessor:x64-linux-dynamic@1.90.0#1 package ABI: 21b1718fc2a34ccf749c00e082e3e44a9d63c69a3d17973286a97836293787ad
+Elapsed time to handle boost-preprocessor:x64-linux-dynamic: 9.09 ms
+Installing 148/222 boost-io:x64-linux-dynamic@1.90.0#1...
+boost-io:x64-linux-dynamic@1.90.0#1 package ABI: 31e79e2fd68047fb80ea20b97f0e334bb1be0c963d29a7b2780bcff2349e39e6
+Elapsed time to handle boost-io:x64-linux-dynamic: 3.81 ms
+Installing 149/222 boost-utility:x64-linux-dynamic@1.90.0#1...
+boost-utility:x64-linux-dynamic@1.90.0#1 package ABI: 8e0846f60eff24cc1f2ab3320e0a77264499e5418d3dc84775c08f4e1d5d10cf
+Elapsed time to handle boost-utility:x64-linux-dynamic: 7.04 ms
+Installing 150/222 boost-optional:x64-linux-dynamic@1.90.0#1...
+boost-optional:x64-linux-dynamic@1.90.0#1 package ABI: bb87e0cc610b40c460674b235d01b48120f3efcf32529f5ea3634bcd0f3a5134
+Elapsed time to handle boost-optional:x64-linux-dynamic: 12.4 ms
+Installing 151/222 boost-mpl:x64-linux-dynamic@1.90.0#1...
+boost-mpl:x64-linux-dynamic@1.90.0#1 package ABI: 1c03bcdc1f0711802504fecdba1d96755c5bfe3c5b106b02db7ce482f62ef9d8
+Elapsed time to handle boost-mpl:x64-linux-dynamic: 71.7 ms
+Installing 152/222 boost-typeof:x64-linux-dynamic@1.90.0#1...
+boost-typeof:x64-linux-dynamic@1.90.0#1 package ABI: d5bfdcb6935381de87ba00a41dd707dfafcfc9fe3227c24f69472cb6087a6825
+Elapsed time to handle boost-typeof:x64-linux-dynamic: 22.7 ms
+Installing 153/222 boost-tuple:x64-linux-dynamic@1.90.0#1...
+boost-tuple:x64-linux-dynamic@1.90.0#1 package ABI: 6da10c96d96899e743bf4d038de50c692f0f04026425c30bb486e454171049ae
+Elapsed time to handle boost-tuple:x64-linux-dynamic: 16.8 ms
+Installing 154/222 boost-detail:x64-linux-dynamic@1.90.0#1...
+boost-detail:x64-linux-dynamic@1.90.0#1 package ABI: 17716c439c815c982067b0b900c8f2732b233e5e8f98b6fb05ba86eb397ff83c
+Elapsed time to handle boost-detail:x64-linux-dynamic: 16.7 ms
+Installing 155/222 boost-function-types:x64-linux-dynamic@1.90.0#1...
+boost-function-types:x64-linux-dynamic@1.90.0#1 package ABI: d346dd171eec663400e66006254098924024e08ccadeaf4a997a97c52beebdee
+Elapsed time to handle boost-function-types:x64-linux-dynamic: 16.6 ms
+Installing 156/222 boost-bind:x64-linux-dynamic@1.90.0#1...
+boost-bind:x64-linux-dynamic@1.90.0#1 package ABI: 85fba0aab948536e57fef77c61f6116063badc2a78b24968c620202c25463b0e
+Elapsed time to handle boost-bind:x64-linux-dynamic: 18.6 ms
+Installing 157/222 boost-function:x64-linux-dynamic@1.90.0#1...
+boost-function:x64-linux-dynamic@1.90.0#1 package ABI: a73632c72dc09fbd2e1f67e3090aa80be7c380d9b58efee3f60c1f6ffb34cb34
+Elapsed time to handle boost-function:x64-linux-dynamic: 19.1 ms
+Installing 158/222 boost-functional:x64-linux-dynamic@1.90.0#1...
+boost-functional:x64-linux-dynamic@1.90.0#1 package ABI: 817aa0efe1cff44a0a74faca182804452d6e7db626701a8ecd2db72e177b0c0f
+Elapsed time to handle boost-functional:x64-linux-dynamic: 18.2 ms
+Installing 159/222 boost-describe:x64-linux-dynamic@1.90.0#1...
+boost-describe:x64-linux-dynamic@1.90.0#1 package ABI: 7006155d81ea1fffd996a47d036a1083eea8e5aa8d65647bf0d98e7db5fcc5ba
+Elapsed time to handle boost-describe:x64-linux-dynamic: 16.7 ms
+Installing 160/222 boost-container-hash:x64-linux-dynamic@1.90.0#1...
+boost-container-hash:x64-linux-dynamic@1.90.0#1 package ABI: 5b441b990aea528464e5b885fd5c7f196417f8fe79b4c38fac5a2e0c2f19fb7b
+Elapsed time to handle boost-container-hash:x64-linux-dynamic: 15.8 ms
+Installing 161/222 boost-fusion:x64-linux-dynamic@1.90.0#1...
+boost-fusion:x64-linux-dynamic@1.90.0#1 package ABI: b85857553d8b47a633c898682ae820325a380fd18721196807f4586df6d7959f
+Elapsed time to handle boost-fusion:x64-linux-dynamic: 34.7 ms
+Installing 162/222 boost-concept-check:x64-linux-dynamic@1.90.0#1...
+boost-concept-check:x64-linux-dynamic@1.90.0#1 package ABI: 2322420e4d53f862287912a3b03d63ad4cc1132d8a64ad78300ee8374833cb75
+Elapsed time to handle boost-concept-check:x64-linux-dynamic: 13.1 ms
+Installing 163/222 boost-iterator:x64-linux-dynamic@1.90.0#1...
+boost-iterator:x64-linux-dynamic@1.90.0#1 package ABI: e370de2902168fd2977dc4afcbe2b68f146d1b2eb939ba3fcd9869344132b062
+Elapsed time to handle boost-iterator:x64-linux-dynamic: 13.1 ms
+Installing 164/222 boost-align:x64-linux-dynamic@1.90.0#1...
+boost-align:x64-linux-dynamic@1.90.0#1 package ABI: 72eabf9c90eff2103d5ae9a451b1ba09b272f963a372e9d5b2a4f251ff434c24
+Elapsed time to handle boost-align:x64-linux-dynamic: 10.3 ms
+Installing 165/222 boost-atomic:x64-linux-dynamic@1.90.0#1...
+boost-atomic:x64-linux-dynamic@1.90.0#1 package ABI: 175b778ea70a14fa4f67d04dff98df05d2db6b0e8060579ade84c71f8d8e4bad
+Elapsed time to handle boost-atomic:x64-linux-dynamic: 15.3 ms
+Installing 166/222 boost-filesystem:x64-linux-dynamic@1.90.0#1...
+boost-filesystem:x64-linux-dynamic@1.90.0#1 package ABI: 27ac9c6a10ee1138a9c471c86d2db229451594eda96edfa0dd886374cecbce37
+Elapsed time to handle boost-filesystem:x64-linux-dynamic: 25 ms
+Installing 167/222 falcon-core[c-api,core]:x64-linux-dynamic@1.2.13...
+falcon-core[c-api,core]:x64-linux-dynamic@1.2.13 package ABI: f7b3f79d822da3df26027502ba86a7c780111901131c8f618c0c11af694834d4
+Elapsed time to handle falcon-core:x64-linux-dynamic: 86.7 ms
+Installing 168/222 falcon-instrument-hub:x64-linux-dynamic@1.0.18#32...
+falcon-instrument-hub:x64-linux-dynamic@1.0.18#32 package ABI: 39375c666f203e0c038fe0d867a7ef8f3c777dc4c2dbb3d3fefb126bcf7366a6
+Building falcon-instrument-hub:x64-linux-dynamic@1.0.18#32...
+/home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/triplets/community/x64-linux-dynamic.cmake: info: loaded community triplet from here. Community triplets are not built in the curated registry and are thus less likely to succeed.
+/home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-instrument-hub: info: installing overlay port from here
+-- falcon-instrument-hub: using local workspace source at /home/zdm2/Documents/github/FAlCon/falcon-instrument-hub
+-- Installing: /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/packages/falcon-instrument-hub_x64-linux-dynamic/share/falcon-instrument-hub/copyright
+-- Adjusted RPATH of '/home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/packages/falcon-instrument-hub_x64-linux-dynamic/bin/dataviewer' (From '' -> To '$ORIGIN:$ORIGIN/../lib')
+-- Adjusted RPATH of '/home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/packages/falcon-instrument-hub_x64-linux-dynamic/bin/instrument-hub' (From '' -> To '$ORIGIN:$ORIGIN/../lib')
+-- Performing post-build validation
+/home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-instrument-hub/portfile.cmake: warning: The folder ${CURRENT_PACKAGES_DIR}/include is empty or not present. This usually means that headers are not correctly installed. If this is a CMake helper port, add set(VCPKG_POLICY_CMAKE_HELPER_PORT enabled). If this is not a CMake helper port but this is otherwise intentional, add set(VCPKG_POLICY_EMPTY_INCLUDE_FOLDER enabled) to suppress this message.
+/home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-instrument-hub/portfile.cmake: warning: Found 1 post-build check problem(s). These are usually caused by bugs in portfile.cmake or the upstream build system. Please correct these before submitting this port to the curated registry.
+Starting submission of falcon-instrument-hub:x64-linux-dynamic@1.0.18#32 to 1 binary cache(s) in the background
+Elapsed time to handle falcon-instrument-hub:x64-linux-dynamic: 5.6 s
+Installing 169/222 falcon-measurement-lib:x64-linux-dynamic@1.0.2...
+falcon-measurement-lib:x64-linux-dynamic@1.0.2 package ABI: 5f0acb47157dddd2ab3632fd1777fe36dec29bad60c43fcc2adfb1a10952b2b9
+Elapsed time to handle falcon-measurement-lib:x64-linux-dynamic: 7.39 ms
+Installing 170/222 fmt:x64-linux-dynamic@12.1.0...
+fmt:x64-linux-dynamic@12.1.0 package ABI: 404cbcf30947354c1e69b434433063b8a0386ab12dfe2daa5250ed77d79d7144
+Elapsed time to handle fmt:x64-linux-dynamic: 13.7 ms
+Installing 171/222 spdlog[core,fmt,tz-offset]:x64-linux-dynamic@1.17.0...
+spdlog[core,fmt,tz-offset]:x64-linux-dynamic@1.17.0 package ABI: 4baf2f0f197053b947f3f08b190d572b42fbbf078ff5d4922870eb4e1aff97e4
+Elapsed time to handle spdlog:x64-linux-dynamic: 15.2 ms
+Installing 172/222 vcpkg-cmake-get-vars:x64-linux@2025-05-29...
+vcpkg-cmake-get-vars:x64-linux@2025-05-29 package ABI: be96e5edfd9cd87c6523a5d58b1de3b84a8b151ee8f77ae1ea3eb899147ae945
+Elapsed time to handle vcpkg-cmake-get-vars:x64-linux: 9.09 ms
+Installing 173/222 openssl:x64-linux-dynamic@3.6.1#2...
+openssl:x64-linux-dynamic@3.6.1#2 package ABI: caf3d2b7fbe83264ad2cacf4f5dd1fd311f9a748ab00b37a8c0ebc56ec5bc9f0
+Elapsed time to handle openssl:x64-linux-dynamic: 13.9 ms
+Installing 174/222 lz4:x64-linux-dynamic@1.10.0...
+lz4:x64-linux-dynamic@1.10.0 package ABI: 52312c6409d9166acd77f68405231fd437e48a859e3e4a9345192ebb038f7dc1
+Elapsed time to handle lz4:x64-linux-dynamic: 8.98 ms
+Installing 175/222 libpq[core,lz4,openssl,zlib]:x64-linux-dynamic@16.9#3...
+libpq[core,lz4,openssl,zlib]:x64-linux-dynamic@16.9#3 package ABI: 2f2a8ebf2afdf5812dfdbbc60e1be837bfe2ad22e6e27c3e47e9723a6088e68d
+Elapsed time to handle libpq:x64-linux-dynamic: 33.6 ms
+Installing 176/222 libpqxx:x64-linux-dynamic@7.10.5...
+libpqxx:x64-linux-dynamic@7.10.5 package ABI: 61fa920c568ec73b6b615022ae8b0665bc0e934b61b9156dd85e470afc3c4850
+Elapsed time to handle libpqxx:x64-linux-dynamic: 12.1 ms
+Installing 177/222 falcon-database:x64-linux-dynamic@1.0.7...
+falcon-database:x64-linux-dynamic@1.0.7 package ABI: d3e45d98dafd1cea86a46650a079033c5050c000c879ff49980af1a9b1d413fc
+Elapsed time to handle falcon-database:x64-linux-dynamic: 6.31 ms
+Installing 178/222 abseil:x64-linux-dynamic@20250814.1...
+abseil:x64-linux-dynamic@20250814.1 package ABI: ef027eb0bd40d9d26ce3501ffc5c2270eae1bd5c50dce1f94f74d8435499172b
+Elapsed time to handle abseil:x64-linux-dynamic: 29.5 ms
+Installing 179/222 utf8-range:x64-linux-dynamic@6.33.4...
+utf8-range:x64-linux-dynamic@6.33.4 package ABI: 9b7fe62f65c2eab91c710031bae4ae1201dce41a4b3d7c253274bb8fdf26b24a
+Elapsed time to handle utf8-range:x64-linux-dynamic: 12 ms
+Installing 180/222 abseil:x64-linux@20250814.1...
+abseil:x64-linux@20250814.1 package ABI: 6589858f583a14a948cfa2a312db1c806470912e2d6bbe82ff07896a8c1b248f
+Elapsed time to handle abseil:x64-linux: 22.4 ms
+Installing 181/222 utf8-range:x64-linux@6.33.4...
+utf8-range:x64-linux@6.33.4 package ABI: 7e9726ad9778f259f32bc00194df38221c23bf97a707135da711bdba0f2d7f73
+Elapsed time to handle utf8-range:x64-linux: 5.26 ms
+Installing 182/222 protobuf:x64-linux@6.33.4#1...
+protobuf:x64-linux@6.33.4#1 package ABI: cd888882ee8b33d7ce7e7cb3a72da68872c5ba37e99f0c8583c43416b52acd4c
+Elapsed time to handle protobuf:x64-linux: 7.46 ms
+Installing 183/222 protobuf:x64-linux-dynamic@6.33.4#1...
+protobuf:x64-linux-dynamic@6.33.4#1 package ABI: a0313a7ac7a8c3b610d7866a521ac6974471fba3a7e8cb628cea8eb6dcfc4bf6
+Elapsed time to handle protobuf:x64-linux-dynamic: 12.8 ms
+Installing 184/222 protobuf-c:x64-linux-dynamic@1.5.2...
+protobuf-c:x64-linux-dynamic@1.5.2 package ABI: ed8c71b0b4447c628a935de302c0c128ca347d642d9f0f80b4d6f1c6841f83a8
+Elapsed time to handle protobuf-c:x64-linux-dynamic: 11.9 ms
+Installing 185/222 libsodium:x64-linux-dynamic@1.0.21...
+libsodium:x64-linux-dynamic@1.0.21 package ABI: 5de0d552c793b494bff98bbf792fec635adff115223fc95ab66934d1b149d10b
+Elapsed time to handle libsodium:x64-linux-dynamic: 15.5 ms
+Installing 186/222 cnats:x64-linux-dynamic@3.12.0...
+cnats:x64-linux-dynamic@3.12.0 package ABI: d8926b5616e76f53553cbcff269aef380f68bdce5d1a238fa74fdced363192b7
+Elapsed time to handle cnats:x64-linux-dynamic: 15.8 ms
+Installing 187/222 falcon-comms:x64-linux-dynamic@1.0.10#8...
+falcon-comms:x64-linux-dynamic@1.0.10#8 package ABI: bcfbf78911123e6baded033822734f1d5b3a97350d79711d768853fe570e91d2
+Elapsed time to handle falcon-comms:x64-linux-dynamic: 14.1 ms
+Installing 188/222 falcon-routine:x64-linux-dynamic@1.0.5#3...
+falcon-routine:x64-linux-dynamic@1.0.5#3 package ABI: c63f8091e82b1fb9fe0d5e815872ce595909c7dc5da4bdff30386de883e6b64d
+Elapsed time to handle falcon-routine:x64-linux-dynamic: 7.68 ms
+Installing 189/222 vcpkg-tool-meson:x64-linux@1.9.0#3...
+vcpkg-tool-meson:x64-linux@1.9.0#3 package ABI: 350403a0fa85bf4c4e5d780a8e94c060bbcd65948762585ef80b9f2104d2f596
+Elapsed time to handle vcpkg-tool-meson:x64-linux: 2.51 ms
+Installing 190/222 pcre2[core,jit,platform-default-features]:x64-linux-dynamic@10.47...
+pcre2[core,jit,platform-default-features]:x64-linux-dynamic@10.47 package ABI: c99d6a7bd0436d09b6c3c1a1d4e0a45a2666201a6f140ad0ac538b22d79db074
+Elapsed time to handle pcre2:x64-linux-dynamic: 9.55 ms
+Installing 191/222 libiconv:x64-linux-dynamic@1.18#3...
+libiconv:x64-linux-dynamic@1.18#3 package ABI: 8850b848eef6284bde291fa01986066e286b2d50fc245a23bdcbc8f9e5d8aca9
+Elapsed time to handle libiconv:x64-linux-dynamic: 12 ms
+Installing 192/222 vcpkg-make:x64-linux@2026-01-01...
+vcpkg-make:x64-linux@2026-01-01 package ABI: 01ad12e890e93570d2f705935eed94589628fef4665ec295be21566531ea71af
+Elapsed time to handle vcpkg-make:x64-linux: 5.09 ms
+Installing 193/222 libffi:x64-linux-dynamic@3.5.2...
+libffi:x64-linux-dynamic@3.5.2 package ABI: 672f5947c61713a9f51082f3097cf364200d1f7608f61bf8d3461155f86510b8
+Elapsed time to handle libffi:x64-linux-dynamic: 10.2 ms
+Installing 194/222 gettext-libintl:x64-linux-dynamic@0.22.5#4...
+gettext-libintl:x64-linux-dynamic@0.22.5#4 package ABI: 32941b8c0f6011c3f5700fd0834337a646f11048839bb5d7158044572765ea54
+Elapsed time to handle gettext-libintl:x64-linux-dynamic: 11.6 ms
+Installing 195/222 libiconv:x64-linux@1.18#3...
+libiconv:x64-linux@1.18#3 package ABI: 0d47bd09b4269d0db25939bf44380af845fae491ec96ac2c49756d41e5c625c7
+Elapsed time to handle libiconv:x64-linux: 2.49 ms
+Installing 196/222 gettext-libintl:x64-linux@0.22.5#4...
+gettext-libintl:x64-linux@0.22.5#4 package ABI: 6a37bdc2944fab9c8d05fc3a477af5fcd97d74b3960a9461ed741990b8fb439a
+Elapsed time to handle gettext-libintl:x64-linux: 3.66 ms
+Installing 197/222 gettext[core,tools]:x64-linux@0.22.5#4...
+gettext[core,tools]:x64-linux@0.22.5#4 package ABI: 1299b44853f6ccafed8f6bfeb176debe745740397586358c16710780b11ae76e
+Elapsed time to handle gettext:x64-linux: 7.82 ms
+Installing 198/222 dirent:x64-linux-dynamic@1.26...
+dirent:x64-linux-dynamic@1.26 package ABI: ea1d72d53fa3a14853e4acf4d89f87f4dd9dbabe46d32869276f322ae4c108de
+Elapsed time to handle dirent:x64-linux-dynamic: 13.8 ms
+Installing 199/222 glib:x64-linux-dynamic@2.86.3...
+glib:x64-linux-dynamic@2.86.3 package ABI: dd56a691c6b5767704258540953cd20c98817f94d5874b718dbf3edb92a5833d
+Elapsed time to handle glib:x64-linux-dynamic: 20.3 ms
+Installing 200/222 gtest:x64-linux-dynamic@1.17.0#2...
+gtest:x64-linux-dynamic@1.17.0#2 package ABI: 206f69cd45f64f5ffda9041d95bff2314e16b175bc48426c3e70e80539cc3fcf
+Elapsed time to handle gtest:x64-linux-dynamic: 9.39 ms
+Installing 201/222 uthash:x64-linux-dynamic@2.3.0...
+uthash:x64-linux-dynamic@2.3.0 package ABI: fed91de38e645ed52c3e5b0ee6d7eb935d9c3304cce28ceb44c4663dd73e6f74
+Elapsed time to handle uthash:x64-linux-dynamic: 7.04 ms
+Installing 202/222 instrument-data:x64-linux-dynamic@1.0.2...
+instrument-data:x64-linux-dynamic@1.0.2 package ABI: 1f3e084ab2a3e67448110ec89f1e34b863cc55517a60eb8b0b7d3744a37ca088
+Elapsed time to handle instrument-data:x64-linux-dynamic: 9.03 ms
+Installing 203/222 sol2:x64-linux-dynamic@3.5.0#1...
+sol2:x64-linux-dynamic@3.5.0#1 package ABI: fe5227fc41f565b3a71f68e891fff514c37189c9a847291c716fd3ca8345a783
+Elapsed time to handle sol2:x64-linux-dynamic: 16 ms
+Installing 204/222 lua:x64-linux-dynamic@5.5.0#1...
+lua:x64-linux-dynamic@5.5.0#1 package ABI: 37eb7528b4033e83e1600031847d16ee70f811ef156ebe76f94219e0a841c350
+Elapsed time to handle lua:x64-linux-dynamic: 13.8 ms
+Installing 205/222 boost-move:x64-linux-dynamic@1.90.0#1...
+boost-move:x64-linux-dynamic@1.90.0#1 package ABI: 9bda412ebb1c0f21665b32c29a77af6e21de98a3b21dcc36651619cc96e5a003
+Elapsed time to handle boost-move:x64-linux-dynamic: 16.3 ms
+Installing 206/222 boost-intrusive:x64-linux-dynamic@1.90.0#1...
+boost-intrusive:x64-linux-dynamic@1.90.0#1 package ABI: 1653458e495db9cd80f7f3f8c18df60047a10473dd4885f3eefcb9158fd0174e
+Elapsed time to handle boost-intrusive:x64-linux-dynamic: 16.2 ms
+Installing 207/222 boost-container:x64-linux-dynamic@1.90.0#1...
+boost-container:x64-linux-dynamic@1.90.0#1 package ABI: 3d78448e065d464b389f27f07377aa3c707077346a9693cff8e68d686dcb014a
+Elapsed time to handle boost-container:x64-linux-dynamic: 26.3 ms
+Installing 208/222 boost-interprocess:x64-linux-dynamic@1.90.0#1...
+boost-interprocess:x64-linux-dynamic@1.90.0#1 package ABI: 9968af187a1305faade46e7ffa7055ec7e64d4a9223c1327e910f00b04c2869a
+Elapsed time to handle boost-interprocess:x64-linux-dynamic: 20.2 ms
+Installing 209/222 boost-tokenizer:x64-linux-dynamic@1.90.0#1...
+boost-tokenizer:x64-linux-dynamic@1.90.0#1 package ABI: 842a748141e8761bd5d01e6c449804dd7b938dcf419a956874fdd23345cd9370
+Elapsed time to handle boost-tokenizer:x64-linux-dynamic: 15 ms
+Installing 210/222 boost-regex:x64-linux-dynamic@1.90.0#1...
+boost-regex:x64-linux-dynamic@1.90.0#1 package ABI: 1cd1e5d6fc39d210b0947051d513cd8961975ee96e4cc38a9fbd22c2c23cd038
+Elapsed time to handle boost-regex:x64-linux-dynamic: 15.7 ms
+Installing 211/222 boost-conversion:x64-linux-dynamic@1.90.0#1...
+boost-conversion:x64-linux-dynamic@1.90.0#1 package ABI: 2ce18318d52ec88f3978184d8820f8884c6f36dc481272dcb08c3b741589b220
+Elapsed time to handle boost-conversion:x64-linux-dynamic: 17.2 ms
+Installing 212/222 boost-array:x64-linux-dynamic@1.90.0#1...
+boost-array:x64-linux-dynamic@1.90.0#1 package ABI: cd28628d8f78f5783420ae3a75c6a9e22251b9ec1db004d78d017002ef5d34db
+Elapsed time to handle boost-array:x64-linux-dynamic: 18.8 ms
+Installing 213/222 boost-range:x64-linux-dynamic@1.90.0#1...
+boost-range:x64-linux-dynamic@1.90.0#1 package ABI: c2092abe2a2255c839891fae683afb0c4d777b69c1c27f1d883ac70c0bd5ff05
+Elapsed time to handle boost-range:x64-linux-dynamic: 19 ms
+Installing 214/222 boost-numeric-conversion:x64-linux-dynamic@1.90.0#1...
+boost-numeric-conversion:x64-linux-dynamic@1.90.0#1 package ABI: af0c548ef7107070499647ab0550a9b2c89d7fb4abe6b36927515e7c31df210e
+Elapsed time to handle boost-numeric-conversion:x64-linux-dynamic: 20.8 ms
+Installing 215/222 boost-lexical-cast:x64-linux-dynamic@1.90.0#1...
+boost-lexical-cast:x64-linux-dynamic@1.90.0#1 package ABI: ffa0ef7aa7d09b1e638bc03a4e527b94949fdb15be3cd7f1775726c1ee3de4ca
+Elapsed time to handle boost-lexical-cast:x64-linux-dynamic: 22.5 ms
+Installing 216/222 boost-unordered:x64-linux-dynamic@1.90.0#1...
+boost-unordered:x64-linux-dynamic@1.90.0#1 package ABI: 85f54dde77562598531fb7240a776e7d4941226441453dd09e14e7b52807bdc5
+Elapsed time to handle boost-unordered:x64-linux-dynamic: 23.5 ms
+Installing 217/222 boost-exception:x64-linux-dynamic@1.90.0#1...
+boost-exception:x64-linux-dynamic@1.90.0#1 package ABI: f2ef1649715b5144d1d7ef778d87e134fd77ea4a32dd19d1a6750095a9b6b6a9
+Elapsed time to handle boost-exception:x64-linux-dynamic: 14.4 ms
+Installing 218/222 boost-algorithm:x64-linux-dynamic@1.90.0#1...
+boost-algorithm:x64-linux-dynamic@1.90.0#1 package ABI: 54239134a9ddaf0837c702a0ab36837e0dd1ca4a7070f724b9da450dd2da0835
+Elapsed time to handle boost-algorithm:x64-linux-dynamic: 15.2 ms
+Installing 219/222 boost-date-time:x64-linux-dynamic@1.90.0#1...
+boost-date-time:x64-linux-dynamic@1.90.0#1 package ABI: 125db9bff705a2c2255c6ffe96dad88d50d7c81a0b1562ca944a15b102c05549
+Elapsed time to handle boost-date-time:x64-linux-dynamic: 20.8 ms
+Installing 220/222 instrument-script-server:x64-linux-dynamic@1.1.7#13...
+instrument-script-server:x64-linux-dynamic@1.1.7#13 package ABI: dd598fcc107c88b338f6c4b53cbb00b2663d51337727c7fce89b642755164947
+Elapsed time to handle instrument-script-server:x64-linux-dynamic: 25.3 ms
+Installing 221/222 isa-test-utils:x64-linux-dynamic@1.0.4...
+isa-test-utils:x64-linux-dynamic@1.0.4 package ABI: f8e7550cc3afbcc61b434fb26674c2b7b69413ff31d4c2ec1680ce8bbb4f8b35
+Elapsed time to handle isa-test-utils:x64-linux-dynamic: 22 ms
+Installing 222/222 teal-api-gen:x64-linux-dynamic@1.0.1#1...
+teal-api-gen:x64-linux-dynamic@1.0.1#1 package ABI: eaa63efb198b6fd9719ce26711a292b0f921d7a8120d032e165d62de9c46126f
+Elapsed time to handle teal-api-gen:x64-linux-dynamic: 18.5 ms
+Installed contents are licensed to you by owners. Microsoft is not responsible for, nor does it grant any licenses to, third-party packages.
+Some packages did not declare an SPDX license. Check the `copyright` file for each package for more information about their licensing.
+Packages installed in this vcpkg installation declare the following licenses:
+Apache-2.0
+BSD-1-Clause
+BSD-2-Clause
+BSD-3-Clause
+BSL-1.0
+GPL-3.0-only
+ISC
+LGPL-2.1-or-later
+MIT
+MPL-2.0
+PostgreSQL
+Zlib
+falcon-core provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(falcon-core CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE falcon-core::falcon-core falcon-core::falcon-core-c-api)
+
+falcon-core provides pkg-config modules:
+
+  # Falcon Core C API library
+  falcon-core-c-api
+
+  # Falcon Core C++ library
+  falcon-core
+
+falcon-routine provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(falcon-routine CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE falcon::falcon-routine)
+
+glib provides pkg-config modules:
+
+  # glib I/O library
+  gio-2.0
+
+  # unix specific headers for glib I/O library
+  gio-unix-2.0
+
+  # GObject Introspection repository parser
+  girepository-2.0
+
+  # C Utility Library
+  glib-2.0
+
+  # Dynamic module loader for GLib
+  gmodule-2.0
+
+  # Dynamic module loader for GLib
+  gmodule-export-2.0
+
+  # Dynamic module loader for GLib
+  gmodule-no-export-2.0
+
+  # GLib Type, Object, Parameter and Signal Library
+  gobject-2.0
+
+  # Thread support for GLib
+  gthread-2.0
+
+The package gtest is compatible with built-in CMake targets:
+
+    enable_testing()
+    
+    find_package(GTest CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
+    
+    add_test(AllTestsInMain main)
+
+instrument-data provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(instrument-data CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE instrument-data::instrument-data)
+
+instrument-data provides pkg-config modules:
+
+  # An cross OS shared memory platform for collecting scientific data from instruments
+  instrument-data
+
+instrument-script-server provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(instrument-script-server CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE instrument-script-server::instrument-script-server-core)
+
+isa-test-utils provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(isa-test-utils CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE isa-test-utils::isa-test-utils)
+
+teal-api-gen provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(teal-api-gen CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE teal-api-gen::teal-api-gen)
+
+Waiting for 1 remaining binary cache submissions...
+Completed submission of falcon-instrument-hub:x64-linux-dynamic@1.0.18#32 to 1 binary cache(s) in 1.7 s (1/1)
+All requested installations completed successfully in: 7.8 s
+-- ✓ vcpkg bootstrap and dependency installation complete
+Configuring linux-clang-release...
+MAKELEVEL=0 cmake --preset linux-clang-release
+Preset CMake variables:
+
+  BUILD_TESTS="ON"
+  CMAKE_BUILD_TYPE="Release"
+  CMAKE_CXX_COMPILER="clang++"
+  CMAKE_C_COMPILER="clang"
+  CMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld"
+  CMAKE_EXPORT_COMPILE_COMMANDS="ON"
+  CMAKE_MAKE_PROGRAM="ninja"
+  CMAKE_PREFIX_PATH="/home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg_installed/x64-linux-dynamic/share;/home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg_installed"
+  CMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
+  CMAKE_TOOLCHAIN_FILE="/home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/scripts/buildsystems/vcpkg.cmake"
+  ENABLE_PCH="ON"
+  FALCON_CORE_BUILD_C_API="ON"
+  USE_CCACHE="ON"
+  VCPKG_INSTALLED_DIR="/home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg_installed"
+  VCPKG_OVERLAY_PORTS="/home/zdm2/Documents/github/FAlCon/instrument-controller/ports"
+  VCPKG_OVERLAY_TRIPLETS="/home/zdm2/Documents/github/FAlCon/instrument-controller/my-vcpkg-triplets"
+  VCPKG_ROOT="/home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg"
+  VCPKG_TARGET_TRIPLET="x64-linux-dynamic"
+
+-- Running vcpkg install
+Detecting compiler hash for triplet x64-linux...
+Compiler found: /usr/bin/c++
+Detecting compiler hash for triplet x64-linux-dynamic...
+Compiler found: /usr/bin/c++
+The following packages will be rebuilt:
+  * abseil:x64-linux@20250814.1
+  * abseil:x64-linux-dynamic@20250814.1
+  * boost-algorithm:x64-linux-dynamic@1.90.0#1
+  * boost-align:x64-linux-dynamic@1.90.0#1
+  * boost-array:x64-linux-dynamic@1.90.0#1
+  * boost-assert:x64-linux-dynamic@1.90.0#1
+  * boost-atomic:x64-linux-dynamic@1.90.0#1
+  * boost-bind:x64-linux-dynamic@1.90.0#1
+  * boost-cmake:x64-linux-dynamic@1.90.0#1
+  * boost-concept-check:x64-linux-dynamic@1.90.0#1
+  * boost-config:x64-linux-dynamic@1.90.0#1
+  * boost-container:x64-linux-dynamic@1.90.0#1
+  * boost-container-hash:x64-linux-dynamic@1.90.0#1
+  * boost-conversion:x64-linux-dynamic@1.90.0#1
+  * boost-core:x64-linux-dynamic@1.90.0#1
+  * boost-date-time:x64-linux-dynamic@1.90.0#1
+  * boost-describe:x64-linux-dynamic@1.90.0#1
+  * boost-detail:x64-linux-dynamic@1.90.0#1
+  * boost-exception:x64-linux-dynamic@1.90.0#1
+  * boost-filesystem:x64-linux-dynamic@1.90.0#1
+  * boost-function:x64-linux-dynamic@1.90.0#1
+  * boost-function-types:x64-linux-dynamic@1.90.0#1
+  * boost-functional:x64-linux-dynamic@1.90.0#1
+  * boost-fusion:x64-linux-dynamic@1.90.0#1
+  * boost-headers:x64-linux-dynamic@1.90.0#1
+  * boost-interprocess:x64-linux-dynamic@1.90.0#1
+  * boost-intrusive:x64-linux-dynamic@1.90.0#1
+  * boost-io:x64-linux-dynamic@1.90.0#1
+  * boost-iterator:x64-linux-dynamic@1.90.0#1
+  * boost-lexical-cast:x64-linux-dynamic@1.90.0#1
+  * boost-move:x64-linux-dynamic@1.90.0#1
+  * boost-mp11:x64-linux-dynamic@1.90.0#1
+  * boost-mpl:x64-linux-dynamic@1.90.0#1
+  * boost-numeric-conversion:x64-linux-dynamic@1.90.0#1
+  * boost-optional:x64-linux-dynamic@1.90.0#1
+  * boost-predef:x64-linux-dynamic@1.90.0#1
+  * boost-preprocessor:x64-linux-dynamic@1.90.0#1
+  * boost-range:x64-linux-dynamic@1.90.0#1
+  * boost-regex:x64-linux-dynamic@1.90.0#1
+  * boost-scope:x64-linux-dynamic@1.90.0#1
+  * boost-smart-ptr:x64-linux-dynamic@1.90.0#1
+  * boost-static-assert:x64-linux-dynamic@1.90.0#1
+  * boost-system:x64-linux-dynamic@1.90.0#1
+  * boost-throw-exception:x64-linux-dynamic@1.90.0#1
+  * boost-tokenizer:x64-linux-dynamic@1.90.0#1
+  * boost-tuple:x64-linux-dynamic@1.90.0#1
+  * boost-type-traits:x64-linux-dynamic@1.90.0#1
+  * boost-typeof:x64-linux-dynamic@1.90.0#1
+  * boost-uninstall:x64-linux-dynamic@1.90.0#1
+  * boost-unordered:x64-linux-dynamic@1.90.0#1
+  * boost-utility:x64-linux-dynamic@1.90.0#1
+  * boost-uuid:x64-linux-dynamic@1.90.0#1
+  * boost-variant2:x64-linux-dynamic@1.90.0#1
+  * boost-winapi:x64-linux-dynamic@1.90.0#1
+  * cereal:x64-linux-dynamic@1.3.2#1
+  * cereal-xtensor:x64-linux-dynamic@1.3.2 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/cereal-xtensor
+  * cnats:x64-linux-dynamic@3.12.0
+  * dirent:x64-linux-dynamic@1.26
+  * exprtk:x64-linux-dynamic@0.0.3
+  * falcon-comms:x64-linux-dynamic@1.0.10#8 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-comms
+    falcon-core[c-api,core]:x64-linux-dynamic@1.2.13 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-core
+  * falcon-database:x64-linux-dynamic@1.0.7 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-database
+    falcon-instrument-hub:x64-linux-dynamic@1.0.18#32 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-instrument-hub
+    falcon-measurement-lib:x64-linux-dynamic@1.0.2 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-measurement-lib
+    falcon-routine:x64-linux-dynamic@1.0.5#3 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-routine
+  * fmt:x64-linux-dynamic@12.1.0
+  * gettext[core,tools]:x64-linux@0.22.5#4
+  * gettext-libintl:x64-linux@0.22.5#4
+  * gettext-libintl:x64-linux-dynamic@0.22.5#4
+    glib:x64-linux-dynamic@2.86.3
+    gtest:x64-linux-dynamic@1.17.0#2
+  * hdf5[core,cpp,hl,szip,zlib]:x64-linux-dynamic@2.0.0
+  * highfive:x64-linux-dynamic@3.3.0
+    instrument-data:x64-linux-dynamic@1.0.2 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/instrument-data
+    instrument-script-server:x64-linux-dynamic@1.1.7#13 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/instrument-script-server
+    isa-test-utils:x64-linux-dynamic@1.0.4 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/isa-test-utils
+  * libaec:x64-linux-dynamic@1.1.5
+  * libffi:x64-linux-dynamic@3.5.2
+  * libiconv:x64-linux-dynamic@1.18#3
+  * libiconv:x64-linux@1.18#3
+  * libpq[core,lz4,openssl,zlib]:x64-linux-dynamic@16.9#3
+  * libpqxx:x64-linux-dynamic@7.10.5
+  * libsodium:x64-linux-dynamic@1.0.21
+  * lua:x64-linux-dynamic@5.5.0#1
+  * lz4:x64-linux-dynamic@1.10.0
+  * nlohmann-json:x64-linux-dynamic@3.12.0#2
+  * openssl:x64-linux-dynamic@3.6.1#2
+  * pcre2[core,jit,platform-default-features]:x64-linux-dynamic@10.47
+  * protobuf:x64-linux-dynamic@6.33.4#1
+  * protobuf:x64-linux@6.33.4#1
+  * protobuf-c:x64-linux-dynamic@1.5.2
+  * sol2:x64-linux-dynamic@3.5.0#1
+  * spdlog[core,fmt,tz-offset]:x64-linux-dynamic@1.17.0
+    teal-api-gen:x64-linux-dynamic@1.0.1#1 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/teal-api-gen
+  * utf8-range:x64-linux@6.33.4
+  * utf8-range:x64-linux-dynamic@6.33.4
+  * uthash:x64-linux-dynamic@2.3.0
+  * vcpkg-boost:x64-linux@2025-03-29
+  * vcpkg-cmake:x64-linux@2024-04-23
+  * vcpkg-cmake:x64-linux-dynamic@2024-04-23
+  * vcpkg-cmake-config:x64-linux@2024-05-23
+  * vcpkg-cmake-config:x64-linux-dynamic@2024-05-23
+  * vcpkg-cmake-get-vars:x64-linux@2025-05-29
+  * vcpkg-make:x64-linux@2026-01-01
+  * vcpkg-tool-meson:x64-linux@1.9.0#3
+  * xsimd:x64-linux-dynamic@14.0.0
+  * xtensor:x64-linux-dynamic@0.25.0
+  * xtensor-io:x64-linux-dynamic@0.13.0#1
+  * xtl:x64-linux-dynamic@0.7.5
+  * yaml-cpp:x64-linux-dynamic@0.9.0
+  * zlib:x64-linux-dynamic@1.3.1
+Additional packages (*) will be modified to complete this operation.
+Restored 110 package(s) from /home/zdm2/.cache/vcpkg/archives in 3.9 s. Use --debug to see more details.
+Removing 1/222 instrument-script-server:x64-linux-dynamic
+Elapsed time to handle instrument-script-server:x64-linux-dynamic: 6.96 ms
+Removing 2/222 instrument-data:x64-linux-dynamic
+Elapsed time to handle instrument-data:x64-linux-dynamic: 1.27 ms
+Removing 3/222 uthash:x64-linux-dynamic
+Elapsed time to handle uthash:x64-linux-dynamic: 618 us
+Removing 4/222 isa-test-utils:x64-linux-dynamic
+Elapsed time to handle isa-test-utils:x64-linux-dynamic: 1.31 ms
+Removing 5/222 glib:x64-linux-dynamic
+Elapsed time to handle glib:x64-linux-dynamic: 28.9 ms
+Removing 6/222 dirent:x64-linux-dynamic
+Elapsed time to handle dirent:x64-linux-dynamic: 633 us
+Removing 7/222 gettext:x64-linux
+Elapsed time to handle gettext:x64-linux: 6.89 ms
+Removing 8/222 gettext-libintl:x64-linux
+Elapsed time to handle gettext-libintl:x64-linux: 198 us
+Removing 9/222 libiconv:x64-linux
+Elapsed time to handle libiconv:x64-linux: 220 us
+Removing 10/222 gettext-libintl:x64-linux-dynamic
+Elapsed time to handle gettext-libintl:x64-linux-dynamic: 154 us
+Removing 11/222 libffi:x64-linux-dynamic
+Elapsed time to handle libffi:x64-linux-dynamic: 659 us
+Removing 12/222 vcpkg-make:x64-linux
+Elapsed time to handle vcpkg-make:x64-linux: 969 us
+Removing 13/222 libiconv:x64-linux-dynamic
+Elapsed time to handle libiconv:x64-linux-dynamic: 511 us
+Removing 14/222 pcre2:x64-linux-dynamic
+Elapsed time to handle pcre2:x64-linux-dynamic: 5.06 ms
+Removing 15/222 vcpkg-tool-meson:x64-linux
+Elapsed time to handle vcpkg-tool-meson:x64-linux: 524 us
+Removing 16/222 teal-api-gen:x64-linux-dynamic
+Elapsed time to handle teal-api-gen:x64-linux-dynamic: 751 us
+Removing 17/222 boost-date-time:x64-linux-dynamic
+Elapsed time to handle boost-date-time:x64-linux-dynamic: 1.41 ms
+Removing 18/222 boost-algorithm:x64-linux-dynamic
+Elapsed time to handle boost-algorithm:x64-linux-dynamic: 1.13 ms
+Removing 19/222 boost-exception:x64-linux-dynamic
+Elapsed time to handle boost-exception:x64-linux-dynamic: 1.96 ms
+Removing 20/222 boost-unordered:x64-linux-dynamic
+Elapsed time to handle boost-unordered:x64-linux-dynamic: 1.31 ms
+Removing 21/222 boost-lexical-cast:x64-linux-dynamic
+Elapsed time to handle boost-lexical-cast:x64-linux-dynamic: 469 us
+Removing 22/222 boost-numeric-conversion:x64-linux-dynamic
+Elapsed time to handle boost-numeric-conversion:x64-linux-dynamic: 1.88 ms
+Removing 23/222 boost-range:x64-linux-dynamic
+Elapsed time to handle boost-range:x64-linux-dynamic: 3.02 ms
+Removing 24/222 boost-array:x64-linux-dynamic
+Elapsed time to handle boost-array:x64-linux-dynamic: 795 us
+Removing 25/222 boost-conversion:x64-linux-dynamic
+Elapsed time to handle boost-conversion:x64-linux-dynamic: 477 us
+Removing 26/222 boost-regex:x64-linux-dynamic
+Elapsed time to handle boost-regex:x64-linux-dynamic: 2.55 ms
+Removing 27/222 boost-tokenizer:x64-linux-dynamic
+Elapsed time to handle boost-tokenizer:x64-linux-dynamic: 679 us
+Removing 28/222 boost-interprocess:x64-linux-dynamic
+Elapsed time to handle boost-interprocess:x64-linux-dynamic: 7.08 ms
+Removing 29/222 boost-container:x64-linux-dynamic
+Elapsed time to handle boost-container:x64-linux-dynamic: 3.3 ms
+Removing 30/222 boost-intrusive:x64-linux-dynamic
+Elapsed time to handle boost-intrusive:x64-linux-dynamic: 3.03 ms
+Removing 31/222 boost-move:x64-linux-dynamic
+Elapsed time to handle boost-move:x64-linux-dynamic: 1.8 ms
+Removing 32/222 lua:x64-linux-dynamic
+Elapsed time to handle lua:x64-linux-dynamic: 1.11 ms
+Removing 33/222 sol2:x64-linux-dynamic
+Elapsed time to handle sol2:x64-linux-dynamic: 2.04 ms
+Removing 34/222 gtest:x64-linux-dynamic
+Elapsed time to handle gtest:x64-linux-dynamic: 2.21 ms
+Removing 35/222 falcon-routine:x64-linux-dynamic
+Elapsed time to handle falcon-routine:x64-linux-dynamic: 778 us
+Removing 36/222 falcon-comms:x64-linux-dynamic
+Elapsed time to handle falcon-comms:x64-linux-dynamic: 797 us
+Removing 37/222 cnats:x64-linux-dynamic
+Elapsed time to handle cnats:x64-linux-dynamic: 503 us
+Removing 38/222 libsodium:x64-linux-dynamic
+Elapsed time to handle libsodium:x64-linux-dynamic: 1.67 ms
+Removing 39/222 protobuf-c:x64-linux-dynamic
+Elapsed time to handle protobuf-c:x64-linux-dynamic: 738 us
+Removing 40/222 protobuf:x64-linux-dynamic
+Elapsed time to handle protobuf:x64-linux-dynamic: 12.7 ms
+Removing 41/222 protobuf:x64-linux
+Elapsed time to handle protobuf:x64-linux: 11.3 ms
+Removing 42/222 utf8-range:x64-linux
+Elapsed time to handle utf8-range:x64-linux: 1.51 ms
+Removing 43/222 abseil:x64-linux
+Elapsed time to handle abseil:x64-linux: 26.2 ms
+Removing 44/222 utf8-range:x64-linux-dynamic
+Elapsed time to handle utf8-range:x64-linux-dynamic: 2.08 ms
+Removing 45/222 abseil:x64-linux-dynamic
+Elapsed time to handle abseil:x64-linux-dynamic: 25.5 ms
+Removing 46/222 falcon-database:x64-linux-dynamic
+Elapsed time to handle falcon-database:x64-linux-dynamic: 634 us
+Removing 47/222 libpqxx:x64-linux-dynamic
+Elapsed time to handle libpqxx:x64-linux-dynamic: 2.12 ms
+Removing 48/222 libpq:x64-linux-dynamic
+Elapsed time to handle libpq:x64-linux-dynamic: 34.3 ms
+Removing 49/222 lz4:x64-linux-dynamic
+Elapsed time to handle lz4:x64-linux-dynamic: 1.84 ms
+Removing 50/222 openssl:x64-linux-dynamic
+Elapsed time to handle openssl:x64-linux-dynamic: 8.73 ms
+Removing 51/222 vcpkg-cmake-get-vars:x64-linux
+Elapsed time to handle vcpkg-cmake-get-vars:x64-linux: 486 us
+Removing 52/222 spdlog:x64-linux-dynamic
+Elapsed time to handle spdlog:x64-linux-dynamic: 4.34 ms
+Removing 53/222 fmt:x64-linux-dynamic
+Elapsed time to handle fmt:x64-linux-dynamic: 1.97 ms
+Removing 54/222 falcon-measurement-lib:x64-linux-dynamic
+Elapsed time to handle falcon-measurement-lib:x64-linux-dynamic: 1.68 ms
+Removing 55/222 falcon-instrument-hub:x64-linux-dynamic
+Elapsed time to handle falcon-instrument-hub:x64-linux-dynamic: 2.42 ms
+Removing 56/222 falcon-core:x64-linux-dynamic
+Elapsed time to handle falcon-core:x64-linux-dynamic: 44.3 ms
+Removing 57/222 boost-filesystem:x64-linux-dynamic
+Elapsed time to handle boost-filesystem:x64-linux-dynamic: 2.09 ms
+Removing 58/222 boost-atomic:x64-linux-dynamic
+Elapsed time to handle boost-atomic:x64-linux-dynamic: 6.75 ms
+Removing 59/222 boost-align:x64-linux-dynamic
+Elapsed time to handle boost-align:x64-linux-dynamic: 2.47 ms
+Removing 60/222 boost-iterator:x64-linux-dynamic
+Elapsed time to handle boost-iterator:x64-linux-dynamic: 2.27 ms
+Removing 61/222 boost-concept-check:x64-linux-dynamic
+Elapsed time to handle boost-concept-check:x64-linux-dynamic: 829 us
+Removing 62/222 boost-fusion:x64-linux-dynamic
+Elapsed time to handle boost-fusion:x64-linux-dynamic: 43.1 ms
+Removing 63/222 boost-container-hash:x64-linux-dynamic
+Elapsed time to handle boost-container-hash:x64-linux-dynamic: 976 us
+Removing 64/222 boost-describe:x64-linux-dynamic
+Elapsed time to handle boost-describe:x64-linux-dynamic: 2 ms
+Removing 65/222 boost-functional:x64-linux-dynamic
+Elapsed time to handle boost-functional:x64-linux-dynamic: 774 us
+Removing 66/222 boost-function:x64-linux-dynamic
+Elapsed time to handle boost-function:x64-linux-dynamic: 1.32 ms
+Removing 67/222 boost-bind:x64-linux-dynamic
+Elapsed time to handle boost-bind:x64-linux-dynamic: 783 us
+Removing 68/222 boost-function-types:x64-linux-dynamic
+Elapsed time to handle boost-function-types:x64-linux-dynamic: 3.29 ms
+Removing 69/222 boost-detail:x64-linux-dynamic
+Elapsed time to handle boost-detail:x64-linux-dynamic: 1.46 ms
+Removing 70/222 boost-tuple:x64-linux-dynamic
+Elapsed time to handle boost-tuple:x64-linux-dynamic: 1.46 ms
+Removing 71/222 boost-typeof:x64-linux-dynamic
+Elapsed time to handle boost-typeof:x64-linux-dynamic: 3.64 ms
+Removing 72/222 boost-mpl:x64-linux-dynamic
+Elapsed time to handle boost-mpl:x64-linux-dynamic: 35.4 ms
+Removing 73/222 boost-optional:x64-linux-dynamic
+Elapsed time to handle boost-optional:x64-linux-dynamic: 821 us
+Removing 74/222 boost-utility:x64-linux-dynamic
+Elapsed time to handle boost-utility:x64-linux-dynamic: 1.71 ms
+Removing 75/222 boost-io:x64-linux-dynamic
+Elapsed time to handle boost-io:x64-linux-dynamic: 1.52 ms
+Removing 76/222 boost-preprocessor:x64-linux-dynamic
+Elapsed time to handle boost-preprocessor:x64-linux-dynamic: 13.6 ms
+Removing 77/222 boost-scope:x64-linux-dynamic
+Elapsed time to handle boost-scope:x64-linux-dynamic: 2.82 ms
+Removing 78/222 boost-smart-ptr:x64-linux-dynamic
+Elapsed time to handle boost-smart-ptr:x64-linux-dynamic: 1.5 ms
+Removing 79/222 boost-core:x64-linux-dynamic
+Elapsed time to handle boost-core:x64-linux-dynamic: 1.91 ms
+Removing 80/222 boost-system:x64-linux-dynamic
+Elapsed time to handle boost-system:x64-linux-dynamic: 2.16 ms
+Removing 81/222 boost-variant2:x64-linux-dynamic
+Elapsed time to handle boost-variant2:x64-linux-dynamic: 922 us
+Removing 82/222 boost-mp11:x64-linux-dynamic
+Elapsed time to handle boost-mp11:x64-linux-dynamic: 3.15 ms
+Removing 83/222 boost-winapi:x64-linux-dynamic
+Elapsed time to handle boost-winapi:x64-linux-dynamic: 2.14 ms
+Removing 84/222 boost-predef:x64-linux-dynamic
+Elapsed time to handle boost-predef:x64-linux-dynamic: 4.02 ms
+Removing 85/222 boost-uuid:x64-linux-dynamic
+Elapsed time to handle boost-uuid:x64-linux-dynamic: 1.07 ms
+Removing 86/222 boost-throw-exception:x64-linux-dynamic
+Elapsed time to handle boost-throw-exception:x64-linux-dynamic: 288 us
+Removing 87/222 boost-assert:x64-linux-dynamic
+Elapsed time to handle boost-assert:x64-linux-dynamic: 288 us
+Removing 88/222 boost-type-traits:x64-linux-dynamic
+Elapsed time to handle boost-type-traits:x64-linux-dynamic: 7.15 ms
+Removing 89/222 boost-static-assert:x64-linux-dynamic
+Elapsed time to handle boost-static-assert:x64-linux-dynamic: 824 us
+Removing 90/222 boost-config:x64-linux-dynamic
+Elapsed time to handle boost-config:x64-linux-dynamic: 9.59 ms
+Removing 91/222 boost-headers:x64-linux-dynamic
+Elapsed time to handle boost-headers:x64-linux-dynamic: 577 us
+Removing 92/222 boost-cmake:x64-linux-dynamic
+Elapsed time to handle boost-cmake:x64-linux-dynamic: 318 us
+Removing 93/222 boost-uninstall:x64-linux-dynamic
+Elapsed time to handle boost-uninstall:x64-linux-dynamic: 179 us
+Removing 94/222 vcpkg-boost:x64-linux
+Elapsed time to handle vcpkg-boost:x64-linux: 512 us
+Removing 95/222 cereal-xtensor:x64-linux-dynamic
+Elapsed time to handle cereal-xtensor:x64-linux-dynamic: 340 us
+Removing 96/222 cereal:x64-linux-dynamic
+Elapsed time to handle cereal:x64-linux-dynamic: 3.61 ms
+Removing 97/222 exprtk:x64-linux-dynamic
+Elapsed time to handle exprtk:x64-linux-dynamic: 702 us
+Removing 98/222 highfive:x64-linux-dynamic
+Elapsed time to handle highfive:x64-linux-dynamic: 2.67 ms
+Removing 99/222 hdf5:x64-linux-dynamic
+Elapsed time to handle hdf5:x64-linux-dynamic: 3.18 ms
+Removing 100/222 libaec:x64-linux-dynamic
+Elapsed time to handle libaec:x64-linux-dynamic: 598 us
+Removing 101/222 zlib:x64-linux-dynamic
+Elapsed time to handle zlib:x64-linux-dynamic: 516 us
+Removing 102/222 vcpkg-cmake:x64-linux-dynamic
+Elapsed time to handle vcpkg-cmake:x64-linux-dynamic: 158 us
+Removing 103/222 vcpkg-cmake-config:x64-linux-dynamic
+Elapsed time to handle vcpkg-cmake-config:x64-linux-dynamic: 137 us
+Removing 104/222 xsimd:x64-linux-dynamic
+Elapsed time to handle xsimd:x64-linux-dynamic: 1.85 ms
+Removing 105/222 xtensor-io:x64-linux-dynamic
+Elapsed time to handle xtensor-io:x64-linux-dynamic: 697 us
+Removing 106/222 xtensor:x64-linux-dynamic
+Elapsed time to handle xtensor:x64-linux-dynamic: 1.08 ms
+Removing 107/222 xtl:x64-linux-dynamic
+Elapsed time to handle xtl:x64-linux-dynamic: 776 us
+Removing 108/222 nlohmann-json:x64-linux-dynamic
+Elapsed time to handle nlohmann-json:x64-linux-dynamic: 3.3 ms
+Removing 109/222 yaml-cpp:x64-linux-dynamic
+Elapsed time to handle yaml-cpp:x64-linux-dynamic: 5.51 ms
+Removing 110/222 vcpkg-cmake:x64-linux
+Elapsed time to handle vcpkg-cmake:x64-linux: 906 us
+Removing 111/222 vcpkg-cmake-config:x64-linux
+Elapsed time to handle vcpkg-cmake-config:x64-linux: 421 us
+Installing 112/222 vcpkg-cmake-config:x64-linux@2024-05-23...
+vcpkg-cmake-config:x64-linux@2024-05-23 package ABI: 0ba116826d89ec7810a5aa15fa267e6402e64b3f2f5f320e48bab7afde850bc8
+Elapsed time to handle vcpkg-cmake-config:x64-linux: 1.06 ms
+Installing 113/222 vcpkg-cmake:x64-linux@2024-04-23...
+vcpkg-cmake:x64-linux@2024-04-23 package ABI: 659cdd458d5fd96f7ba5abe6705c8ce6cbd958940c4565dc3ac9547123e704cc
+Elapsed time to handle vcpkg-cmake:x64-linux: 1.23 ms
+Installing 114/222 yaml-cpp:x64-linux-dynamic@0.9.0...
+yaml-cpp:x64-linux-dynamic@0.9.0 package ABI: 3abc792e4f7ae15f166dcc0c9968b5df9c6d013c8559f0db3abba557846bac7a
+Elapsed time to handle yaml-cpp:x64-linux-dynamic: 1.84 ms
+Installing 115/222 nlohmann-json:x64-linux-dynamic@3.12.0#2...
+nlohmann-json:x64-linux-dynamic@3.12.0#2 package ABI: fccb7781563b2243460f5db8dc773f9ccd6ad548fc130a74deb1efaf8568e8aa
+Elapsed time to handle nlohmann-json:x64-linux-dynamic: 1.93 ms
+Installing 116/222 xtl:x64-linux-dynamic@0.7.5...
+xtl:x64-linux-dynamic@0.7.5 package ABI: cadb96c8c3c17fd9c76d8256d50ef7ce28f4ff54f365bbae7c968470f5b53dfd
+Elapsed time to handle xtl:x64-linux-dynamic: 4.85 ms
+Installing 117/222 xtensor:x64-linux-dynamic@0.25.0...
+xtensor:x64-linux-dynamic@0.25.0 package ABI: c985512c6883ca0f1c37cb6aa48b938531268429f04d3bae0e3a48a223536b3a
+Elapsed time to handle xtensor:x64-linux-dynamic: 3.38 ms
+Installing 118/222 xtensor-io:x64-linux-dynamic@0.13.0#1...
+xtensor-io:x64-linux-dynamic@0.13.0#1 package ABI: c4b9a3841c51a0fa8ed934442cd7593545d446ed8fbb9a59f0e05a6b1a330877
+Elapsed time to handle xtensor-io:x64-linux-dynamic: 1.15 ms
+Installing 119/222 xsimd:x64-linux-dynamic@14.0.0...
+xsimd:x64-linux-dynamic@14.0.0 package ABI: b65b4b5dc149c91cccb0ea4da9c2b0ad86a61e2ea582bac3f654bc44e1b61001
+Elapsed time to handle xsimd:x64-linux-dynamic: 2.41 ms
+Installing 120/222 vcpkg-cmake-config:x64-linux-dynamic@2024-05-23...
+vcpkg-cmake-config:x64-linux-dynamic@2024-05-23 package ABI: 22e3fa763f5a70feb7f2c591b22b32cfe6a36bda6b6afaf1fdebf34b072a879a
+Elapsed time to handle vcpkg-cmake-config:x64-linux-dynamic: 701 us
+Installing 121/222 vcpkg-cmake:x64-linux-dynamic@2024-04-23...
+vcpkg-cmake:x64-linux-dynamic@2024-04-23 package ABI: df6ad52f4e5ffb04b4d64c7b611ca37471114612c72a3401e0d309360b8572c8
+Elapsed time to handle vcpkg-cmake:x64-linux-dynamic: 864 us
+Installing 122/222 zlib:x64-linux-dynamic@1.3.1...
+zlib:x64-linux-dynamic@1.3.1 package ABI: dccaea1223f25f46355822373e593168e4d5fbbcca5db9985d0a3bebd9d96e68
+Elapsed time to handle zlib:x64-linux-dynamic: 1.75 ms
+Installing 123/222 libaec:x64-linux-dynamic@1.1.5...
+libaec:x64-linux-dynamic@1.1.5 package ABI: c7634241aa0a7f1662dc9e775d17bd725eaa2f87cc94507321189c6e855c169f
+Elapsed time to handle libaec:x64-linux-dynamic: 2.51 ms
+Installing 124/222 hdf5[core,cpp,hl,szip,zlib]:x64-linux-dynamic@2.0.0...
+hdf5[core,cpp,hl,szip,zlib]:x64-linux-dynamic@2.0.0 package ABI: 691c014a1b893ffa78556321c4e47bfc0d418a759cf59bbc35c264e461657c00
+Elapsed time to handle hdf5:x64-linux-dynamic: 11.4 ms
+Installing 125/222 highfive:x64-linux-dynamic@3.3.0...
+highfive:x64-linux-dynamic@3.3.0 package ABI: 9f4bdc66f21de4c7d319fea02d7748465c0916d2ea7d3c4d2e675c9e17f9da80
+Elapsed time to handle highfive:x64-linux-dynamic: 4.93 ms
+Installing 126/222 exprtk:x64-linux-dynamic@0.0.3...
+exprtk:x64-linux-dynamic@0.0.3 package ABI: ae9f2bb0b06f3232476a39e47910f33b291fa9181e93447220ab2afdc382db9b
+Elapsed time to handle exprtk:x64-linux-dynamic: 2.87 ms
+Installing 127/222 cereal:x64-linux-dynamic@1.3.2#1...
+cereal:x64-linux-dynamic@1.3.2#1 package ABI: c67f54376d74cc43a1d88543fdb5f782d1d5c169bda2b1f967d5530c851b3878
+Elapsed time to handle cereal:x64-linux-dynamic: 10.9 ms
+Installing 128/222 cereal-xtensor:x64-linux-dynamic@1.3.2...
+cereal-xtensor:x64-linux-dynamic@1.3.2 package ABI: d0572695326287078f7a997c83721596e12e70dd923ad2fe582f2d08fff423ef
+Elapsed time to handle cereal-xtensor:x64-linux-dynamic: 2.33 ms
+Installing 129/222 vcpkg-boost:x64-linux@2025-03-29...
+vcpkg-boost:x64-linux@2025-03-29 package ABI: eddc9fbbc8e34c5e04355fd4fd412cb8c8adc078a4e809287edb6974351158b7
+Elapsed time to handle vcpkg-boost:x64-linux: 1.84 ms
+Installing 130/222 boost-uninstall:x64-linux-dynamic@1.90.0#1...
+boost-uninstall:x64-linux-dynamic@1.90.0#1 package ABI: f40eb8589ee01f39d6ef50e65969505505a25711d1463deab94b538caa523303
+Elapsed time to handle boost-uninstall:x64-linux-dynamic: 2.2 ms
+Installing 131/222 boost-cmake:x64-linux-dynamic@1.90.0#1...
+boost-cmake:x64-linux-dynamic@1.90.0#1 package ABI: 720cf0750389cc5993c94e0f2748571e6ce3309909440fde320bf025643bd86a
+Elapsed time to handle boost-cmake:x64-linux-dynamic: 2.56 ms
+Installing 132/222 boost-headers:x64-linux-dynamic@1.90.0#1...
+boost-headers:x64-linux-dynamic@1.90.0#1 package ABI: 49a5580042efdf60c3dcb4605ce87f45688f6f3978d4b959dc9ce1084c33abb8
+Elapsed time to handle boost-headers:x64-linux-dynamic: 2.16 ms
+Installing 133/222 boost-config:x64-linux-dynamic@1.90.0#1...
+boost-config:x64-linux-dynamic@1.90.0#1 package ABI: f028c2c10606896f83fab04b213afe49672a391b582a10a14a01e951f885e53c
+Elapsed time to handle boost-config:x64-linux-dynamic: 7.03 ms
+Installing 134/222 boost-static-assert:x64-linux-dynamic@1.90.0#1...
+boost-static-assert:x64-linux-dynamic@1.90.0#1 package ABI: 793e344901d0a9db99ebc1d88e344d40a84afb2264867814e588b64c04b61264
+Elapsed time to handle boost-static-assert:x64-linux-dynamic: 6.8 ms
+Installing 135/222 boost-type-traits:x64-linux-dynamic@1.90.0#1...
+boost-type-traits:x64-linux-dynamic@1.90.0#1 package ABI: 85bed1e0c149ca1851a7ead197862bc3c9cd298fd4ff43b69006bf4eeaa6556f
+Elapsed time to handle boost-type-traits:x64-linux-dynamic: 7.71 ms
+Installing 136/222 boost-assert:x64-linux-dynamic@1.90.0#1...
+boost-assert:x64-linux-dynamic@1.90.0#1 package ABI: 9c93ec7e6dafebbfcfe8a44217022826bd28119e33dcd4dffc01513169e9a59a
+Elapsed time to handle boost-assert:x64-linux-dynamic: 2.81 ms
+Installing 137/222 boost-throw-exception:x64-linux-dynamic@1.90.0#1...
+boost-throw-exception:x64-linux-dynamic@1.90.0#1 package ABI: e3322a436e0f3d3c1558eaa8c2c4f93bed692c1f94ceceb8500d1f67982922b4
+Elapsed time to handle boost-throw-exception:x64-linux-dynamic: 3.49 ms
+Installing 138/222 boost-uuid:x64-linux-dynamic@1.90.0#1...
+boost-uuid:x64-linux-dynamic@1.90.0#1 package ABI: d740a7a500344725bb0f7283aa6149611cb565af0ece26a766361eb575f05381
+Elapsed time to handle boost-uuid:x64-linux-dynamic: 3.34 ms
+Installing 139/222 boost-predef:x64-linux-dynamic@1.90.0#1...
+boost-predef:x64-linux-dynamic@1.90.0#1 package ABI: 00ec58821fb60f0af0f4cdb8044f23de73c7e9d26a8f5aa49737d685ada7ffa4
+Elapsed time to handle boost-predef:x64-linux-dynamic: 4 ms
+Installing 140/222 boost-winapi:x64-linux-dynamic@1.90.0#1...
+boost-winapi:x64-linux-dynamic@1.90.0#1 package ABI: cb9ef34991389f68313cab865e31f254910c05b8b31e7f776b0d3f0f76d30c56
+Elapsed time to handle boost-winapi:x64-linux-dynamic: 4.11 ms
+Installing 141/222 boost-mp11:x64-linux-dynamic@1.90.0#1...
+boost-mp11:x64-linux-dynamic@1.90.0#1 package ABI: b95c8def26287b283f800be236df963e4b4217bae5abd685e6461f3d328c3eab
+Elapsed time to handle boost-mp11:x64-linux-dynamic: 4.13 ms
+Installing 142/222 boost-variant2:x64-linux-dynamic@1.90.0#1...
+boost-variant2:x64-linux-dynamic@1.90.0#1 package ABI: dddc4795cd54a7cf7ea0030b9741496a3a7311b2e8dc33dc874e7d383d20c96d
+Elapsed time to handle boost-variant2:x64-linux-dynamic: 5.15 ms
+Installing 143/222 boost-system:x64-linux-dynamic@1.90.0#1...
+boost-system:x64-linux-dynamic@1.90.0#1 package ABI: 2c32b26a70bb2f34e01fceb3e9899747f60537dcd1254b51d351e0ddd22ef981
+Elapsed time to handle boost-system:x64-linux-dynamic: 6.08 ms
+Installing 144/222 boost-core:x64-linux-dynamic@1.90.0#1...
+boost-core:x64-linux-dynamic@1.90.0#1 package ABI: 0c3475bfffc9137f35fd6fb44dfe714eb40e4709187670c7039bf7e24d867634
+Elapsed time to handle boost-core:x64-linux-dynamic: 4.54 ms
+Installing 145/222 boost-smart-ptr:x64-linux-dynamic@1.90.0#1...
+boost-smart-ptr:x64-linux-dynamic@1.90.0#1 package ABI: 8fa84006c5035485281050e57f3e45b057f879adbc679957133bcc8063ebfca2
+Elapsed time to handle boost-smart-ptr:x64-linux-dynamic: 8.28 ms
+Installing 146/222 boost-scope:x64-linux-dynamic@1.90.0#1...
+boost-scope:x64-linux-dynamic@1.90.0#1 package ABI: c301f51d0a642f919d6916239890ce4943028c1f25e8ef961c8ae78dc241d150
+Elapsed time to handle boost-scope:x64-linux-dynamic: 3.55 ms
+Installing 147/222 boost-preprocessor:x64-linux-dynamic@1.90.0#1...
+boost-preprocessor:x64-linux-dynamic@1.90.0#1 package ABI: 753599c622f74681cbe8efc174a4050b2904d43e5b8a4ee7fd00b85bbef8d1ab
+Elapsed time to handle boost-preprocessor:x64-linux-dynamic: 12.7 ms
+Installing 148/222 boost-io:x64-linux-dynamic@1.90.0#1...
+boost-io:x64-linux-dynamic@1.90.0#1 package ABI: 3ef39acb9fc594ad07e0d9c6c834a9b2ea7700f90adddc04b8664f987a33419b
+Elapsed time to handle boost-io:x64-linux-dynamic: 4.23 ms
+Installing 149/222 boost-utility:x64-linux-dynamic@1.90.0#1...
+boost-utility:x64-linux-dynamic@1.90.0#1 package ABI: 85fef87ec192d71bff565beae1071b46d96edbb0513b101cafb96f2df2d9c5bd
+Elapsed time to handle boost-utility:x64-linux-dynamic: 7.86 ms
+Installing 150/222 boost-optional:x64-linux-dynamic@1.90.0#1...
+boost-optional:x64-linux-dynamic@1.90.0#1 package ABI: 07bac2716e5c66ad23ba4433e10d2f1da11b6275ff4ded353062fca03a1cc365
+Elapsed time to handle boost-optional:x64-linux-dynamic: 4.8 ms
+Installing 151/222 boost-mpl:x64-linux-dynamic@1.90.0#1...
+boost-mpl:x64-linux-dynamic@1.90.0#1 package ABI: b3842e7bbebdf0c0f066c6ac1e271a12934c6f8e940a92e86b8aaee34377053d
+Elapsed time to handle boost-mpl:x64-linux-dynamic: 38 ms
+Installing 152/222 boost-typeof:x64-linux-dynamic@1.90.0#1...
+boost-typeof:x64-linux-dynamic@1.90.0#1 package ABI: 670b804ec6d84e177678f22f390ac5389e4c28a441000110784e81398ae476af
+Elapsed time to handle boost-typeof:x64-linux-dynamic: 9.76 ms
+Installing 153/222 boost-tuple:x64-linux-dynamic@1.90.0#1...
+boost-tuple:x64-linux-dynamic@1.90.0#1 package ABI: 8f9ade19b2e17287206723b019d2e04c074c6916cda047423dbfb1a48b9499c2
+Elapsed time to handle boost-tuple:x64-linux-dynamic: 5.95 ms
+Installing 154/222 boost-detail:x64-linux-dynamic@1.90.0#1...
+boost-detail:x64-linux-dynamic@1.90.0#1 package ABI: 1137f25d36a4951e198dcc7c4086562d823e05ab12aecb6d0c2eff56ac26ab1c
+Elapsed time to handle boost-detail:x64-linux-dynamic: 7.86 ms
+Installing 155/222 boost-function-types:x64-linux-dynamic@1.90.0#1...
+boost-function-types:x64-linux-dynamic@1.90.0#1 package ABI: 7b6ec8051c2e4bcf058672dfca369d41f0bfe70fd06c2cff54f8e362ef971d03
+Elapsed time to handle boost-function-types:x64-linux-dynamic: 7.65 ms
+Installing 156/222 boost-bind:x64-linux-dynamic@1.90.0#1...
+boost-bind:x64-linux-dynamic@1.90.0#1 package ABI: 6fb33a2ff646263e606662d767503b55768a08d85800608639d67a44a2e24238
+Elapsed time to handle boost-bind:x64-linux-dynamic: 8.23 ms
+Installing 157/222 boost-function:x64-linux-dynamic@1.90.0#1...
+boost-function:x64-linux-dynamic@1.90.0#1 package ABI: 9ada692a48c80fb2fd34cb01126df8f77b503b4b715709e72c749134f4e40f1d
+Elapsed time to handle boost-function:x64-linux-dynamic: 7.9 ms
+Installing 158/222 boost-functional:x64-linux-dynamic@1.90.0#1...
+boost-functional:x64-linux-dynamic@1.90.0#1 package ABI: 5810b29507faa08ad89520008a60f7ac37e49ae56b484a9721ec7c18d97f309b
+Elapsed time to handle boost-functional:x64-linux-dynamic: 7.46 ms
+Installing 159/222 boost-describe:x64-linux-dynamic@1.90.0#1...
+boost-describe:x64-linux-dynamic@1.90.0#1 package ABI: 8131c15c86aa07fc7b90ab9cdeb13a6e48a7ff36b63ad5fb60dc6223e165b7f2
+Elapsed time to handle boost-describe:x64-linux-dynamic: 9.76 ms
+Installing 160/222 boost-container-hash:x64-linux-dynamic@1.90.0#1...
+boost-container-hash:x64-linux-dynamic@1.90.0#1 package ABI: 6897ae28fa72c20b8f3f15a96bb53dd493bacf6e3ed7873b293aa2e941003613
+Elapsed time to handle boost-container-hash:x64-linux-dynamic: 8.17 ms
+Installing 161/222 boost-fusion:x64-linux-dynamic@1.90.0#1...
+boost-fusion:x64-linux-dynamic@1.90.0#1 package ABI: fdf286238cb5fe5c547111dedf58ea7b340e7464b86dd47c33398c12f711a4eb
+Elapsed time to handle boost-fusion:x64-linux-dynamic: 37.3 ms
+Installing 162/222 boost-concept-check:x64-linux-dynamic@1.90.0#1...
+boost-concept-check:x64-linux-dynamic@1.90.0#1 package ABI: 21ead076aa6bce5e1d2d4ea57d99b864a6d940e84dcb810bb2ea53771d8222cc
+Elapsed time to handle boost-concept-check:x64-linux-dynamic: 9.57 ms
+Installing 163/222 boost-iterator:x64-linux-dynamic@1.90.0#1...
+boost-iterator:x64-linux-dynamic@1.90.0#1 package ABI: df97acf343a512a465cf89b6ac849f9939c44efc5a3ba1ad923e822e8a9bc214
+Elapsed time to handle boost-iterator:x64-linux-dynamic: 12.6 ms
+Installing 164/222 boost-align:x64-linux-dynamic@1.90.0#1...
+boost-align:x64-linux-dynamic@1.90.0#1 package ABI: ca69097c0bea262777bc1d481e9b29c009a6753d710c97b2d18229bb92bd69cf
+Elapsed time to handle boost-align:x64-linux-dynamic: 8.82 ms
+Installing 165/222 boost-atomic:x64-linux-dynamic@1.90.0#1...
+boost-atomic:x64-linux-dynamic@1.90.0#1 package ABI: 39ece2fa4aba11bebc85e62b888f4c06456e452f277e129f05572de0250797f7
+Elapsed time to handle boost-atomic:x64-linux-dynamic: 8.99 ms
+Installing 166/222 boost-filesystem:x64-linux-dynamic@1.90.0#1...
+boost-filesystem:x64-linux-dynamic@1.90.0#1 package ABI: bd1c0126feb4c9b47ca967eca1617339a70c9ab5ad81426b75bb19c71e2b6cb4
+Elapsed time to handle boost-filesystem:x64-linux-dynamic: 9.79 ms
+Installing 167/222 falcon-core[c-api,core]:x64-linux-dynamic@1.2.13...
+falcon-core[c-api,core]:x64-linux-dynamic@1.2.13 package ABI: ae86ee2780fee96e26b1573b399cd90fc93eeb5caf79e47e5264ae0dc127dea7
+Elapsed time to handle falcon-core:x64-linux-dynamic: 23.2 ms
+Installing 168/222 falcon-instrument-hub:x64-linux-dynamic@1.0.18#32...
+falcon-instrument-hub:x64-linux-dynamic@1.0.18#32 package ABI: 16aea21d33eaaf60f788209faac375470ae41df0406794b767a89ef2911178d5
+Building falcon-instrument-hub:x64-linux-dynamic@1.0.18#32...
+/home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/triplets/community/x64-linux-dynamic.cmake: info: loaded community triplet from here. Community triplets are not built in the curated registry and are thus less likely to succeed.
+/home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-instrument-hub: info: installing overlay port from here
+-- falcon-instrument-hub: using local workspace source at /home/zdm2/Documents/github/FAlCon/falcon-instrument-hub
+-- Installing: /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/packages/falcon-instrument-hub_x64-linux-dynamic/share/falcon-instrument-hub/copyright
+-- Adjusted RPATH of '/home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/packages/falcon-instrument-hub_x64-linux-dynamic/bin/dataviewer' (From '' -> To '$ORIGIN:$ORIGIN/../lib')
+-- Adjusted RPATH of '/home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/packages/falcon-instrument-hub_x64-linux-dynamic/bin/instrument-hub' (From '' -> To '$ORIGIN:$ORIGIN/../lib')
+-- Performing post-build validation
+/home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-instrument-hub/portfile.cmake: warning: The folder ${CURRENT_PACKAGES_DIR}/include is empty or not present. This usually means that headers are not correctly installed. If this is a CMake helper port, add set(VCPKG_POLICY_CMAKE_HELPER_PORT enabled). If this is not a CMake helper port but this is otherwise intentional, add set(VCPKG_POLICY_EMPTY_INCLUDE_FOLDER enabled) to suppress this message.
+/home/zdm2/Documents/github/FAlCon/instrument-controller/ports/falcon-instrument-hub/portfile.cmake: warning: Found 1 post-build check problem(s). These are usually caused by bugs in portfile.cmake or the upstream build system. Please correct these before submitting this port to the curated registry.
+Starting submission of falcon-instrument-hub:x64-linux-dynamic@1.0.18#32 to 1 binary cache(s) in the background
+Elapsed time to handle falcon-instrument-hub:x64-linux-dynamic: 4.6 s
+Installing 169/222 falcon-measurement-lib:x64-linux-dynamic@1.0.2...
+falcon-measurement-lib:x64-linux-dynamic@1.0.2 package ABI: ed7bf4ec60549cf6c4a7104e01a9f7998fd1645a3647689f6f03b4b15a595443
+Elapsed time to handle falcon-measurement-lib:x64-linux-dynamic: 6.02 ms
+Installing 170/222 fmt:x64-linux-dynamic@12.1.0...
+fmt:x64-linux-dynamic@12.1.0 package ABI: 4774f5398262a5bc1d5bba9173c0aaa891fb5ad09e2010c753b1ad51a70e3d9c
+Elapsed time to handle fmt:x64-linux-dynamic: 10.3 ms
+Installing 171/222 spdlog[core,fmt,tz-offset]:x64-linux-dynamic@1.17.0...
+spdlog[core,fmt,tz-offset]:x64-linux-dynamic@1.17.0 package ABI: 297b8db6f70cf26750b1b421a3c85d2a1dd13324a8b7e3188d668a45145a61a0
+Elapsed time to handle spdlog:x64-linux-dynamic: 13.7 ms
+Installing 172/222 vcpkg-cmake-get-vars:x64-linux@2025-05-29...
+vcpkg-cmake-get-vars:x64-linux@2025-05-29 package ABI: c2d2532069f3372781eac2d4c288bb77cc47ad0706714cb4319db7575ae6f25e
+Elapsed time to handle vcpkg-cmake-get-vars:x64-linux: 3.26 ms
+Installing 173/222 openssl:x64-linux-dynamic@3.6.1#2...
+openssl:x64-linux-dynamic@3.6.1#2 package ABI: 267eec9a756c580f055de08ddb87c8578df9bb318c32ff656a51403f4ae83601
+Elapsed time to handle openssl:x64-linux-dynamic: 13.9 ms
+Installing 174/222 lz4:x64-linux-dynamic@1.10.0...
+lz4:x64-linux-dynamic@1.10.0 package ABI: b75819cb0aebd40ce24069608c9de716cdb79e8e5c9ba4fe042330c2193b69fa
+Elapsed time to handle lz4:x64-linux-dynamic: 8.82 ms
+Installing 175/222 libpq[core,lz4,openssl,zlib]:x64-linux-dynamic@16.9#3...
+libpq[core,lz4,openssl,zlib]:x64-linux-dynamic@16.9#3 package ABI: 12470f5e2979f9cc9bda300c553fe2e3490f2f89a22f7baf38a3dedc2f973305
+Elapsed time to handle libpq:x64-linux-dynamic: 25.8 ms
+Installing 176/222 libpqxx:x64-linux-dynamic@7.10.5...
+libpqxx:x64-linux-dynamic@7.10.5 package ABI: b5b337574eef575aecd356a02c61e61873ef94dc37d954679be3300073d2d588
+Elapsed time to handle libpqxx:x64-linux-dynamic: 16.4 ms
+Installing 177/222 falcon-database:x64-linux-dynamic@1.0.7...
+falcon-database:x64-linux-dynamic@1.0.7 package ABI: 23a280e878b938375faf8b945dda11ef2cedbec2c4e70e93ab554e94b8577c50
+Elapsed time to handle falcon-database:x64-linux-dynamic: 7.43 ms
+Installing 178/222 abseil:x64-linux-dynamic@20250814.1...
+abseil:x64-linux-dynamic@20250814.1 package ABI: ed5ea2f5594a2da97d53fed8d81d10735cf0a405ca9f155769e77677bbe6b44b
+Elapsed time to handle abseil:x64-linux-dynamic: 28.7 ms
+Installing 179/222 utf8-range:x64-linux-dynamic@6.33.4...
+utf8-range:x64-linux-dynamic@6.33.4 package ABI: f2dc8495c3f87b299c27669d0935264e5cd5fdae44b5fcd54404e2ffd4ea7adf
+Elapsed time to handle utf8-range:x64-linux-dynamic: 12.7 ms
+Installing 180/222 abseil:x64-linux@20250814.1...
+abseil:x64-linux@20250814.1 package ABI: 6447e7f14e3069fbffdf190f8fb07372312072576bedcb5c24fc44f8842f061f
+Elapsed time to handle abseil:x64-linux: 18.4 ms
+Installing 181/222 utf8-range:x64-linux@6.33.4...
+utf8-range:x64-linux@6.33.4 package ABI: 892a9fba5e5c97a6ab6a35e206b2d03cc58f9f4307e00ea006cb0b7943904694
+Elapsed time to handle utf8-range:x64-linux: 4.1 ms
+Installing 182/222 protobuf:x64-linux@6.33.4#1...
+protobuf:x64-linux@6.33.4#1 package ABI: e8a14c8ecafcaf5ed6f8709fa4ec76132fb4b5cb893ce31788fe63d2ac8ab882
+Elapsed time to handle protobuf:x64-linux: 11.9 ms
+Installing 183/222 protobuf:x64-linux-dynamic@6.33.4#1...
+protobuf:x64-linux-dynamic@6.33.4#1 package ABI: 432d9b332505edc915ce57c50220eaf53292bd2b2c9b53367b81f9084906c2dc
+Elapsed time to handle protobuf:x64-linux-dynamic: 19 ms
+Installing 184/222 protobuf-c:x64-linux-dynamic@1.5.2...
+protobuf-c:x64-linux-dynamic@1.5.2 package ABI: 5d006b5d5d6ed1678fba597dc08f833817a6ede5f64f0d9491b23f52bce4c164
+Elapsed time to handle protobuf-c:x64-linux-dynamic: 13.4 ms
+Installing 185/222 libsodium:x64-linux-dynamic@1.0.21...
+libsodium:x64-linux-dynamic@1.0.21 package ABI: f918a4949839951ccf7f2c8b582d825b1735b38278cb179d0c007490c38d22a1
+Elapsed time to handle libsodium:x64-linux-dynamic: 13.9 ms
+Installing 186/222 cnats:x64-linux-dynamic@3.12.0...
+cnats:x64-linux-dynamic@3.12.0 package ABI: 92a2157ef8b6b1c517618de1d4526424e40b426533e78a4d12154ea33b45852a
+Elapsed time to handle cnats:x64-linux-dynamic: 15.1 ms
+Installing 187/222 falcon-comms:x64-linux-dynamic@1.0.10#8...
+falcon-comms:x64-linux-dynamic@1.0.10#8 package ABI: 46db057d8212af84fc6124783c48e15251b9c8001c39ee6fe89037bae340134b
+Elapsed time to handle falcon-comms:x64-linux-dynamic: 18.4 ms
+Installing 188/222 falcon-routine:x64-linux-dynamic@1.0.5#3...
+falcon-routine:x64-linux-dynamic@1.0.5#3 package ABI: 1c0db9487a3dc39e0bea8eb47aef331224bf0e7932b189f03db0f4b331cdc9a5
+Elapsed time to handle falcon-routine:x64-linux-dynamic: 13.1 ms
+Installing 189/222 vcpkg-tool-meson:x64-linux@1.9.0#3...
+vcpkg-tool-meson:x64-linux@1.9.0#3 package ABI: fa32c0c399adcf6e824f7f9b3fad1892b5157250be09233a8002368b6d1127c9
+Elapsed time to handle vcpkg-tool-meson:x64-linux: 7.87 ms
+Installing 190/222 pcre2[core,jit,platform-default-features]:x64-linux-dynamic@10.47...
+pcre2[core,jit,platform-default-features]:x64-linux-dynamic@10.47 package ABI: 08850d336593661ada5cd4867ddae7cbb500ed19843d31f1440600a4570f63e6
+Elapsed time to handle pcre2:x64-linux-dynamic: 19 ms
+Installing 191/222 libiconv:x64-linux-dynamic@1.18#3...
+libiconv:x64-linux-dynamic@1.18#3 package ABI: dad6fae66bc6b460321dfef5481f2b711b8df5c7d19d2fcf35e22ab70331a1c6
+Elapsed time to handle libiconv:x64-linux-dynamic: 13 ms
+Installing 192/222 vcpkg-make:x64-linux@2026-01-01...
+vcpkg-make:x64-linux@2026-01-01 package ABI: d549e9250e281801f1d255bec373d29fefd41db819c21491ec9912088390b099
+Elapsed time to handle vcpkg-make:x64-linux: 4.59 ms
+Installing 193/222 libffi:x64-linux-dynamic@3.5.2...
+libffi:x64-linux-dynamic@3.5.2 package ABI: a9f1f8347236573257aae7d3b1c6f3d6add62460c7bcfc5b02a800fb8fdc2d53
+Elapsed time to handle libffi:x64-linux-dynamic: 13.6 ms
+Installing 194/222 gettext-libintl:x64-linux-dynamic@0.22.5#4...
+gettext-libintl:x64-linux-dynamic@0.22.5#4 package ABI: bb8c00c4f7cc07e1a7f0959cd68f93359415c5b69f12d0f07da333af2258fecb
+Elapsed time to handle gettext-libintl:x64-linux-dynamic: 13 ms
+Installing 195/222 libiconv:x64-linux@1.18#3...
+libiconv:x64-linux@1.18#3 package ABI: 7e071b8b09bc0040a79d17330115471aa83a2cac705c9a2f30b20b58795c94e2
+Elapsed time to handle libiconv:x64-linux: 4.31 ms
+Installing 196/222 gettext-libintl:x64-linux@0.22.5#4...
+gettext-libintl:x64-linux@0.22.5#4 package ABI: 8da5d7d9d3f08f3e9b9d2770fdb7748a028fd328cca026fd61651bef40b2baea
+Elapsed time to handle gettext-libintl:x64-linux: 3.95 ms
+Installing 197/222 gettext[core,tools]:x64-linux@0.22.5#4...
+gettext[core,tools]:x64-linux@0.22.5#4 package ABI: 5800460147cdd92adaab82810c62d26adfcba635c35d68d1d964c3bfd91fe983
+Elapsed time to handle gettext:x64-linux: 12.5 ms
+Installing 198/222 dirent:x64-linux-dynamic@1.26...
+dirent:x64-linux-dynamic@1.26 package ABI: c0403e18697a82c89d866d6301800c165ae699d5af5083fe7729d613272452a1
+Elapsed time to handle dirent:x64-linux-dynamic: 12.8 ms
+Installing 199/222 glib:x64-linux-dynamic@2.86.3...
+glib:x64-linux-dynamic@2.86.3 package ABI: ce5b5064f2ea4f4a76fa190b8bb2aa58fec3ad38723c8868d19d1cb7d2f0937d
+Elapsed time to handle glib:x64-linux-dynamic: 32.5 ms
+Installing 200/222 gtest:x64-linux-dynamic@1.17.0#2...
+gtest:x64-linux-dynamic@1.17.0#2 package ABI: 0a7c55073f12cf7639bb208d97d6ca3b003ba27aa710e1ae0bd3ff08393c7655
+Elapsed time to handle gtest:x64-linux-dynamic: 18.6 ms
+Installing 201/222 uthash:x64-linux-dynamic@2.3.0...
+uthash:x64-linux-dynamic@2.3.0 package ABI: 52c7a764fe8a397ebb6bbde46826a7a9ea535b99d12f718e045d0c0b682246ce
+Elapsed time to handle uthash:x64-linux-dynamic: 15.6 ms
+Installing 202/222 instrument-data:x64-linux-dynamic@1.0.2...
+instrument-data:x64-linux-dynamic@1.0.2 package ABI: f307071680889c9914f56ec08b438f9ce76bbde66193be999c2a09b6b7b94e77
+Elapsed time to handle instrument-data:x64-linux-dynamic: 14.7 ms
+Installing 203/222 sol2:x64-linux-dynamic@3.5.0#1...
+sol2:x64-linux-dynamic@3.5.0#1 package ABI: d3858e96311109cde13373628d4764d913411e19f3987abbd8b5cebf5a8785b0
+Elapsed time to handle sol2:x64-linux-dynamic: 19 ms
+Installing 204/222 lua:x64-linux-dynamic@5.5.0#1...
+lua:x64-linux-dynamic@5.5.0#1 package ABI: 2fdc6e8532294aa7f03094b08b69d69368d7054423585cd03849ceb971d56f77
+Elapsed time to handle lua:x64-linux-dynamic: 16.3 ms
+Installing 205/222 boost-move:x64-linux-dynamic@1.90.0#1...
+boost-move:x64-linux-dynamic@1.90.0#1 package ABI: 444f2f9f0e0241828137c9e1ae66f2c0a1c3981cc09f702d5c2597c815091a96
+Elapsed time to handle boost-move:x64-linux-dynamic: 16.7 ms
+Installing 206/222 boost-intrusive:x64-linux-dynamic@1.90.0#1...
+boost-intrusive:x64-linux-dynamic@1.90.0#1 package ABI: e8f2571c34d7fa6df657e66bb6151fee88b78403c18bb16ba79cb353cd40bd0c
+Elapsed time to handle boost-intrusive:x64-linux-dynamic: 17.7 ms
+Installing 207/222 boost-container:x64-linux-dynamic@1.90.0#1...
+boost-container:x64-linux-dynamic@1.90.0#1 package ABI: 4783a9aec768e80f5d4f964b9ad755943aae05417a70ce459caf5cd1c2672c38
+Elapsed time to handle boost-container:x64-linux-dynamic: 16.3 ms
+Installing 208/222 boost-interprocess:x64-linux-dynamic@1.90.0#1...
+boost-interprocess:x64-linux-dynamic@1.90.0#1 package ABI: 8915a5e2ebfd87fd27bcc58699ecaaf0953f01044dbb1eb63bffebd7aa10f8b8
+Elapsed time to handle boost-interprocess:x64-linux-dynamic: 18.5 ms
+Installing 209/222 boost-tokenizer:x64-linux-dynamic@1.90.0#1...
+boost-tokenizer:x64-linux-dynamic@1.90.0#1 package ABI: 169ae71044154fa69abb4a78f72e58a57800cbdd50f4006e6408e81c697c196f
+Elapsed time to handle boost-tokenizer:x64-linux-dynamic: 14.5 ms
+Installing 210/222 boost-regex:x64-linux-dynamic@1.90.0#1...
+boost-regex:x64-linux-dynamic@1.90.0#1 package ABI: a5dc9da7f677f0712dc59585f6a18b1e5798d4bccc04e7502567d3bb74724f4e
+Elapsed time to handle boost-regex:x64-linux-dynamic: 16.1 ms
+Installing 211/222 boost-conversion:x64-linux-dynamic@1.90.0#1...
+boost-conversion:x64-linux-dynamic@1.90.0#1 package ABI: 361dddaf5a48a02db3c71b38dee8938d79e0c17a787f13b2cf052732c600c3b1
+Elapsed time to handle boost-conversion:x64-linux-dynamic: 15.7 ms
+Installing 212/222 boost-array:x64-linux-dynamic@1.90.0#1...
+boost-array:x64-linux-dynamic@1.90.0#1 package ABI: 7f6512d43d7fb60c7e506b1715438bff93f0d28c2575e71cc3884a1d57af3d9f
+Elapsed time to handle boost-array:x64-linux-dynamic: 15.9 ms
+Installing 213/222 boost-range:x64-linux-dynamic@1.90.0#1...
+boost-range:x64-linux-dynamic@1.90.0#1 package ABI: 74e71785bb44bac13bdbf68d77926f0f3250b3264e662ff593c4796d71c16ea1
+Elapsed time to handle boost-range:x64-linux-dynamic: 22.9 ms
+Installing 214/222 boost-numeric-conversion:x64-linux-dynamic@1.90.0#1...
+boost-numeric-conversion:x64-linux-dynamic@1.90.0#1 package ABI: 3dcd19375e9cf058967c103b6ab7bb7f26bcb5a015842d2e8d5d02d9343a09b0
+Elapsed time to handle boost-numeric-conversion:x64-linux-dynamic: 15.9 ms
+Installing 215/222 boost-lexical-cast:x64-linux-dynamic@1.90.0#1...
+boost-lexical-cast:x64-linux-dynamic@1.90.0#1 package ABI: d5f85d84bc933c6534b01ffb77880aa707659a593de701d22d135ae7f6c1ed55
+Elapsed time to handle boost-lexical-cast:x64-linux-dynamic: 10.2 ms
+Installing 216/222 boost-unordered:x64-linux-dynamic@1.90.0#1...
+boost-unordered:x64-linux-dynamic@1.90.0#1 package ABI: f56e787d9d4f8bd31ec2ad67a226e30686788b93898a53602b0be178bc2771c6
+Elapsed time to handle boost-unordered:x64-linux-dynamic: 11.7 ms
+Installing 217/222 boost-exception:x64-linux-dynamic@1.90.0#1...
+boost-exception:x64-linux-dynamic@1.90.0#1 package ABI: 535e953f8bc886874b2106de04d38f4f38f44cbf4dd626e0299268d174160ad5
+Elapsed time to handle boost-exception:x64-linux-dynamic: 16.2 ms
+Installing 218/222 boost-algorithm:x64-linux-dynamic@1.90.0#1...
+boost-algorithm:x64-linux-dynamic@1.90.0#1 package ABI: 10306d3e2569aac2dddae06b450ce948847c3bcf1989db3e3089bd59cfaedf69
+Elapsed time to handle boost-algorithm:x64-linux-dynamic: 15.2 ms
+Installing 219/222 boost-date-time:x64-linux-dynamic@1.90.0#1...
+boost-date-time:x64-linux-dynamic@1.90.0#1 package ABI: eb2358c03d0a768b97a4f7244141434eadd30f45d8757fa3d13c80657016e10f
+Elapsed time to handle boost-date-time:x64-linux-dynamic: 21.9 ms
+Installing 220/222 instrument-script-server:x64-linux-dynamic@1.1.7#13...
+instrument-script-server:x64-linux-dynamic@1.1.7#13 package ABI: bd252cfd9de90c68655820322ca20b920e5b09fc7424e5020ffbc7d38a47e3d8
+Elapsed time to handle instrument-script-server:x64-linux-dynamic: 21.3 ms
+Installing 221/222 isa-test-utils:x64-linux-dynamic@1.0.4...
+isa-test-utils:x64-linux-dynamic@1.0.4 package ABI: 82243cd8154d09843e2dfe6b0973a9052373c4f45324e78d528839df31f3e5f7
+Elapsed time to handle isa-test-utils:x64-linux-dynamic: 17.5 ms
+Installing 222/222 teal-api-gen:x64-linux-dynamic@1.0.1#1...
+teal-api-gen:x64-linux-dynamic@1.0.1#1 package ABI: 6c629ef18381a51cb84305a396db55381de992d1c3fcffa80678c82379d16581
+Elapsed time to handle teal-api-gen:x64-linux-dynamic: 16.3 ms
+Installed contents are licensed to you by owners. Microsoft is not responsible for, nor does it grant any licenses to, third-party packages.
+Some packages did not declare an SPDX license. Check the `copyright` file for each package for more information about their licensing.
+Packages installed in this vcpkg installation declare the following licenses:
+Apache-2.0
+BSD-1-Clause
+BSD-2-Clause
+BSD-3-Clause
+BSL-1.0
+GPL-3.0-only
+ISC
+LGPL-2.1-or-later
+MIT
+MPL-2.0
+PostgreSQL
+Zlib
+falcon-core provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(falcon-core CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE falcon-core::falcon-core falcon-core::falcon-core-c-api)
+
+falcon-core provides pkg-config modules:
+
+  # Falcon Core C API library
+  falcon-core-c-api
+
+  # Falcon Core C++ library
+  falcon-core
+
+falcon-routine provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(falcon-routine CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE falcon::falcon-routine)
+
+glib provides pkg-config modules:
+
+  # glib I/O library
+  gio-2.0
+
+  # unix specific headers for glib I/O library
+  gio-unix-2.0
+
+  # GObject Introspection repository parser
+  girepository-2.0
+
+  # C Utility Library
+  glib-2.0
+
+  # Dynamic module loader for GLib
+  gmodule-2.0
+
+  # Dynamic module loader for GLib
+  gmodule-export-2.0
+
+  # Dynamic module loader for GLib
+  gmodule-no-export-2.0
+
+  # GLib Type, Object, Parameter and Signal Library
+  gobject-2.0
+
+  # Thread support for GLib
+  gthread-2.0
+
+The package gtest is compatible with built-in CMake targets:
+
+    enable_testing()
+    
+    find_package(GTest CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
+    
+    add_test(AllTestsInMain main)
+
+instrument-data provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(instrument-data CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE instrument-data::instrument-data)
+
+instrument-data provides pkg-config modules:
+
+  # An cross OS shared memory platform for collecting scientific data from instruments
+  instrument-data
+
+instrument-script-server provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(instrument-script-server CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE instrument-script-server::instrument-script-server-core)
+
+isa-test-utils provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(isa-test-utils CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE isa-test-utils::isa-test-utils)
+
+teal-api-gen provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(teal-api-gen CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE teal-api-gen::teal-api-gen)
+
+Waiting for 1 remaining binary cache submissions...
+Completed submission of falcon-instrument-hub:x64-linux-dynamic@1.0.18#32 to 1 binary cache(s) in 1.6 s (1/1)
+All requested installations completed successfully in: 6.3 s
+-- Running vcpkg install - done
+-- No ccache/sccache found (fine, builds will just be normal).
+-- Building mock instrument plugins...
+-- Configured instrument plugin:  mock_multimeter
+-- Configured instrument plugin:  mock_voltage_source
+-- Integration tests configured
+--   Test executable: integration_tests
+--   Plugin search path: /home/zdm2/Documents/github/FAlCon/instrument-controller/build/linux-clang-release/.;/home/zdm2/Documents/github/FAlCon/instrument-controller/build/linux-clang-release/lib/plugins;/home/zdm2/Documents/github/FAlCon/instrument-controller/build/linux-clang-release
+-- Generated env.sh and build-info.json in /home/zdm2/Documents/github/FAlCon/instrument-controller/build/linux-clang-release
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/zdm2/Documents/github/FAlCon/instrument-controller/build/linux-clang-release
+Building linux-clang-release...
+cmake --build --preset linux-clang-release
+[1/6] Building C object tests/CMakeFiles/mock_voltage_source.dir/instrument-plugins/mock-voltage-source.c.o
+/home/zdm2/Documents/github/FAlCon/instrument-controller/tests/instrument-plugins/mock-voltage-source.c:25:14: warning: variable length array folded to constant array as an extension [-Wgnu-folding-constant]
+static float g_stored_voltage[MAX_CHANNEL - MIN_CHANNEL] = {NULL_VOLTAGE};
+             ^
+/home/zdm2/Documents/github/FAlCon/instrument-controller/tests/instrument-plugins/mock-voltage-source.c:211:33: warning: passing 'const char[128]' to parameter of type 'char *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  payloadCopy(resp->command_id, cmd->id);
+                                ^~~~~~~
+/home/zdm2/Documents/github/FAlCon/instrument-controller/tests/instrument-plugins/mock-voltage-source.c:36:45: note: passing argument to parameter 'message' here
+static void payloadCopy(char *target, char *message) {
+                                            ^
+/home/zdm2/Documents/github/FAlCon/instrument-controller/tests/instrument-plugins/mock-voltage-source.c:212:38: warning: passing 'const char[128]' to parameter of type 'char *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  payloadCopy(resp->instrument_name, cmd->instrument_name);
+                                     ^~~~~~~~~~~~~~~~~~~~
+/home/zdm2/Documents/github/FAlCon/instrument-controller/tests/instrument-plugins/mock-voltage-source.c:36:45: note: passing argument to parameter 'message' here
+static void payloadCopy(char *target, char *message) {
+                                            ^
+3 warnings generated.
+[2/6] Building C object tests/CMakeFiles/mock_multimeter.dir/instrument-plugins/mock-multimeter.c.o
+/home/zdm2/Documents/github/FAlCon/instrument-controller/tests/instrument-plugins/mock-multimeter.c:39:13: warning: variable length array folded to constant array as an extension [-Wgnu-folding-constant]
+static char g_data_file_path[MAX_CHANNEL - MIN_CHANNEL + 1][PLUGIN_MAX_STRING_LEN] =
+            ^
+/home/zdm2/Documents/github/FAlCon/instrument-controller/tests/instrument-plugins/mock-multimeter.c:41:12: warning: variable length array folded to constant array as an extension [-Wgnu-folding-constant]
+static int g_num_bins[MAX_CHANNEL - MIN_CHANNEL + 1] = {0};
+           ^
+/home/zdm2/Documents/github/FAlCon/instrument-controller/tests/instrument-plugins/mock-multimeter.c:42:16: warning: variable length array folded to constant array as an extension [-Wgnu-folding-constant]
+static double *g_data_buffer[MAX_CHANNEL - MIN_CHANNEL + 1] = {NULL};
+               ^
+/home/zdm2/Documents/github/FAlCon/instrument-controller/tests/instrument-plugins/mock-multimeter.c:43:12: warning: variable length array folded to constant array as an extension [-Wgnu-folding-constant]
+static int g_data_count[MAX_CHANNEL - MIN_CHANNEL + 1] = {0};
+           ^
+/home/zdm2/Documents/github/FAlCon/instrument-controller/tests/instrument-plugins/mock-multimeter.c:44:12: warning: variable length array folded to constant array as an extension [-Wgnu-folding-constant]
+static int g_current_index[MAX_CHANNEL - MIN_CHANNEL + 1] = {0};
+           ^
+/home/zdm2/Documents/github/FAlCon/instrument-controller/tests/instrument-plugins/mock-multimeter.c:156:15: warning: variable length array folded to constant array as an extension [-Wgnu-folding-constant]
+  const char *filepaths[MAX_CHANNEL] = {0};
+              ^
+/home/zdm2/Documents/github/FAlCon/instrument-controller/tests/instrument-plugins/mock-multimeter.c:393:33: warning: passing 'const char[128]' to parameter of type 'char *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  payloadCopy(resp->command_id, cmd->id);
+                                ^~~~~~~
+/home/zdm2/Documents/github/FAlCon/instrument-controller/tests/instrument-plugins/mock-multimeter.c:56:45: note: passing argument to parameter 'message' here
+static void payloadCopy(char *target, char *message) {
+                                            ^
+/home/zdm2/Documents/github/FAlCon/instrument-controller/tests/instrument-plugins/mock-multimeter.c:394:38: warning: passing 'const char[128]' to parameter of type 'char *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  payloadCopy(resp->instrument_name, cmd->instrument_name);
+                                     ^~~~~~~~~~~~~~~~~~~~
+/home/zdm2/Documents/github/FAlCon/instrument-controller/tests/instrument-plugins/mock-multimeter.c:56:45: note: passing argument to parameter 'message' here
+static void payloadCopy(char *target, char *message) {
+                                            ^
+8 warnings generated.
+[3/6] Linking C shared module tests/mock_voltage_source.so
+[4/6] Linking C shared module tests/mock_multimeter.so
+[5/6] Building CXX object tests/CMakeFiles/integration_tests.dir/data-retrieval-1D/data-retrieval.cpp.o
+[6/6] Linking CXX executable tests/integration_tests
+Running tests for linux-clang-release...
+. build/linux-clang-release/env.sh && LD_LIBRARY_PATH=$VCPKG_INSTALLED_DIR/$VCPKG_TRIPLET/lib:$LD_LIBRARY_PATH ctest --preset linux-clang-release --output-on-failure
+Test project /home/zdm2/Documents/github/FAlCon/instrument-controller/build/linux-clang-release
+    Start 1: DataRetrievalTest.Gaussian1D
+1/3 Test #1: DataRetrievalTest.Gaussian1D ..............   Passed    6.53 sec
+    Start 2: DataRetrievalTest.VoltageSweepCurrent
+2/3 Test #2: DataRetrievalTest.VoltageSweepCurrent .....   Passed    7.39 sec
+    Start 3: DataRetrievalTest.VoltageSweepCurrent2D
+3/3 Test #3: DataRetrievalTest.VoltageSweepCurrent2D ...   Passed    2.64 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Total Test time (real) =  16.56 sec

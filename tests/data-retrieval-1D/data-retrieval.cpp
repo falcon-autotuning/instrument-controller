@@ -112,12 +112,20 @@ protected:
                 (LUA_SCRIPTS_DIR / "set_voltage.lua").string());
     CompileTeal((MEASUREMENT_SCRIPTS_DIR / "1D Gaussian Noise.tl").string(),
                 (LUA_SCRIPTS_DIR / "1D Gaussian Noise.lua").string());
+    CompileTeal((MEASUREMENT_SCRIPTS_DIR / "1D Voltage Sweep Current.tl").string(),
+                (LUA_SCRIPTS_DIR / "1D Voltage Sweep Current.lua").string());
+    CompileTeal((MEASUREMENT_SCRIPTS_DIR / "2D Voltage Sweep Current.tl").string(),
+                (LUA_SCRIPTS_DIR / "2D Voltage Sweep Current.lua").string());
     SetISSLuaLibs(std::vector<std::filesystem::path>{
         INSTRUMENT_LUA_LIBS_DIR / "multimeter.lua",
         INSTRUMENT_LUA_LIBS_DIR / "source.lua", LUA_LIB_DIR});
 
     // Ensure spawned hub/ISS processes inherit test-specific runtime variables.
-    setenv("MOCK_MULTIMETER_DATA_FILE", TEST_DATA_FILE.c_str(), 1);
+    // Channel 1 (O1) receives Gaussian data; channel 2 (O2) receives linear data.
+    std::string multimeter_data_files =
+        TEST_DATA_FILE.string() + ";" +
+        (TEST_DATA_DIR_PATH / "linear-1d.txt").string();
+    setenv("MOCK_MULTIMETER_DATA_FILE", multimeter_data_files.c_str(), 1);
     setenv("NATS_URL", "nats://localhost:4222", 1);
 
     StartInstrumentHub(VCPKG_BIN_DIR / "instrument-hub",
@@ -489,4 +497,175 @@ TEST_F(DataRetrievalTest, Gaussian1D)
   EXPECT_EQ(labelledArray->size(), NUM_POINTS)
       << "Expected 100 data points, but got " << labelledArray->size()
       << " instead";
+}
+TEST_F(DataRetrievalTest, VoltageSweepCurrent)
+{
+  const int NUM_POINTS = 100;
+  const double START_TIME_SECONDS = 0.0;
+  const double MAX_TIME_SECONDS = 1.0;
+  const char *SWEEP_NAME = "P1";
+  const char *GETTER_NAME = "O2";
+  const double MIN_SWEEP_VOLTAGE = 0.0;
+  const double MAX_SWEEP_VOLTAGE = 0.5;
+  ConfigSP config = request_config(TIMEOUT_MS);
+  ASSERT_NE(config, nullptr) << "Failed to get config from request_config";
+
+  InstrumentPortSP currentMeter = InstrumentPort::Meter(
+      "analog2_stream", Connection::Ohmic(GETTER_NAME),
+      InstrumentTypes::VOLTMETER, SymbolUnit::MilliVolt(),
+      "Mock current meter");
+  PortsSP getters =
+      std::make_shared<Ports>(std::vector<InstrumentPortSP>{currentMeter});
+
+  // NOTE: O2 shares Meter1 (VOLTMETER) with O1, so the hub stamps VOLTMETER and
+  // MilliVolt on the response regardless of the getter port's declared type.
+  // In a physical setup the raw mV reading would be scaled to nA by the
+  // transresistance amplifier gain; the test data (linear-1d.txt) represents
+  // that conceptual current sweep.
+  // TODO(port_payload): Replace with request_port_payload() once PORT_PAYLOAD
+  // serialisation is stable (see 5 - PORT_PAYLOAD_REFACTOR_NOTES.md).
+  InstrumentPortSP voltageKnob = InstrumentPort::Knob(
+      "analog4_voltage", Connection::PlungerGate(SWEEP_NAME),
+      InstrumentTypes::DC_VOLTAGE_SOURCE, SymbolUnit::Volt(),
+      "Voltage sweep knob");
+  InstrumentPortSP clock = InstrumentPort::ExecutionClock();
+
+  MapSP<InstrumentPort, PortTransform> transforms =
+      std::make_shared<Map<InstrumentPort, PortTransform>>(
+          std::vector<std::pair<InstrumentPortSP, PortTransformSP>>{
+              {voltageKnob,
+               PortTransform::IdentityTransform(voltageKnob)}});
+  LabelledDomainSP time_domain = LabelledDomain::from_port(
+      std::pair<double, double>{START_TIME_SECONDS, MAX_TIME_SECONDS}, clock);
+  LabelledDomainSP sweepDomain = LabelledDomain::from_port(
+      std::pair<double, double>{MIN_SWEEP_VOLTAGE, MAX_SWEEP_VOLTAGE},
+      voltageKnob);
+  CoupledLabelledDomainSP coupledDomain =
+      std::make_shared<CoupledLabelledDomain>(
+          std::vector<LabelledDomainSP>{sweepDomain});
+  MapSP<std::string, bool> increasing =
+      std::make_shared<Map<std::string, bool>>(
+          std::vector<std::pair<std::string, bool>>{
+              {voltageKnob->default_name(), true}});
+
+  auto waveform = Waveform::CartesianIdentityWaveform1D(
+      NUM_POINTS, coupledDomain, increasing);
+  ListSP<Waveform> waveforms =
+      std::make_shared<List<Waveform>>(std::vector<WaveformSP>{waveform});
+
+  MeasurementRequestSP request = std::make_shared<MeasurementRequest>(
+      "1D voltage sweep recording current at O2", "1D Voltage Sweep Current",
+      waveforms, getters, transforms, time_domain);
+  auto resp = request_measurement(request, TIMEOUT_MS);
+
+  EXPECT_TRUE(resp->arrays()->is_measured_arrays())
+      << "The arrays were not measured arrays";
+  EXPECT_EQ(resp->arrays()->size(), 1) << "Expected exactly one measured array";
+  auto labelledArray = resp->arrays()->arrays()[0];
+  EXPECT_EQ(*labelledArray->connection(),
+            *Connection::PlungerGate(SWEEP_NAME))
+      << "Expected connection to be P1, but got "
+      << labelledArray->connection()->name() << " instead";
+  EXPECT_EQ(labelledArray->instrument_type(), InstrumentTypes::VOLTMETER)
+      << "Expected instrument type to be VOLTMETER, but got "
+      << labelledArray->instrument_type() << " instead";
+  EXPECT_EQ(*labelledArray->units(), *SymbolUnit::MilliVolt())
+      << "Expected units to be mV, but got " << labelledArray->units()
+      << " instead";
+  EXPECT_EQ(labelledArray->size(), NUM_POINTS)
+      << "Expected 100 data points, but got " << labelledArray->size()
+      << " instead";
+}
+
+TEST_F(DataRetrievalTest, VoltageSweepCurrent2D)
+{
+  const int N_FAST = 10;
+  const int N_SLOW = 10;
+  const double START_TIME_SECONDS = 0.0;
+  const double MAX_TIME_SECONDS = 2.0;
+  const char *FAST_GATE = "P1";
+  const char *SLOW_GATE = "P2";
+  const char *GETTER_NAME = "O2";
+  const double FAST_MIN_V = 0.0, FAST_MAX_V = 0.5;
+  const double SLOW_MIN_V = -0.1, SLOW_MAX_V = 0.1;
+
+  ConfigSP config = request_config(TIMEOUT_MS);
+  ASSERT_NE(config, nullptr) << "Failed to get config from request_config";
+
+  InstrumentPortSP currentMeter = InstrumentPort::Meter(
+      "analog2_stream", Connection::Ohmic(GETTER_NAME),
+      InstrumentTypes::VOLTMETER, SymbolUnit::MilliVolt(),
+      "Mock current meter");
+  PortsSP getters =
+      std::make_shared<Ports>(std::vector<InstrumentPortSP>{currentMeter});
+
+  InstrumentPortSP fastKnob = InstrumentPort::Knob(
+      "analog4_voltage", Connection::PlungerGate(FAST_GATE),
+      InstrumentTypes::DC_VOLTAGE_SOURCE, SymbolUnit::Volt(),
+      "Fast axis voltage sweep knob");
+  InstrumentPortSP slowKnob = InstrumentPort::Knob(
+      "analog5_voltage", Connection::PlungerGate(SLOW_GATE),
+      InstrumentTypes::DC_VOLTAGE_SOURCE, SymbolUnit::Volt(),
+      "Slow axis voltage step knob");
+  InstrumentPortSP clock = InstrumentPort::ExecutionClock();
+
+  MapSP<InstrumentPort, PortTransform> transforms =
+      std::make_shared<Map<InstrumentPort, PortTransform>>(
+          std::vector<std::pair<InstrumentPortSP, PortTransformSP>>{
+              {fastKnob, PortTransform::IdentityTransform(fastKnob)},
+              {slowKnob, PortTransform::IdentityTransform(slowKnob)}});
+
+  LabelledDomainSP time_domain = LabelledDomain::from_port(
+      std::pair<double, double>{START_TIME_SECONDS, MAX_TIME_SECONDS}, clock);
+  LabelledDomainSP fastDomain = LabelledDomain::from_port(
+      std::pair<double, double>{FAST_MIN_V, FAST_MAX_V}, fastKnob);
+  LabelledDomainSP slowDomain = LabelledDomain::from_port(
+      std::pair<double, double>{SLOW_MIN_V, SLOW_MAX_V}, slowKnob);
+
+  CoupledLabelledDomainSP fastCoupled =
+      std::make_shared<CoupledLabelledDomain>(
+          std::vector<LabelledDomainSP>{fastDomain});
+  CoupledLabelledDomainSP slowCoupled =
+      std::make_shared<CoupledLabelledDomain>(
+          std::vector<LabelledDomainSP>{slowDomain});
+
+  MapSP<std::string, bool> fastIncreasing =
+      std::make_shared<Map<std::string, bool>>(
+          std::vector<std::pair<std::string, bool>>{
+              {fastKnob->default_name(), true}});
+  MapSP<std::string, bool> slowIncreasing =
+      std::make_shared<Map<std::string, bool>>(
+          std::vector<std::pair<std::string, bool>>{
+              {slowKnob->default_name(), true}});
+
+  WaveformSP fastWaveform = Waveform::CartesianIdentityWaveform1D(
+      N_FAST, fastCoupled, fastIncreasing);
+  WaveformSP slowWaveform = Waveform::CartesianIdentityWaveform1D(
+      N_SLOW, slowCoupled, slowIncreasing);
+  ListSP<Waveform> waveforms =
+      std::make_shared<List<Waveform>>(
+          std::vector<WaveformSP>{fastWaveform, slowWaveform});
+
+  MeasurementRequestSP request = std::make_shared<MeasurementRequest>(
+      "2D voltage sweep recording current at O2", "2D Voltage Sweep Current",
+      waveforms, getters, transforms, time_domain);
+  auto resp = request_measurement(request, TIMEOUT_MS);
+
+  EXPECT_TRUE(resp->arrays()->is_measured_arrays())
+      << "The arrays were not measured arrays";
+  EXPECT_EQ(resp->arrays()->size(), 1) << "Expected exactly one measured array";
+  auto labelledArray = resp->arrays()->arrays()[0];
+  EXPECT_EQ(*labelledArray->connection(),
+            *Connection::PlungerGate(FAST_GATE))
+      << "Expected connection to be P1, but got "
+      << labelledArray->connection()->name() << " instead";
+  EXPECT_EQ(labelledArray->instrument_type(), InstrumentTypes::VOLTMETER)
+      << "Expected instrument type to be VOLTMETER, but got "
+      << labelledArray->instrument_type() << " instead";
+  EXPECT_EQ(*labelledArray->units(), *SymbolUnit::MilliVolt())
+      << "Expected units to be mV, but got " << labelledArray->units()
+      << " instead";
+  EXPECT_EQ(labelledArray->size(), N_FAST * N_SLOW)
+      << "Expected " << N_FAST * N_SLOW << " data points, but got "
+      << labelledArray->size() << " instead";
 }
