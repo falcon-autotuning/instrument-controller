@@ -44,11 +44,11 @@ fi
 
 # Platform-specific configuration
 if [ "$PLATFORM" = "windows" ]; then
-  PACKAGE_FILE="falcon-instrument-controller-${RELEASE_VERSION}-win64.zip"
+  PACKAGE_FILE="instrument-controller-${RELEASE_VERSION}-Windows-AMD64.zip"
   INSTALL_DIR="${FALCON_INSTALL_DIR:-C:/falcon}"
   EXTRACT_CMD="unzip -q -o"
 else
-  PACKAGE_FILE="falcon-instrument-controller-${RELEASE_VERSION}-Linux.tar.gz"
+  PACKAGE_FILE="instrument-controller-${RELEASE_VERSION}-Linux-x86_64.tar.gz"
   INSTALL_DIR="${FALCON_INSTALL_DIR:-/opt/falcon}"
   EXTRACT_CMD="tar --strip-components=1 -xzf"
 fi
