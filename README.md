@@ -8,10 +8,10 @@ The Instrument Controller provides a complete runtime for managing and executing
 
 ```bash
 # Or latest 
-curl -fsSL https://github.com/falcon-autotuning/falcon/releases/latest/download/install.sh | sudo bash
+curl -fsSL https://github.com/falcon-autotuning/instrument-controller/releases/latest/download/install.sh | sudo bash
 
 # Install specific version
-curl -fsSL https://github.com/falcon-autotuning/falcon/releases/download/v<VERSION>/install.sh | sudo bash
+curl -fsSL https://github.com/falcon-autotuning/instrument-controller/releases/download/v<VERSION>/install.sh | sudo bash
 ```
 
 ***

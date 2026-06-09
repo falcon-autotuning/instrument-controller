@@ -45,7 +45,7 @@ fi
 # Platform-specific configuration
 if [ "$PLATFORM" = "windows" ]; then
   PACKAGE_FILE="instrument-controller-${RELEASE_VERSION}-Windows-AMD64.zip"
-  INSTALL_DIR="${FALCON_INSTALL_DIR:-C:/falcon}"
+  INSTALL_DIR="${FALCON_INSTALL_DIR:-/c/falcon}"
 else
   PACKAGE_FILE="instrument-controller-${RELEASE_VERSION}-Linux-x86_64.tar.gz"
   INSTALL_DIR="${FALCON_INSTALL_DIR:-/opt/falcon}"
@@ -104,10 +104,13 @@ if [ "$PLATFORM" = "windows" ]; then
   echo "📋 Next steps (PowerShell):"
   echo ""
   echo "  Add to PATH:"
-  echo "    \$env:PATH = \"$INSTALL_DIR\\bin;\" + \$env:PATH"
+  echo "    \$env:PATH = \"$INSTALL_DIR/bin;\" + \$env:PATH"
+  echo ""
+  echo "  Add to PATH inside Git Bash:"
+  echo "    \$env:PATH = \"$INSTALL_DIR/bin;\" + \$env:PATH"
   echo ""
   echo "  Or add CMake prefix:"
-  echo "    \$env:CMAKE_PREFIX_PATH = \"$INSTALL_DIR\\lib\\cmake;\" + \$env:CMAKE_PREFIX_PATH"
+  echo "    \$env:CMAKE_PREFIX_PATH = \"$INSTALL_DIR/lib/cmake;\" + \$env:CMAKE_PREFIX_PATH"
 else
   echo "📋 Next steps:"
   echo ""
