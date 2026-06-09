@@ -6,20 +6,12 @@ The Instrument Controller provides a complete runtime for managing and executing
 
 ## Installation
 
-Prebuilt binaries are distributed through GitHub Releases and can be installed using the provided installation script.
-
-### Install Latest Release
-
 ```bash
-curl -fsSL https://github.com/falcon-autotuning/instrument-controller/releases/download/v1.0.0/install.sh | bash
-```
+# Or latest 
+curl -fsSL https://github.com/falcon-autotuning/falcon/releases/latest/download/install.sh | sudo bash
 
-***
-
-### Install a Specific Version
-
-```bash
-curl -fsSL https://github.com/falcon-autotuning/instrument-controller/releases/download/v1.0.1/install.sh | bash -s v1.0.1
+# Install specific version
+curl -fsSL https://github.com/falcon-autotuning/falcon/releases/download/v<VERSION>/install.sh | sudo bash
 ```
 
 ***
