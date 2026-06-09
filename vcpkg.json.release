@@ -1,6 +1,6 @@
 {
   "name": "instrument-controller",
-  "description": "The packaging requirements",
+  "description": "For running integration tests",
   "license": "MPL-2.0",
   "dependencies": [
     {
@@ -11,13 +11,30 @@
       "version>=": "1.2.4"
     },
     "instrument-script-server",
+    "instrument-data",
     "teal-api-gen",
     "falcon-instrument-hub",
     "falcon-measurement-lib",
-    "glib",
+    "cjson",
+    {
+      "name": "instrument-plugin-api",
+      "version>=": "1.0.4"
+    },
+    {
+      "name": "instrument-data",
+      "version>=": "1.1.5"
+    },
+    {
+      "name": "instrument-log",
+      "version>=": "1.0.5"
+    },
     {
       "name": "isa-test-utils",
       "version>=": "1.0.4"
+    },
+    {
+      "name": "visa-plugin",
+      "version>=": "1.0.0"
     }
   ],
   "builtin-baseline": "e5a1490e1409d175932ef6014519e9ae149ddb7c",

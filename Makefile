@@ -64,6 +64,8 @@ clean:
 
 package:  
 	mkdir -p packaging
+	mkdir -p build
+	mkdir -p build/$(PRESET)
 	cp CMakeLists.txt packaging/
 	cp vcpkg.json.release packaging/vcpkg.json
 	cp CMakePresets.json packaging/CMakePresets.json
@@ -73,14 +75,16 @@ package:
 	cp README.md packaging/README.md
 	cp LICENSE packaging/LICENSE
 	cp -r CMakeFiles/ packaging/CMakeFiles
-	cd packaging && $(MAKE) clean build $(PRESET)
+	cd packaging && $(MAKE) clean build PRESET=$(PRESET)
 	if [ "$$(uname -s | grep -i 'mingw\|msys\|cygwin')" ]; then \
-		cd packaging/build && cpack -G ZIP -C Release; \
-		mv packaging/build/*.zip build/ 2>/dev/null || true; \
-		echo "✓ Windows package moved to build/"; \
+			cd packaging/build/$(PRESET) && \
+			cpack -G ZIP -C Release && \
+			mv *.zip ../../../build/$(PRESET)/ && \
+			echo "✓ Windows package moved to build/$(PRESET)/"; \
 	else \
-		cd packaging/build && cpack -G TGZ -C Release; \
-		mv packaging/build/*.tar.gz build/ 2>/dev/null || true; \
-		echo "✓ Linux package moved to build/"; \
+			cd packaging/build/$(PRESET) && \
+			cpack -G TGZ -C Release && \
+			mv *.tar.gz ../../../build/$(PRESET)/ && \
+			echo "✓ Linux package moved to build/$(PRESET)/"; \
 	fi
 	rm -rf packaging

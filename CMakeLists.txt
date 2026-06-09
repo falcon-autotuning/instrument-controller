@@ -85,15 +85,25 @@ endif()
 # ============================================================================
 # CPack General Settings
 # ============================================================================
+
+set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
+set(CPACK_PROJECT_NAME "${PROJECT_NAME}")
+set(CPACK_PACKAGE_VENDOR "Falcon")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+
 set(CPACK_SOURCE_IGNORE_FILES
   build/
   ".*~$"
   vcpkg/
   vcpkg_installed/
 )
-set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+
+set(CPACK_PACKAGE_FILE_NAME
+  "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}"
+)
 
 # ============================================================================
 # Platform-Specific CPack Configuration
