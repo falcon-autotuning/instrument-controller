@@ -75,6 +75,11 @@ package:
 	cp README.md packaging/README.md
 	cp LICENSE packaging/LICENSE
 	cp -r CMakeFiles/ packaging/CMakeFiles
+	# Copy NuGet credentials if present (speeds up authenticated package restores)
+	if [ -f ".nuget-credential" ]; then \
+			cp .nuget-credential packaging/.nuget-credential; \
+			echo "✓ Copied .nuget-credential"; \
+	fi
 	cd packaging && $(MAKE) clean build PRESET=$(PRESET)
 	if [ "$$(uname -s | grep -i 'mingw\|msys\|cygwin')" ]; then \
 			cd packaging/build/$(PRESET) && \
