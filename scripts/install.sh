@@ -46,11 +46,9 @@ fi
 if [ "$PLATFORM" = "windows" ]; then
   PACKAGE_FILE="instrument-controller-${RELEASE_VERSION}-Windows-AMD64.zip"
   INSTALL_DIR="${FALCON_INSTALL_DIR:-C:/falcon}"
-  EXTRACT_CMD="unzip -q -o"
 else
   PACKAGE_FILE="instrument-controller-${RELEASE_VERSION}-Linux-x86_64.tar.gz"
   INSTALL_DIR="${FALCON_INSTALL_DIR:-/opt/falcon}"
-  EXTRACT_CMD="tar --strip-components=1 -xzf"
 fi
 
 PACKAGE_URL="$RELEASE_URL/$PACKAGE_FILE"
@@ -85,9 +83,16 @@ if ! curl -fsSL "$PACKAGE_URL" -o "$TEMP_FILE"; then
 fi
 
 # Extract based on platform
-if ! $EXTRACT_CMD "$TEMP_FILE" -C "$INSTALL_DIR"; then
-  echo "❌ Extraction failed"
-  exit 1
+if [ "$PLATFORM" = "windows" ]; then
+  if ! unzip -q -o "$TEMP_FILE" -d "$INSTALL_DIR"; then
+    echo "❌ Extraction failed"
+    exit 1
+  fi
+else
+  if ! tar --strip-components=1 -xzf "$TEMP_FILE" -C "$INSTALL_DIR"; then
+    echo "❌ Extraction failed"
+    exit 1
+  fi
 fi
 
 echo "✅ Installation successful!"
