@@ -196,4 +196,29 @@ else()
   )
 endif()
 
+# ------------------------------------------------------------------------------
+# Collect dependency licenses
+# ------------------------------------------------------------------------------
+
+function(install_vcpkg_licenses)
+  set(_share_dir "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share")
+
+  file(GLOB dirs "${_share_dir}/*")
+
+  foreach(dir ${dirs})
+    if(IS_DIRECTORY "${dir}")
+      get_filename_component(pkg "${dir}" NAME)
+
+      # Most vcpkg ports install license as "copyright"
+      if(EXISTS "${dir}/copyright")
+        install(
+          FILES "${dir}/copyright"
+          DESTINATION "${INSTALL_DOC_DIR}/licenses/${pkg}"
+        )
+      endif()
+    endif()
+  endforeach()
+endfunction()
+
+install_vcpkg_licenses()
 include(CPack)

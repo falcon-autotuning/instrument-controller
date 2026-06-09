@@ -13,7 +13,6 @@
     "instrument-script-server",
     "instrument-data",
     "teal-api-gen",
-    "falcon-instrument-hub",
     "falcon-measurement-lib",
     "cjson",
     {
