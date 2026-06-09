@@ -12,7 +12,6 @@
     },
     "instrument-script-server",
     "instrument-data",
-    "teal-api-gen",
     "cjson",
     {
       "name": "instrument-plugin-api",
