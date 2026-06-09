@@ -12,7 +12,7 @@
 set -euo pipefail
 
 # Configuration
-RELEASE_VERSION="${1:-v1.0.0}"
+RELEASE_VERSION="${1:-v0.1.0-alpha}"
 REPO_OWNER="falcon-autotuning"
 REPO_NAME="instrument-controller"
 RELEASE_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/$RELEASE_VERSION"
@@ -45,12 +45,10 @@ fi
 # Platform-specific configuration
 if [ "$PLATFORM" = "windows" ]; then
   PACKAGE_FILE="instrument-controller-${RELEASE_VERSION}-Windows-AMD64.zip"
-  INSTALL_DIR="${FALCON_INSTALL_DIR:-C:/falcon}"
-  EXTRACT_CMD="unzip -q -o"
+  INSTALL_DIR="${FALCON_INSTALL_DIR:-/c/falcon}"
 else
   PACKAGE_FILE="instrument-controller-${RELEASE_VERSION}-Linux-x86_64.tar.gz"
   INSTALL_DIR="${FALCON_INSTALL_DIR:-/opt/falcon}"
-  EXTRACT_CMD="tar --strip-components=1 -xzf"
 fi
 
 PACKAGE_URL="$RELEASE_URL/$PACKAGE_FILE"
@@ -85,9 +83,16 @@ if ! curl -fsSL "$PACKAGE_URL" -o "$TEMP_FILE"; then
 fi
 
 # Extract based on platform
-if ! $EXTRACT_CMD "$TEMP_FILE" -C "$INSTALL_DIR"; then
-  echo "❌ Extraction failed"
-  exit 1
+if [ "$PLATFORM" = "windows" ]; then
+  if ! unzip -q -o "$TEMP_FILE" -d "$INSTALL_DIR"; then
+    echo "❌ Extraction failed"
+    exit 1
+  fi
+else
+  if ! tar --strip-components=1 -xzf "$TEMP_FILE" -C "$INSTALL_DIR"; then
+    echo "❌ Extraction failed"
+    exit 1
+  fi
 fi
 
 echo "✅ Installation successful!"
@@ -98,11 +103,13 @@ echo ""
 if [ "$PLATFORM" = "windows" ]; then
   echo "📋 Next steps (PowerShell):"
   echo ""
-  echo "  Add to PATH:"
-  echo "    \$env:PATH = \"$INSTALL_DIR\\bin;\" + \$env:PATH"
+  echo "  Add to PATH with C:\falcon\bin"
+  echo ""
+  echo "  Add to PATH inside Git Bash:"
+  echo "    \$env:PATH = \"$INSTALL_DIR/bin;\" + \$env:PATH"
   echo ""
   echo "  Or add CMake prefix:"
-  echo "    \$env:CMAKE_PREFIX_PATH = \"$INSTALL_DIR\\lib\\cmake;\" + \$env:CMAKE_PREFIX_PATH"
+  echo "    \$env:CMAKE_PREFIX_PATH = \"$INSTALL_DIR/lib/cmake;\" + \$env:CMAKE_PREFIX_PATH"
 else
   echo "📋 Next steps:"
   echo ""
