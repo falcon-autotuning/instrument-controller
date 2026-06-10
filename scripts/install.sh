@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ============================================================================
 # Falcon Instrument Controller Installer
 # Supports: Linux (native bash), Windows (Git Bash/WSL/MSYS2)
@@ -68,59 +68,87 @@ mkdir -p "$INSTALL_DIR" || {
   exit 1
 }
 
-# Download and extract in one step
-TEMP_FILE="$(mktemp)" || {
-  echo "❌ Failed to create temporary file"
+# Temp workspace
+TMP_DIR="$(mktemp -d)" || {
+  echo "❌ Failed to create temp directory"
   exit 1
 }
 
-trap "rm -f '$TEMP_FILE'" EXIT
+cleanup() {
+  rm -rf "$TMP_DIR"
+}
+trap cleanup EXIT
 
-echo "⏳ Downloading and extracting..."
-if ! curl -fsSL "$PACKAGE_URL" -o "$TEMP_FILE"; then
+ARCHIVE_FILE="$TMP_DIR/package"
+
+echo "⏳ Downloading..."
+if ! curl -fsSL "$PACKAGE_URL" -o "$ARCHIVE_FILE"; then
   echo "❌ Download failed: $PACKAGE_URL"
   exit 1
 fi
 
-# Extract based on platform
+echo "📦 Extracting..."
+
 if [ "$PLATFORM" = "windows" ]; then
-  if ! unzip -q -o "$TEMP_FILE" -d "$INSTALL_DIR"; then
+  unzip -q -o "$ARCHIVE_FILE" -d "$TMP_DIR/extract" || {
     echo "❌ Extraction failed"
     exit 1
+  }
+
+  # Detect top-level directory
+  TOP_DIR="$(find "$TMP_DIR/extract" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+
+  if [ -n "$TOP_DIR" ]; then
+    echo "📁 Flattening extracted directory..."
+    cp -r "$TOP_DIR"/. "$INSTALL_DIR"/
+  else
+    echo "⚠️ No wrapper directory detected, copying directly..."
+    cp -r "$TMP_DIR/extract"/. "$INSTALL_DIR"/
   fi
+
 else
-  if ! tar --strip-components=1 -xzf "$TEMP_FILE" -C "$INSTALL_DIR"; then
+  tar --strip-components=1 -xzf "$ARCHIVE_FILE" -C "$INSTALL_DIR" || {
     echo "❌ Extraction failed"
     exit 1
-  fi
+  }
 fi
 
 echo "✅ Installation successful!"
 echo "📍 Location: $INSTALL_DIR"
 echo ""
 
-# Platform-specific next steps
 if [ "$PLATFORM" = "windows" ]; then
-  echo "📋 Next steps (PowerShell):"
+  WINDOWS_INSTALL_DIR="$(cygpath -w "$INSTALL_DIR")"
+fi
+
+if [ "$PLATFORM" = "windows" ]; then
+  echo "📋 Next steps"
   echo ""
-  echo "  Add to PATH with C:\falcon\bin"
+  echo "Git Bash / MSYS2:"
+  echo "  echo 'export PATH=\"$INSTALL_DIR/bin:\$PATH\"' >> ~/.bashrc"
+  echo "  echo 'export PKG_CONFIG_PATH=\"$INSTALL_DIR/lib/pkgconfig:\$PKG_CONFIG_PATH\"' >> ~/.bashrc"
+  echo "  source ~/.bashrc"
   echo ""
-  echo "  Add to PATH inside Git Bash:"
-  echo "    \$env:PATH = \"$INSTALL_DIR/bin;\" + \$env:PATH"
+
+  echo "PowerShell (persistent user PATH):"
+  printf '  [System.Environment]::SetEnvironmentVariable("Path", "%s\\bin;" + $env:Path, [System.EnvironmentVariableTarget]::User)\n' "$WINDOWS_INSTALL_DIR"
   echo ""
-  echo "  Or add CMake prefix:"
-  echo "    \$env:CMAKE_PREFIX_PATH = \"$INSTALL_DIR/lib/cmake;\" + \$env:CMAKE_PREFIX_PATH"
+
+  echo "Optional (CMake projects):"
+  printf '  [System.Environment]::SetEnvironmentVariable("CMAKE_PREFIX_PATH", "%s\\lib\\cmake;" + $env:CMAKE_PREFIX_PATH, [System.EnvironmentVariableTarget]::User)\n' "$WINDOWS_INSTALL_DIR"
+
 else
   echo "📋 Next steps:"
   echo ""
-  echo "  Add to ~/.bashrc or ~/.zshrc:"
-  echo "    export PATH=\"$INSTALL_DIR/bin:\$PATH\""
-  echo "    export LD_LIBRARY_PATH=\"$INSTALL_DIR/lib:\$LD_LIBRARY_PATH\""
-  echo "    export PKG_CONFIG_PATH=\"$INSTALL_DIR/lib/pkgconfig:\$PKG_CONFIG_PATH\""
+  echo "Add to ~/.bashrc or ~/.zshrc:"
+  echo "  export PATH=\"$INSTALL_DIR/bin:\$PATH\""
+  echo "  export LD_LIBRARY_PATH=\"$INSTALL_DIR/lib:\$LD_LIBRARY_PATH\""
+  echo "  export PKG_CONFIG_PATH=\"$INSTALL_DIR/lib/pkgconfig:\$PKG_CONFIG_PATH\""
   echo ""
-  echo "  Then reload:"
-  echo "    source ~/.bashrc"
+  echo "Reload shell:"
+  echo "  source ~/.bashrc"
 fi
 
 echo ""
-echo "📖 For more info, see: $INSTALL_DIR/FALCON_DEPENDENCIES.txt"
+echo "📖 For more info, see:"
+echo "   $INSTALL_DIR/FALCON_DEPENDENCIES.txt"
