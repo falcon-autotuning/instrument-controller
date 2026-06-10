@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(
   instrument-controller
-  VERSION 0.1.0
+  VERSION 0.1.1
   DESCRIPTION "Instrument Controller - Full instrument control stack for Falcon"
   HOMEPAGE_URL "https://github.com/falcon-autotuning/instrument-controller"
   LANGUAGES CXX C
