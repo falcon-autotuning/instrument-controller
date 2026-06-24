@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(
   instrument-controller
-  VERSION 1.0.0
+  VERSION 0.1.1
   DESCRIPTION "Instrument Controller - Full instrument control stack for Falcon"
   HOMEPAGE_URL "https://github.com/falcon-autotuning/instrument-controller"
   LANGUAGES CXX C
@@ -49,7 +49,9 @@ endif()
 find_package(falcon-core              CONFIG REQUIRED)
 find_package(instrument-data          CONFIG REQUIRED)
 find_package(instrument-script-server CONFIG REQUIRED)
-find_package(teal-api-gen             CONFIG REQUIRED)
+find_package(visa-plugin              CONFIG REQUIRED)
+find_package(instrument-plugin-api    CONFIG REQUIRED)
+# find_package(teal-api-gen             CONFIG REQUIRED)
 
 if(BUILD_TESTS)
   enable_testing()
@@ -85,15 +87,25 @@ endif()
 # ============================================================================
 # CPack General Settings
 # ============================================================================
+
+set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
+set(CPACK_PROJECT_NAME "${PROJECT_NAME}")
+set(CPACK_PACKAGE_VENDOR "Falcon")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+
 set(CPACK_SOURCE_IGNORE_FILES
   build/
   ".*~$"
   vcpkg/
   vcpkg_installed/
 )
-set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+
+set(CPACK_PACKAGE_FILE_NAME
+  "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}"
+)
 
 # ============================================================================
 # Platform-Specific CPack Configuration
@@ -142,24 +154,20 @@ install(
 # Install vcpkg dependencies
 # ============================================================================
 if(WIN32)
-  file(GLOB_RECURSE WIN_DLLS "${VCPKG_INSTALLED_DIR}/x64-win-llvm/bin/*.dll")
   install(
-    PROGRAMS ${WIN_DLLS}
+    DIRECTORY "${VCPKG_INSTALLED_DIR}/x64-win-llvm/bin/"
     DESTINATION "${INSTALL_BIN_DIR}"
   )
-  file(GLOB_RECURSE WIN_LIBS "${VCPKG_INSTALLED_DIR}/x64-win-llvm/lib/*.lib")
   install(
-    FILES ${WIN_LIBS}
+    DIRECTORY "${VCPKG_INSTALLED_DIR}/x64-win-llvm/lib/"
     DESTINATION "${INSTALL_LIB_DIR}"
   )
-  file(GLOB_RECURSE WIN_INCLUDES "${VCPKG_INSTALLED_DIR}/x64-win-llvm/include/*")
   install(
-    FILES ${WIN_INCLUDES}
+    DIRECTORY "${VCPKG_INSTALLED_DIR}/x64-win-llvm/include/"
     DESTINATION "${INSTALL_INCLUDE_DIR}"
   )
-  file(GLOB_RECURSE WIN_SHARE "${VCPKG_INSTALLED_DIR}/x64-win-llvm/share/*")
   install(
-    FILES ${WIN_SHARE}
+    DIRECTORY "${VCPKG_INSTALLED_DIR}/x64-win-llvm/share/"
     DESTINATION "${INSTALL_SHARE_DIR}"
   )
 else()
@@ -186,4 +194,29 @@ else()
   )
 endif()
 
+# ------------------------------------------------------------------------------
+# Collect dependency licenses
+# ------------------------------------------------------------------------------
+
+function(install_vcpkg_licenses)
+  set(_share_dir "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share")
+
+  file(GLOB dirs "${_share_dir}/*")
+
+  foreach(dir ${dirs})
+    if(IS_DIRECTORY "${dir}")
+      get_filename_component(pkg "${dir}" NAME)
+
+      # Most vcpkg ports install license as "copyright"
+      if(EXISTS "${dir}/copyright")
+        install(
+          FILES "${dir}/copyright"
+          DESTINATION "${INSTALL_DOC_DIR}/licenses/${pkg}"
+        )
+      endif()
+    endif()
+  endforeach()
+endfunction()
+
+install_vcpkg_licenses()
 include(CPack)

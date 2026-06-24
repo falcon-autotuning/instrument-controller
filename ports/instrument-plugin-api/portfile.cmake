@@ -1,8 +1,8 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
-    REPO falcon-autotuning/isa-test-utils
+    REPO falcon-autotuning/instrument-plugin-api
     REF v${VERSION}
-    SHA512 25e72721b2a207cae61eb5099706bc0182231480150a4a11276b93da9a9fcd138ae9c73dce465310f3cd3dadb5475fe68739de6206d54ee77ac5e0ae0378edf1
+    SHA512 2b32bb690720950e5471297187f3958bc97eae6dad70293423d889a63df366692dfc03f4d483b03a4878aa9a9a29722b68d8d859191a4d5a9d5f5fa861a096d3
 )
 
 vcpkg_cmake_configure(

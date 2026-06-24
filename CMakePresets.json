@@ -9,16 +9,13 @@
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-        "VCPKG_ROOT": "${sourceDir}/vcpkg",
         "VCPKG_INSTALLED_DIR": "${sourceDir}/vcpkg_installed",
         "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/my-vcpkg-triplets",
         "VCPKG_OVERLAY_PORTS": "${sourceDir}/ports",
         "CMAKE_MAKE_PROGRAM": "ninja",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "USE_CCACHE": "ON",
-        "ENABLE_PCH": "ON",
-        "BUILD_TESTS": "ON",
-        "FALCON_CORE_BUILD_C_API": "ON"
+        "ENABLE_PCH": "ON"
       }
     },
     {
@@ -32,7 +29,8 @@
         "VCPKG_TARGET_TRIPLET": "x64-linux-dynamic",
         "CMAKE_PREFIX_PATH": "${sourceDir}/vcpkg_installed/x64-linux-dynamic/share;${sourceDir}/vcpkg_installed",
         "CMAKE_EXE_LINKER_FLAGS": "-fuse-ld=lld",
-        "CMAKE_SHARED_LINKER_FLAGS": "-fuse-ld=lld"
+        "CMAKE_SHARED_LINKER_FLAGS": "-fuse-ld=lld",
+        "BUILD_TESTS": "ON"
       }
     },
     {
@@ -46,7 +44,23 @@
         "VCPKG_TARGET_TRIPLET": "x64-linux-dynamic",
         "CMAKE_PREFIX_PATH": "${sourceDir}/vcpkg_installed/x64-linux-dynamic/share;${sourceDir}/vcpkg_installed",
         "CMAKE_EXE_LINKER_FLAGS": "-fuse-ld=lld",
-        "CMAKE_SHARED_LINKER_FLAGS": "-fuse-ld=lld"
+        "CMAKE_SHARED_LINKER_FLAGS": "-fuse-ld=lld",
+        "BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "linux-clang-package",
+      "description": "Linux Package build with Clang",
+      "inherits": "default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "VCPKG_TARGET_TRIPLET": "x64-linux-dynamic",
+        "CMAKE_PREFIX_PATH": "${sourceDir}/vcpkg_installed/x64-linux-dynamic/share;${sourceDir}/vcpkg_installed",
+        "CMAKE_EXE_LINKER_FLAGS": "-fuse-ld=lld",
+        "CMAKE_SHARED_LINKER_FLAGS": "-fuse-ld=lld",
+        "BUILD_TESTS": "OFF"
       }
     },
     {
@@ -58,7 +72,8 @@
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
         "VCPKG_TARGET_TRIPLET": "x64-linux-dynamic",
-        "CMAKE_PREFIX_PATH": "${sourceDir}/vcpkg_installed/x64-linux-dynamic/share;${sourceDir}/vcpkg_installed"
+        "CMAKE_PREFIX_PATH": "${sourceDir}/vcpkg_installed/x64-linux-dynamic/share;${sourceDir}/vcpkg_installed",
+        "BUILD_TESTS": "ON"
       }
     },
     {
@@ -70,7 +85,8 @@
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
         "VCPKG_TARGET_TRIPLET": "x64-linux-dynamic",
-        "CMAKE_PREFIX_PATH": "${sourceDir}/vcpkg_installed/x64-linux-dynamic/share;${sourceDir}/vcpkg_installed"
+        "CMAKE_PREFIX_PATH": "${sourceDir}/vcpkg_installed/x64-linux-dynamic/share;${sourceDir}/vcpkg_installed",
+        "BUILD_TESTS": "ON"
       }
     },
     {
@@ -82,7 +98,8 @@
         "CMAKE_C_COMPILER": "clang-cl",
         "CMAKE_CXX_COMPILER": "clang-cl",
         "VCPKG_TARGET_TRIPLET": "x64-win-llvm",
-        "CMAKE_PREFIX_PATH": "${sourceDir}/vcpkg_installed/x64-win-llvm/share;${sourceDir}/vcpkg_installed"
+        "CMAKE_PREFIX_PATH": "${sourceDir}/vcpkg_installed/x64-win-llvm/share;${sourceDir}/vcpkg_installed",
+        "BUILD_TESTS": "ON"
       }
     },
     {
@@ -94,7 +111,21 @@
         "CMAKE_C_COMPILER": "clang-cl",
         "CMAKE_CXX_COMPILER": "clang-cl",
         "VCPKG_TARGET_TRIPLET": "x64-win-llvm",
-        "CMAKE_PREFIX_PATH": "${sourceDir}/vcpkg_installed/x64-win-llvm/share;${sourceDir}/vcpkg_installed"
+        "CMAKE_PREFIX_PATH": "${sourceDir}/vcpkg_installed/x64-win-llvm/share;${sourceDir}/vcpkg_installed",
+        "BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "windows-clang-cl-package",
+      "description": "Windows Package build with clang-cl",
+      "inherits": "default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl",
+        "VCPKG_TARGET_TRIPLET": "x64-win-llvm",
+        "CMAKE_PREFIX_PATH": "${sourceDir}/vcpkg_installed/x64-win-llvm/share;${sourceDir}/vcpkg_installed",
+        "BUILD_TESTS": "OFF"
       }
     }
   ],
@@ -107,6 +138,11 @@
     {
       "name": "linux-clang-release",
       "configurePreset": "linux-clang-release",
+      "jobs": 0
+    },
+    {
+      "name": "linux-clang-package",
+      "configurePreset": "linux-clang-package",
       "jobs": 0
     },
     {
@@ -127,6 +163,11 @@
     {
       "name": "windows-clang-cl-release",
       "configurePreset": "windows-clang-cl-release",
+      "jobs": 0
+    },
+    {
+      "name": "windows-clang-cl-package",
+      "configurePreset": "windows-clang-cl-package",
       "jobs": 0
     }
   ],
