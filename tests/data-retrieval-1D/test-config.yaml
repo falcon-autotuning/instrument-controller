@@ -1,8 +1,0 @@
-wiremap: /home/zdm2/Documents/github/FAlCon/instrument-controller/tests/data-retrieval-1D/2-dot-1-chargesensor-wiremap.yml
-quantum-dot-config: /home/zdm2/Documents/github/FAlCon/instrument-controller/tests/device-configs/2-dot-1-chargesensor.yml
-inst-config: /home/zdm2/Documents/github/FAlCon/instrument-controller/tests/data-retrieval-1D/multimeter-config.yml;/home/zdm2/Documents/github/FAlCon/instrument-controller/tests/data-retrieval-1D/source-config.yml
-inst-plugins: /home/zdm2/Documents/github/FAlCon/instrument-controller/build/linux-clang-release/tests/mock_multimeter.so;/home/zdm2/Documents/github/FAlCon/instrument-controller/build/linux-clang-release/tests/mock_voltage_source.so
-instrument-server-port: 5555
-local-database: /home/zdm2/Documents/github/FAlCon/instrument-controller/tests/data
-start-embedded-nats: true
-user-measurement-luas: /home/zdm2/Documents/github/FAlCon/instrument-controller/tests/lua

@@ -1,0 +1,176 @@
+Bootstrapping vcpkg...
+MAKELEVEL=0 cmake -P cmake/bootstrap/bootstrap-vcpkg.cmake
+-- Using local project vcpkg: /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg
+-- ✓ vcpkg executable found at: /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/vcpkg
+-- ✓ vcpkg triplets found at: /home/zdm2/Documents/github/FAlCon/instrument-controller/my-vcpkg-triplets
+-- Reading preset 'linux-clang-release' from CMakePresets.json...
+-- ✓ Found triplet from preset: x64-linux-dynamic
+-- ✓ Found C compiler: clang
+-- ✓ Found CXX compiler: clang++
+-- Loading NuGet credentials from /home/zdm2/Documents/github/FAlCon/instrument-controller/.nuget-credentials
+-- Setting up NuGet authentication for vcpkg binary caching...
+-- ==== DEBUG: NUGET_EXE (parsed) = /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/downloads/tools/nuget-7.3.1-linux/nuget.exe
+Package source with Name: cpp-cache removed successfully.
+Package source with Name: cpp-cache added successfully.
+-- ✓ NuGet authentication configured
+-- Installing vcpkg dependencies for triplet: x64-linux-dynamic...
+-- Using overlay ports from: /home/zdm2/Documents/github/FAlCon/instrument-controller/ports
+-- Using overlay triplets from: /home/zdm2/Documents/github/FAlCon/instrument-controller/my-vcpkg-triplets
+Detecting compiler hash for triplet x64-linux...
+Compiler found: /usr/bin/clang++
+Detecting compiler hash for triplet x64-linux-dynamic...
+Compiler found: /usr/bin/clang++
+The following packages are already installed:
+  * abseil:x64-linux@20250814.1
+  * abseil:x64-linux-dynamic@20250814.1
+  * boost-algorithm:x64-linux-dynamic@1.90.0#1
+  * boost-align:x64-linux-dynamic@1.90.0#1
+  * boost-array:x64-linux-dynamic@1.90.0#1
+  * boost-assert:x64-linux-dynamic@1.90.0#1
+  * boost-atomic:x64-linux-dynamic@1.90.0#1
+  * boost-bind:x64-linux-dynamic@1.90.0#1
+  * boost-cmake:x64-linux-dynamic@1.90.0#1
+  * boost-concept-check:x64-linux-dynamic@1.90.0#1
+  * boost-config:x64-linux-dynamic@1.90.0#1
+  * boost-container:x64-linux-dynamic@1.90.0#1
+  * boost-container-hash:x64-linux-dynamic@1.90.0#1
+  * boost-conversion:x64-linux-dynamic@1.90.0#1
+  * boost-core:x64-linux-dynamic@1.90.0#1
+  * boost-date-time:x64-linux-dynamic@1.90.0#1
+  * boost-describe:x64-linux-dynamic@1.90.0#1
+  * boost-detail:x64-linux-dynamic@1.90.0#1
+  * boost-exception:x64-linux-dynamic@1.90.0#1
+  * boost-filesystem:x64-linux-dynamic@1.90.0#1
+  * boost-function:x64-linux-dynamic@1.90.0#1
+  * boost-function-types:x64-linux-dynamic@1.90.0#1
+  * boost-functional:x64-linux-dynamic@1.90.0#1
+  * boost-fusion:x64-linux-dynamic@1.90.0#1
+  * boost-headers:x64-linux-dynamic@1.90.0#1
+  * boost-interprocess:x64-linux-dynamic@1.90.0#1
+  * boost-intrusive:x64-linux-dynamic@1.90.0#1
+  * boost-io:x64-linux-dynamic@1.90.0#1
+  * boost-iterator:x64-linux-dynamic@1.90.0#1
+  * boost-lexical-cast:x64-linux-dynamic@1.90.0#1
+  * boost-move:x64-linux-dynamic@1.90.0#1
+  * boost-mp11:x64-linux-dynamic@1.90.0#1
+  * boost-mpl:x64-linux-dynamic@1.90.0#1
+  * boost-numeric-conversion:x64-linux-dynamic@1.90.0#1
+  * boost-optional:x64-linux-dynamic@1.90.0#1
+  * boost-predef:x64-linux-dynamic@1.90.0#1
+  * boost-preprocessor:x64-linux-dynamic@1.90.0#1
+  * boost-range:x64-linux-dynamic@1.90.0#1
+  * boost-regex:x64-linux-dynamic@1.90.0#1
+  * boost-scope:x64-linux-dynamic@1.90.0#1
+  * boost-smart-ptr:x64-linux-dynamic@1.90.0#1
+  * boost-static-assert:x64-linux-dynamic@1.90.0#1
+  * boost-system:x64-linux-dynamic@1.90.0#1
+  * boost-throw-exception:x64-linux-dynamic@1.90.0#1
+  * boost-tokenizer:x64-linux-dynamic@1.90.0#1
+  * boost-tuple:x64-linux-dynamic@1.90.0#1
+  * boost-type-traits:x64-linux-dynamic@1.90.0#1
+  * boost-typeof:x64-linux-dynamic@1.90.0#1
+  * boost-uninstall:x64-linux-dynamic@1.90.0#1
+  * boost-unordered:x64-linux-dynamic@1.90.0#1
+  * boost-utility:x64-linux-dynamic@1.90.0#1
+  * boost-uuid:x64-linux-dynamic@1.90.0#1
+  * boost-variant2:x64-linux-dynamic@1.90.0#1
+  * boost-winapi:x64-linux-dynamic@1.90.0#1
+  * cereal:x64-linux-dynamic@1.3.2#1
+  * cereal-xtensor:x64-linux-dynamic@1.3.2
+  * cnats:x64-linux-dynamic@3.12.0
+  * dirent:x64-linux-dynamic@1.26
+  * exprtk:x64-linux-dynamic@0.0.3
+  * falcon-comms:x64-linux-dynamic@1.0.10#9
+    falcon-core[core,c-api]:x64-linux-dynamic@1.2.13
+  * falcon-database:x64-linux-dynamic@1.0.7
+    falcon-instrument-hub:x64-linux-dynamic@1.0.18#53
+    falcon-measurement-lib:x64-linux-dynamic@1.0.2
+    falcon-routine:x64-linux-dynamic@1.0.5#3
+  * fmt:x64-linux-dynamic@12.1.0
+  * gettext[core,tools]:x64-linux@0.22.5#4
+  * gettext-libintl:x64-linux@0.22.5#4
+  * gettext-libintl:x64-linux-dynamic@0.22.5#4
+    glib:x64-linux-dynamic@2.86.3
+    gtest:x64-linux-dynamic@1.17.0#2
+  * hdf5[core,zlib,szip,hl,cpp]:x64-linux-dynamic@2.0.0
+  * highfive:x64-linux-dynamic@3.3.0
+    instrument-data:x64-linux-dynamic@1.0.2
+  * libaec:x64-linux-dynamic@1.1.5
+  * libffi:x64-linux-dynamic@3.5.2
+  * libiconv:x64-linux@1.18#3
+  * libiconv:x64-linux-dynamic@1.18#3
+  * libpq[core,zlib,openssl,lz4]:x64-linux-dynamic@16.9#3
+  * libpqxx:x64-linux-dynamic@7.10.5
+  * libsodium:x64-linux-dynamic@1.0.21
+  * lua:x64-linux-dynamic@5.5.0#1
+  * lz4:x64-linux-dynamic@1.10.0
+  * nlohmann-json:x64-linux-dynamic@3.12.0#2
+  * openssl:x64-linux-dynamic@3.6.1#2
+  * pcre2[core,platform-default-features,jit]:x64-linux-dynamic@10.47
+  * protobuf:x64-linux@6.33.4#1
+  * protobuf:x64-linux-dynamic@6.33.4#1
+  * protobuf-c:x64-linux-dynamic@1.5.2
+  * sol2:x64-linux-dynamic@3.5.0#1
+  * spdlog[core,tz-offset,fmt]:x64-linux-dynamic@1.17.0
+  * utf8-range:x64-linux@6.33.4
+  * utf8-range:x64-linux-dynamic@6.33.4
+  * uthash:x64-linux-dynamic@2.3.0
+  * vcpkg-boost:x64-linux@2025-03-29
+  * vcpkg-cmake:x64-linux@2024-04-23
+  * vcpkg-cmake:x64-linux-dynamic@2024-04-23
+  * vcpkg-cmake-config:x64-linux@2024-05-23
+  * vcpkg-cmake-config:x64-linux-dynamic@2024-05-23
+  * vcpkg-cmake-get-vars:x64-linux@2025-05-29
+  * vcpkg-make:x64-linux@2026-01-01
+  * vcpkg-tool-meson:x64-linux@1.9.0#3
+  * xsimd:x64-linux-dynamic@14.0.0
+  * xtensor:x64-linux-dynamic@0.25.0
+  * xtensor-io:x64-linux-dynamic@0.13.0#1
+  * xtl:x64-linux-dynamic@0.7.5
+  * yaml-cpp:x64-linux-dynamic@0.9.0
+  * zlib:x64-linux-dynamic@1.3.1
+The following packages will be built and installed:
+    instrument-script-server:x64-linux-dynamic@1.1.11#13 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/instrument-script-server
+    isa-test-utils:x64-linux-dynamic@1.0.4 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/isa-test-utils
+    teal-api-gen:x64-linux-dynamic@1.0.1#1 -- /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/teal-api-gen
+Restored 2 package(s) from /home/zdm2/.cache/vcpkg/archives in 9.09 ms. Use --debug to see more details.
+warning: /usr/bin/mono /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/downloads/tools/nuget-7.3.1-linux/nuget.exe install -ForceEnglishOutput -Verbosity detailed -NonInteractive /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/buildtrees/packages.config -OutputDirectory /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/packages -ExcludeVersion -PreRelease -PackageSaveMode nupkg -DirectDownload -NoCache -Source https://pkgs.dev.azure.com/falcon-autotuning/falcon/_packaging/cpp-cache/nuget/v3/index.json failed with exit code 1
+note: One or more NuGet credential providers failed to authenticate. See 'https://learn.microsoft.com/vcpkg/users/binarycaching-troubleshooting?WT.mc_id=vcpkg_inproduct_cli' for more details on how to provide credentials.
+Restored 0 package(s) from NuGet in 13 s. Use --debug to see more details.
+Installing 1/3 instrument-script-server:x64-linux-dynamic@1.1.11#13...
+instrument-script-server:x64-linux-dynamic@1.1.11#13 package ABI: 0ab82df000e06a033318c8b667bb6c285981b7a48294137bdfa975db4472146b
+Building instrument-script-server:x64-linux-dynamic@1.1.11#13...
+/home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/triplets/community/x64-linux-dynamic.cmake: info: loaded community triplet from here. Community triplets are not built in the curated registry and are thus less likely to succeed.
+/home/zdm2/Documents/github/FAlCon/instrument-controller/ports/instrument-script-server: info: installing overlay port from here
+-- instrument-script-server: local workspace not found, downloading v1.1.11 from GitHub
+Downloading https://github.com/falcon-autotuning/instrument-script-server/archive/v1.1.11.tar.gz -> falcon-autotuning-instrument-script-server-v1.1.11.tar.gz
+Successfully downloaded falcon-autotuning-instrument-script-server-v1.1.11.tar.gz
+-- Extracting source /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/downloads/falcon-autotuning-instrument-script-server-v1.1.11.tar.gz
+-- Using source at /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/buildtrees/instrument-script-server/src/v1.1.11-e9df0d2f56.clean
+-- Configuring x64-linux-dynamic
+CMake Error at scripts/cmake/vcpkg_execute_required_process.cmake:127 (message):
+    Command failed: /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/downloads/tools/ninja-1.13.2-linux/ninja -v
+    Working Directory: /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/buildtrees/instrument-script-server/x64-linux-dynamic-rel/vcpkg-parallel-configure
+    Error code: 1
+    See logs for more information:
+      /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/buildtrees/instrument-script-server/config-x64-linux-dynamic-dbg-CMakeCache.txt.log
+      /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/buildtrees/instrument-script-server/config-x64-linux-dynamic-rel-CMakeCache.txt.log
+      /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/buildtrees/instrument-script-server/config-x64-linux-dynamic-dbg-CMakeConfigureLog.yaml.log
+      /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/buildtrees/instrument-script-server/config-x64-linux-dynamic-rel-CMakeConfigureLog.yaml.log
+      /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg/buildtrees/instrument-script-server/config-x64-linux-dynamic-out.log
+
+Call Stack (most recent call first):
+  /home/zdm2/Documents/github/FAlCon/instrument-controller/vcpkg_installed/x64-linux-dynamic/share/vcpkg-cmake/vcpkg_cmake_configure.cmake:269 (vcpkg_execute_required_process)
+  /home/zdm2/Documents/github/FAlCon/instrument-controller/ports/instrument-script-server/portfile.cmake:18 (vcpkg_cmake_configure)
+  scripts/ports.cmake:206 (include)
+
+
+error: building instrument-script-server:x64-linux-dynamic failed with: BUILD_FAILED
+See https://learn.microsoft.com/vcpkg/troubleshoot/build-failures?WT.mc_id=vcpkg_inproduct_cli for more information.
+Elapsed time to handle instrument-script-server:x64-linux-dynamic: 1.3 s
+Please ensure you're using the latest port files with `git pull` and `vcpkg update`.
+Then check for known issues at:
+  https://github.com/microsoft/vcpkg/issues?q=is%3Aissue+is%3Aopen+in%3Atitle+instrument-script-server
+You can submit a new issue at:
+  https://github.com/microsoft/vcpkg/issues/new?title=%5Binstrument-script-server%5D%20build%20error%20on%20x64-linux-dynamic&body=Copy%20issue%20body%20from%20%2Fhome%2Fzdm2%2FDocuments%2Fgithub%2FFAlCon%2Finstrument-controller%2Fvcpkg_installed%2Fvcpkg%2Fissue_body.md
+

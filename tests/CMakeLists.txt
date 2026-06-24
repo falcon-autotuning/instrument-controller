@@ -12,7 +12,7 @@ add_instrument_plugin(mock_voltage_source
 )
 
 set(TEST_SOURCES
-  data-retrieval-1D/data-retrieval.cpp
+  instrument-control/data-retrieval.cpp
 )
 add_executable(integration_tests ${TEST_SOURCES})
 target_link_libraries(integration_tests
