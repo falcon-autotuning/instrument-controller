@@ -1,4 +1,8 @@
 .nuget-credentials
+
+# test data/logs
+/tests/test-run
+
 vcpkg/
 my-vcpkg-triplets/
 vcpkg_installed/

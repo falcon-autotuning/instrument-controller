@@ -48,6 +48,7 @@ endif()
 
 find_package(falcon-core              CONFIG REQUIRED)
 find_package(instrument-data          CONFIG REQUIRED)
+find_package(instrument-log           CONFIG REQUIRED)
 find_package(instrument-script-server CONFIG REQUIRED)
 find_package(visa-plugin              CONFIG REQUIRED)
 find_package(instrument-plugin-api    CONFIG REQUIRED)

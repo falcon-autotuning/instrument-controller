@@ -827,6 +827,7 @@ TEST_F(DataRetrievalTest, SetVoltage)
 
 TEST_F(DataRetrievalTest, SetSampleRate)
 {
+
   const char *GETTER_NAME = "O1";
   const double TARGET_SAMPLE_RATE = 1000.0;
   InstrumentPortSP getter = BuildSettingPort(

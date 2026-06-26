@@ -1,4 +1,4 @@
-#include <instrument-script-server/plugin/PluginInterface.h>
+#include <instrument-plugin.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>

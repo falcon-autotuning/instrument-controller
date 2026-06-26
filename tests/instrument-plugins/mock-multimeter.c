@@ -1,5 +1,5 @@
-#include <instrument-script-server/ipc/DataBufferManager_c_api.h>
-#include <instrument-script-server/plugin/PluginInterface.h>
+#include <instrument-data.h>
+#include <instrument-plugin.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -337,15 +337,20 @@ static int handle_stream(const PluginCommand *cmd, PluginResponse *resp) {
                           MEMORY_ALLOCATION_ERROR);
   }
   // Create buffer
-  char buffer_id[PLUGIN_MAX_STRING_LEN];
-  int buffer_err = data_buffer_create(cmd->instrument_name, cmd->id,
-                                      1, // FLOAT64
-                                      g_num_bins[index], result, buffer_id);
+  const char *buffer_id = data_manager_create_buffer(
+      cmd->instrument_name, cmd->id, INST_DATA_FLOAT64, g_num_bins[index],
+      result);
   free(result);
+  if (!buffer_id) {
+    return setPluginError(resp, "Failed to create data buffer",
+                          MEMORY_ALLOCATION_ERROR);
+  }
   resp->success = true;
   resp->has_large_data = true;
-  strncpy(resp->data_buffer_id, buffer_id, MOCK_PLUGIN_MAX_PAYLOAD);
+  strncpy(resp->data_buffer_id, buffer_id, PLUGIN_MAX_STRING_LEN - 1);
+  resp->data_buffer_id[PLUGIN_MAX_STRING_LEN - 1] = '\0';
   resp->data_element_count = g_num_bins[index];
+  resp->data_type = INST_DATA_FLOAT64;
   snprintf(resp->text_response, MOCK_PLUGIN_MAX_PAYLOAD,
            "%d datapoints measured on channel %d", g_num_bins[index], channel);
   return resp->error_code;

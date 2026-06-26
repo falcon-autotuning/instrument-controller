@@ -8,6 +8,7 @@ set(_LOCAL_CORE_LIBS_DIR "${WORKSPACE_ROOT}/falcon-core-libs/go/falcon-core")
 
 set(USE_LOCAL_HUB OFF)
 set(USE_LOCAL_CORE OFF)
+set(FALCON_DEV_MODE_ENABLED OFF)
 
 # Detect local hub (dev mode)
 if(EXISTS "${_LOCAL_HUB_DIR}/runtime/cmd/main.go")
@@ -19,10 +20,14 @@ if(EXISTS "${_LOCAL_CORE_LIBS_DIR}/go.mod")
   set(USE_LOCAL_CORE ON)
 endif()
 
+# if(DEFINED ENV{FALCON_DEV_MODE})
+#   set(FALCON_DEV_MODE_ENABLED ON)
+# endif()
+
 # ------------------------------------------------------------------------------
 # Source selection (prefer vcpkg/GitHub unless explicitly overridden)
 # ------------------------------------------------------------------------------
-if(USE_LOCAL_HUB AND DEFINED ENV{FALCON_DEV_MODE})
+if(USE_LOCAL_HUB AND FALCON_DEV_MODE_ENABLED)
   message(STATUS "falcon-instrument-hub: using LOCAL workspace source")
   set(SOURCE_PATH "${_LOCAL_HUB_DIR}")
   set(USING_LOCAL_SOURCE TRUE)
@@ -32,7 +37,7 @@ else()
         OUT_SOURCE_PATH SOURCE_PATH
         REPO falcon-autotuning/falcon-instrument-hub
         REF v${VERSION}
-        SHA512 38b3a42d56bfd37c9758281675be6c2ee70d070bb8d709a6959fb3f9f50275e0f422bc7b537a15b49a4a7f80944dab839e85282d326574726ef7e006b22d2854
+        SHA512 115e33f91c91a87e279ce8234aeab76d2f9e3f2361f4ed33932677bee27719ac71255c4eb45d6236433306c6d97b4803fd44f9d79231d8a2a05c6d81b1ee3fb3
     )
   set(USING_LOCAL_SOURCE FALSE)
 endif()
@@ -64,9 +69,28 @@ set(FALCON_GO_CGO_LDFLAGS
 )
 
 # ------------------------------------------------------------------------------
-# Dev-mode Go module override
+# Go module normalization
 # ------------------------------------------------------------------------------
-if(DEFINED ENV{FALCON_DEV_MODE} AND USE_LOCAL_CORE)
+# Release/package builds should not depend on a checked-in local replace path.
+# Drop it first if it exists; `go mod edit -dropreplace` is a no-op when absent.
+vcpkg_execute_required_process(
+  COMMAND go mod edit
+    "-dropreplace=github.com/falcon-autotuning/falcon-core-libs/go/falcon-core"
+  WORKING_DIRECTORY "${SOURCE_PATH}/runtime"
+  LOGNAME go-mod-dropreplace
+)
+
+# The v1.0.20 hub release tarball still references falcon-core Go module
+# v0.0.3, but the published submodule tag is now v0.0.4. Normalize the
+# extracted source so fresh vcpkg buildtrees resolve the public module tag.
+vcpkg_execute_required_process(
+  COMMAND go mod edit
+    "-require=github.com/falcon-autotuning/falcon-core-libs/go/falcon-core@v0.0.4"
+  WORKING_DIRECTORY "${SOURCE_PATH}/runtime"
+  LOGNAME go-mod-require
+)
+
+if(FALCON_DEV_MODE_ENABLED AND USE_LOCAL_CORE)
   message(STATUS "Using LOCAL falcon-core-libs override via go.mod replace")
 
   # Normalize path for Go (important for Windows)
@@ -81,9 +105,20 @@ if(DEFINED ENV{FALCON_DEV_MODE} AND USE_LOCAL_CORE)
 endif()
 
 # ------------------------------------------------------------------------------
+# Prepare Go module metadata
+# ------------------------------------------------------------------------------
+# Newer hub releases rely on the public falcon-core Go submodule tag and need
+# go.sum entries materialized before `go build` runs in a fresh vcpkg buildtree.
+vcpkg_execute_required_process(
+  COMMAND go mod tidy
+  WORKING_DIRECTORY "${SOURCE_PATH}/runtime"
+  LOGNAME go-mod-tidy
+)
+
+# ------------------------------------------------------------------------------
 # Optional dev overrides (only when explicitly enabled)
 # ------------------------------------------------------------------------------
-if(DEFINED ENV{FALCON_DEV_MODE} AND USE_LOCAL_HUB)
+if(FALCON_DEV_MODE_ENABLED AND USE_LOCAL_HUB)
   message(STATUS "Injecting local dev overrides into hub")
 
   set(HUB_MAIN_OVERRIDE "${_LOCAL_HUB_DIR}/runtime/cmd/main.go")
