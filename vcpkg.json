@@ -40,6 +40,13 @@
     {
       "name": "visa-plugin",
       "version>=": "1.0.0"
+    },
+    {
+      "name": "instrument-call-stack",
+      "version>=": "1.0.6",
+      "features": [
+        "lua"
+      ]
     }
   ],
   "builtin-baseline": "e5a1490e1409d175932ef6014519e9ae149ddb7c",
