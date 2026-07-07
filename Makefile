@@ -44,6 +44,12 @@ help:
 	@echo "  make test PRESET=linux-clang-release            # Run tests"
 	@echo "  make install PRESET=linux-clang-release         # Install"
 
+test-os:
+	@echo "OS is: '$(OS)'"
+	@echo "uname is: '$(shell uname -s 2>/dev/null)'"
+	@echo "IS_WINDOWS is: '$(IS_WINDOWS)'"
+	@echo "BOOTSTRAP_PATH is: '$(BOOTSTRAP_PATH)'"
+
 vcpkg-bootstrap:
 	@echo "Bootstrapping vcpkg..."
 	MAKELEVEL=0 cmake -P $(BOOTSTRAP_PATH)
