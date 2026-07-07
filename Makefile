@@ -2,6 +2,7 @@
 
 # Default to using standard system shell  
 SHELL ?= /bin/sh
+export MSYS_NO_PATHCONV=1
 
 # Build preset (user can override: make build PRESET=linux-gcc-release)
 PRESET ?= linux-clang-release
@@ -12,16 +13,12 @@ else
   SUDO := sudo
 endif
 
+# Default target
+all: build
+
 help:
-	@echo "Instrument Controller Build System"
-	@echo "============================="
-	@echo ""
-	@echo "Available presets:"
-	@cmake --list-presets=all
-	@echo ""
-	@echo "Usage:"
-	@echo "  make configure PRESET=<preset>  - Configure build (default: $(PRESET))"
-	@echo "  make build PRESET=<preset>      - Build (default: $(PRESET))"
+	@echo "Available targets:"
+	@echo "  make build PRESET=<preset>      - Build the project (default: $(PRESET))"
 	@echo "  make test PRESET=<preset>       - Run tests (default: $(PRESET))"
 	@echo "  make install PRESET=<preset>    - Install to system"
 	@echo "  make clean                      - Clean all build artifacts"
@@ -34,11 +31,11 @@ help:
 
 vcpkg-bootstrap:
 	@echo "Bootstrapping vcpkg..."
-	export MSYS_NO_PATHCONV=1 && MAKELEVEL=0 cmake -P cmake/bootstrap/bootstrap-vcpkg.cmake
+	MAKELEVEL=0 cmake -P cmake/bootstrap/bootstrap-vcpkg.cmake
 
 configure: vcpkg-bootstrap
 	@echo "Configuring $(PRESET)..."
-	export MSYS_NO_PATHCONV=1 && MAKELEVEL=0 cmake --preset $(PRESET)
+	MAKELEVEL=0 cmake --preset $(PRESET)
 
 build: configure
 	@echo "Building $(PRESET)..."
