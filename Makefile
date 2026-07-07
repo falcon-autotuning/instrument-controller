@@ -52,7 +52,7 @@ test-os:
 
 vcpkg-bootstrap:
 	@echo "Bootstrapping vcpkg..."
-	MAKELEVEL=0 cmake -P $(BOOTSTRAP_PATH)
+	MAKELEVEL=0 cmake -P "$(BOOTSTRAP_PATH)"
 
 configure: vcpkg-bootstrap
 	@echo "Configuring $(PRESET)..."
