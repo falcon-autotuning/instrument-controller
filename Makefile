@@ -9,8 +9,10 @@ PRESET ?= linux-clang-release
 CMAKE_BUILD_DIR := build/$(PRESET)
 ifeq ($(OS),Windows_NT)
   SUDO :=
+  BOOTSTRAP_PATH := cmake\bootstrap\bootstrap-vcpkg.cmake
 else
   SUDO := sudo
+  BOOTSTRAP_PATH := cmake/bootstrap/bootstrap-vcpkg.cmake
 endif
 
 # Default target
@@ -31,7 +33,7 @@ help:
 
 vcpkg-bootstrap:
 	@echo "Bootstrapping vcpkg..."
-	MAKELEVEL=0 cmake -P cmake/bootstrap/bootstrap-vcpkg.cmake
+	MAKELEVEL=0 cmake -P $(BOOTSTRAP_PATH)
 
 configure: vcpkg-bootstrap
 	@echo "Configuring $(PRESET)..."
