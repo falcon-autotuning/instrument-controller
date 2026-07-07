@@ -34,11 +34,11 @@ help:
 
 vcpkg-bootstrap:
 	@echo "Bootstrapping vcpkg..."
-	MAKELEVEL=0 cmake -P cmake/bootstrap/bootstrap-vcpkg.cmake
+	MSYS_NO_PATHCONV=1 MAKELEVEL=0 cmake -P cmake/bootstrap/bootstrap-vcpkg.cmake
 
 configure: vcpkg-bootstrap
 	@echo "Configuring $(PRESET)..."
-	MAKELEVEL=0 cmake --preset $(PRESET)
+	MSYS_NO_PATHCONV=1 MAKELEVEL=0 cmake --preset $(PRESET)
 
 build: configure
 	@echo "Building $(PRESET)..."
