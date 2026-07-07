@@ -25,11 +25,11 @@ endif
 
 ifdef IS_WINDOWS
   CMAKE_ARGS := -D WIN32=TRUE
-  RUN_CMAKE := TEMP="$$(cygpath -w "$$TEMP" 2>/dev/null)" TMP="$$(cygpath -w "$$TMP" 2>/dev/null)" LOCALAPPDATA="$$(cygpath -w "$$LOCALAPPDATA" 2>/dev/null)" APPDATA="$$(cygpath -w "$$APPDATA" 2>/dev/null)" MAKELEVEL=0 cmake
 else
   CMAKE_ARGS :=
-  RUN_CMAKE := MAKELEVEL=0 cmake
 endif
+
+RUN_CMAKE := MAKELEVEL=0 cmake
 
 # Default target
 all: build
