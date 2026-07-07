@@ -22,7 +22,7 @@ endif
 
 ifdef IS_WINDOWS
   SUDO :=
-  BOOTSTRAP_PATH := cmake\bootstrap\bootstrap-vcpkg.cmake
+  BOOTSTRAP_PATH := $(shell cygpath -w cmake/bootstrap/bootstrap-vcpkg.cmake 2>/dev/null || echo cmake/bootstrap/bootstrap-vcpkg.cmake)
 else
   SUDO := sudo
   BOOTSTRAP_PATH := cmake/bootstrap/bootstrap-vcpkg.cmake
