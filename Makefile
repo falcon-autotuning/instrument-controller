@@ -3,6 +3,11 @@
 # Default to using standard system shell  
 SHELL ?= /bin/sh
 export MSYS_NO_PATHCONV=1
+export LOCALAPPDATA
+export APPDATA
+export TEMP
+export TMP
+export USERPROFILE
 
 # Build preset (user can override: make build PRESET=linux-gcc-release)
 PRESET ?= linux-clang-release
