@@ -7,25 +7,10 @@ export MSYS_NO_PATHCONV=1
 # Build preset (user can override: make build PRESET=linux-gcc-release)
 PRESET ?= linux-clang-release
 CMAKE_BUILD_DIR := build/$(PRESET)
-# Robust Windows OS detection (works on cmd, powershell, git bash, msys)
-IS_WINDOWS :=
 ifeq ($(OS),Windows_NT)
-  IS_WINDOWS := yes
-else
-  ifneq ($(findstring MINGW,$(shell uname -s 2>/dev/null)),)
-    IS_WINDOWS := yes
-  endif
-  ifneq ($(findstring MSYS,$(shell uname -s 2>/dev/null)),)
-    IS_WINDOWS := yes
-  endif
-endif
-
-ifdef IS_WINDOWS
   SUDO :=
-  BOOTSTRAP_PATH := $(shell cygpath -w -a cmake/bootstrap/bootstrap-vcpkg.cmake 2>/dev/null || echo cmake/bootstrap/bootstrap-vcpkg.cmake)
 else
   SUDO := sudo
-  BOOTSTRAP_PATH := cmake/bootstrap/bootstrap-vcpkg.cmake
 endif
 
 # Default target
@@ -44,15 +29,9 @@ help:
 	@echo "  make test PRESET=linux-clang-release            # Run tests"
 	@echo "  make install PRESET=linux-clang-release         # Install"
 
-test-os:
-	@echo "OS is: '$(OS)'"
-	@echo "uname is: '$(shell uname -s 2>/dev/null)'"
-	@echo "IS_WINDOWS is: '$(IS_WINDOWS)'"
-	@echo "BOOTSTRAP_PATH is: '$(BOOTSTRAP_PATH)'"
-
 vcpkg-bootstrap:
 	@echo "Bootstrapping vcpkg..."
-	MAKELEVEL=0 cmake -P "$(BOOTSTRAP_PATH)"
+	MAKELEVEL=0 cmake -P cmake/bootstrap/bootstrap-vcpkg.cmake
 
 configure: vcpkg-bootstrap
 	@echo "Configuring $(PRESET)..."
