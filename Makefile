@@ -7,7 +7,20 @@ export MSYS_NO_PATHCONV=1
 # Build preset (user can override: make build PRESET=linux-gcc-release)
 PRESET ?= linux-clang-release
 CMAKE_BUILD_DIR := build/$(PRESET)
+# Robust Windows OS detection (works on cmd, powershell, git bash, msys)
+IS_WINDOWS :=
 ifeq ($(OS),Windows_NT)
+  IS_WINDOWS := yes
+else
+  ifneq ($(findstring MINGW,$(shell uname -s 2>/dev/null)),)
+    IS_WINDOWS := yes
+  endif
+  ifneq ($(findstring MSYS,$(shell uname -s 2>/dev/null)),)
+    IS_WINDOWS := yes
+  endif
+endif
+
+ifdef IS_WINDOWS
   SUDO :=
   BOOTSTRAP_PATH := cmake\bootstrap\bootstrap-vcpkg.cmake
 else
