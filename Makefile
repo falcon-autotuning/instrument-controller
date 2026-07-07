@@ -29,8 +29,10 @@ endif
 
 ifdef IS_WINDOWS
   CMAKE_ARGS := -D WIN32=TRUE
+  RUN_CMAKE := TEMP="$$(cygpath -w "$$TEMP" 2>/dev/null)" TMP="$$(cygpath -w "$$TMP" 2>/dev/null)" LOCALAPPDATA="$$(cygpath -w "$$LOCALAPPDATA" 2>/dev/null)" APPDATA="$$(cygpath -w "$$APPDATA" 2>/dev/null)" MAKELEVEL=0 cmake
 else
   CMAKE_ARGS :=
+  RUN_CMAKE := MAKELEVEL=0 cmake
 endif
 
 # Default target
@@ -51,11 +53,11 @@ help:
 
 vcpkg-bootstrap:
 	@echo "Bootstrapping vcpkg..."
-	MAKELEVEL=0 cmake -P cmake/bootstrap/bootstrap-vcpkg.cmake
+	$(RUN_CMAKE) $(CMAKE_ARGS) -P cmake/bootstrap/bootstrap-vcpkg.cmake
 
 configure: vcpkg-bootstrap
 	@echo "Configuring $(PRESET)..."
-	MAKELEVEL=0 cmake --preset $(PRESET)
+	$(RUN_CMAKE) --preset $(PRESET)
 
 build: configure
 	@echo "Building $(PRESET)..."
