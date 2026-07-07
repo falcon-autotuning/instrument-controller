@@ -29,13 +29,13 @@ channel_groups:
         suffix: voltage
         unit: "V"
       - name: sample_rate
-        type: int
+        type: integer
         role: setting
         description: "Sample rate of the channel"
         suffix: sample_rate
         unit: "Hz"
       - name: bins
-        type: int
+        type: integer
         role: setting
         description: "Number of bins to average"
         suffix: bins
