@@ -18,13 +18,9 @@ endif
 IS_WINDOWS :=
 ifeq ($(OS),Windows_NT)
   IS_WINDOWS := yes
-else
-  ifneq ($(findstring MINGW,$(shell uname -s 2>/dev/null)),)
-    IS_WINDOWS := yes
-  endif
-  ifneq ($(findstring MSYS,$(shell uname -s 2>/dev/null)),)
-    IS_WINDOWS := yes
-  endif
+endif
+ifneq ($(MSYSTEM),)
+  IS_WINDOWS := yes
 endif
 
 ifdef IS_WINDOWS
