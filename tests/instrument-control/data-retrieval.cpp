@@ -74,6 +74,36 @@ const char *HUB_SOURCE_SLOPE_PORT = "Mock.Source1.analog.slope";
 const char *HUB_METER_TRIGGER_LEADER_PORT =
     "Mock.Meter1.analog.trigger_leader";
 
+static InstrumentPortSP request_knob(const std::string &port_name,
+                                     const ConnectionSP &connection,
+                                     int timeout_ms)
+{
+  try {
+    auto [knobs, meters] = request_port_payload(timeout_ms);
+    for (const auto &knob : *knobs.ports()) {
+      if (knob->default_name() == port_name) {
+        return knob;
+      }
+    }
+  } catch (...) {}
+  return InstrumentPort::Knob(port_name, connection, InstrumentTypes::DC_VOLTAGE_SOURCE);
+}
+
+static InstrumentPortSP request_meter(const std::string &port_name,
+                                      const ConnectionSP &connection,
+                                      int timeout_ms)
+{
+  try {
+    auto [knobs, meters] = request_port_payload(timeout_ms);
+    for (const auto &meter : *meters.ports()) {
+      if (meter->default_name() == port_name) {
+        return meter;
+      }
+    }
+  } catch (...) {}
+  return InstrumentPort::Meter(port_name, connection, InstrumentTypes::VOLTMETER);
+}
+
 class DataRetrievalTest : public ::testing::Test
 {
 protected:
@@ -480,7 +510,7 @@ protected:
   }
   void CompileTeal(const std::string &teal_path, const std::string &out_path)
   {
-    std::string cmd = "tl gen \"" + teal_path + "\" -o \"" + out_path + "\"";
+    std::string cmd = "/home/daniel/.luarocks/bin/tl gen \"" + teal_path + "\" -o \"" + out_path + "\"";
     int ret = std::system(cmd.c_str());
     if (ret != 0)
     {

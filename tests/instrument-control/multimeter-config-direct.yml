@@ -1,0 +1,29 @@
+name: Meter1
+api_ref: multimeter-api-direct.yml
+connection:
+  type: MockMultimeter
+io_config:
+  analog1_stream:
+    type: array
+    role: input
+    unit: V
+    offset: 0
+    scale: 1
+  analog1_voltage:
+    type: float
+    role: input
+    unit: V
+    offset: 0
+    scale: 1
+  analog1_sample_rate:
+    type: int
+    role: setting
+    unit: Hz
+    offset: 0
+    scale: 1
+  analog1_bins:
+    type: int
+    role: setting
+    unit: Hz
+    offset: 0
+    scale: 1
