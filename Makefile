@@ -51,7 +51,7 @@ help:
 
 vcpkg-bootstrap:
 	@echo "Bootstrapping vcpkg..."
-	MAKELEVEL=0 cmake $(CMAKE_ARGS) -P cmake/bootstrap/bootstrap-vcpkg.cmake
+	MAKELEVEL=0 cmake -P cmake/bootstrap/bootstrap-vcpkg.cmake
 
 configure: vcpkg-bootstrap
 	@echo "Configuring $(PRESET)..."
