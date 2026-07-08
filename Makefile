@@ -2,7 +2,6 @@
 
 # Default to using standard system shell  
 SHELL ?= /bin/sh
-export MSYS_NO_PATHCONV=1
 export LOCALAPPDATA
 export APPDATA
 export TEMP
@@ -54,7 +53,7 @@ help:
 
 vcpkg-bootstrap:
 	@echo "Bootstrapping vcpkg..."
-	$(RUN_CMAKE) $(CMAKE_ARGS) -P cmake/bootstrap/bootstrap-vcpkg.cmake
+	$(RUN_CMAKE) -D PRESET=$(PRESET) $(CMAKE_ARGS) -P cmake/bootstrap/bootstrap-vcpkg.cmake
 
 configure: vcpkg-bootstrap
 	@echo "Configuring $(PRESET)..."

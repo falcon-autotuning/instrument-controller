@@ -14,10 +14,27 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DAEMON="$REPO_ROOT/vcpkg_installed/x64-linux-dynamic/tools/instrument-script-server/instrument-script-server-daemon"
-CLI="$REPO_ROOT/vcpkg_installed/x64-linux-dynamic/tools/instrument-script-server/instrument-script-server"
-PLUGIN="$REPO_ROOT/vcpkg_installed/x64-linux-dynamic/lib/instrument-plugins/visa_plugin.so"
-CONFIG="$REPO_ROOT/../instrument-script-server/tests/data/mock_instrument1.yaml"
+
+# Detect OS and set appropriate paths/extensions
+if [[ "${OSTYPE:-}" == "msys" || "${OSTYPE:-}" == "cygwin" ]]; then
+  TRIPLET="x64-win-llvm"
+  EXE=".exe"
+  SO=".dll"
+  # Add the vcpkg bin directory to PATH on Windows so LoadLibrary can find dependency DLLs
+  export PATH="$REPO_ROOT/vcpkg_installed/$TRIPLET/bin:$PATH"
+else
+  TRIPLET="x64-linux-dynamic"
+  EXE=""
+  SO=".so"
+fi
+
+DAEMON="$REPO_ROOT/vcpkg_installed/$TRIPLET/tools/instrument-script-server/instrument-script-server-daemon$EXE"
+CLI="$REPO_ROOT/vcpkg_installed/$TRIPLET/tools/instrument-script-server/instrument-script-server$EXE"
+PLUGIN="$REPO_ROOT/vcpkg_installed/$TRIPLET/lib/instrument-plugins/visa_plugin$SO"
+
+# Dynamically locate the test config file inside the build trees
+CONFIG=$(find "$REPO_ROOT/vcpkg/buildtrees/instrument-script-server" -name "mock_instrument1.yaml" | head -n 1)
+
 SCRIPT="$REPO_ROOT/tests/smoke-measure.lua"
 
 PASS=0
@@ -33,19 +50,23 @@ step "Checking prerequisites..."
 [[ -x "$DAEMON" ]] && ok "Daemon binary found" || { fail "Daemon not found at: $DAEMON"; exit 1; }
 [[ -x "$CLI" ]]    && ok "CLI binary found" || { fail "CLI not found at: $CLI"; exit 1; }
 [[ -f "$PLUGIN" ]] && ok "VISA plugin found" || { fail "Plugin not found at: $PLUGIN"; exit 1; }
-[[ -f "$CONFIG" ]] && ok "Config file found" || { fail "Config not found at: $CONFIG"; exit 1; }
+[[ -n "$CONFIG" && -f "$CONFIG" ]] && ok "Config file found at $CONFIG" || { fail "Config not found"; exit 1; }
 [[ -f "$SCRIPT" ]] && ok "Lua script found" || { fail "Script not found at: $SCRIPT"; exit 1; }
 
 # ---------------------------------------------------------------------------
 step "Stopping any stale daemon..."
-pkill -f "instrument-script-server-daemon" || true
+if [[ "${OSTYPE:-}" == "msys" || "${OSTYPE:-}" == "cygwin" ]]; then
+  taskkill //F //IM "instrument-script-server-daemon.exe" 2>/dev/null || true
+else
+  pkill -f "instrument-script-server-daemon" || true
+fi
 sleep 1
 
 # ---------------------------------------------------------------------------
 step "Starting daemon..."
 "$DAEMON" --log-level warn &
 DAEMON_PID=$!
-sleep 2
+sleep 4 # Increased to 4 seconds to allow Windows port binding and PID file creation
 
 STATUS=$("$CLI" daemon status 2>&1)
 if echo "$STATUS" | grep -q "running"; then
@@ -80,6 +101,7 @@ if echo "$MEASURE_OUT" | grep -q "Measurement complete"; then
     ok "Measurement completed successfully"
 else
     fail "Measurement did not complete as expected"
+    exit 1
 fi
 
 # ---------------------------------------------------------------------------

@@ -18,8 +18,6 @@
     "instrument-data",
     "gtest",
     "teal-api-gen",
-    "falcon-instrument-hub",
-    "falcon-measurement-lib",
     "cjson",
     {
       "name": "instrument-plugin-api",

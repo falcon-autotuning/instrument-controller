@@ -11,6 +11,13 @@ else()
     )
 endif()
 
+# Correct positional syntax
+vcpkg_replace_string(
+    "${SOURCE_PATH}/cmake/instrument-plugin-api-config.cmake"
+    "instrument-plugin-api::plugin"
+    "instrument-plugin-api::instrument-plugin-api-plugin"
+)
+
 if("plugin" IN_LIST FEATURES)
   set(INSTRUMENT_PLUGIN_ENABLE_PLUGIN ON)
 endif()

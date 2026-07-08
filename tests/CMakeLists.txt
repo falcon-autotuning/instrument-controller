@@ -6,6 +6,7 @@ include(GoogleTest)
 message(STATUS "Building mock instrument plugins...")
 add_instrument_plugin(mock_multimeter
   SOURCES instrument-plugins/mock-multimeter.c
+  LINK_LIBRARIES instrument-data::instrument-data
 )
 add_instrument_plugin(mock_voltage_source
   SOURCES instrument-plugins/mock-voltage-source.c
