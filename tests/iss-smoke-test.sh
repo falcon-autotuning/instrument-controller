@@ -35,6 +35,13 @@ PLUGIN="$REPO_ROOT/vcpkg_installed/$TRIPLET/lib/instrument-plugins/visa_plugin$S
 # Dynamically locate the test config file inside the build trees
 CONFIG=$(find "$REPO_ROOT/vcpkg/buildtrees/instrument-script-server" -name "mock_instrument1.yaml" | head -n 1)
 
+# Satisfy the daemon's relative api_ref lookup by duplicating mock_api.yaml into tests/data/ inside the buildtree if needed
+if [[ -n "$CONFIG" ]]; then
+  CONFIG_DIR=$(dirname "$CONFIG")
+  mkdir -p "$CONFIG_DIR/tests/data"
+  cp "$CONFIG_DIR/mock_api.yaml" "$CONFIG_DIR/tests/data/" 2>/dev/null || true
+fi
+
 SCRIPT="$REPO_ROOT/tests/smoke-measure.lua"
 
 PASS=0
