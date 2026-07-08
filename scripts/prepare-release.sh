@@ -10,13 +10,20 @@
 # Usage:
 #   ./scripts/prepare-release.sh <tag-name> [build-preset]
 #   Example:
-#   ./scripts/prepare-release.sh v0.1.1-alpha linux-clang-release
+#   ./scripts/prepare-release.sh v0.1.1-alpha windows-clang-cl-release
 # =============================================================================
 
 # Detect OS
 if [[ "${OSTYPE:-}" == "msys" || "${OSTYPE:-}" == "cygwin" ]]; then
     IS_WINDOWS=true
     DEFAULT_PRESET="windows-clang-cl-release"
+    # Convert USERPROFILE to forward slashes and build the LLVM path
+    USER_PROFILE_POSIX="${USERPROFILE:-}"
+    USER_PROFILE_POSIX="${USER_PROFILE_POSIX//\\//}"
+    export LLVMInstallDir="${LLVMInstallDir:-$USER_PROFILE_POSIX/scoop/apps/llvm/current}"
+    export VCPKG_KEEP_ENV_VARS="${VCPKG_KEEP_ENV_VARS:-PATH;INCLUDE;LIB;LIBPATH;LLVMInstallDir;LLVMToolsVersion}"
+    # Prepend all required Visual Studio, SDK, and Scoop paths to PATH
+    export PATH="/c/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin:/c/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64:/c/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64:$USER_PROFILE_POSIX/scoop/shims:/c/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja:$PATH"
 else
     IS_WINDOWS=false
     DEFAULT_PRESET="linux-clang-release"
@@ -85,7 +92,6 @@ CUSTOM_INSTALL="$ACTUAL_BUILD_DIR/install.sh"
 cp "$REPO_ROOT/scripts/install.sh" "$CUSTOM_INSTALL"
 # Patch default release version in install.sh (replacing v0.1.1-alpha with current tag)
 if [[ "$IS_WINDOWS" == true ]]; then
-  # On Windows Git Bash, sed -i might need empty string for extension
   sed -i "s/RELEASE_VERSION=\"\${1:-v0.1.1-alpha}\"/RELEASE_VERSION=\"\${1:-${TAG}}\"/g" "$CUSTOM_INSTALL"
 else
   sed -i "s/RELEASE_VERSION=\"\${1:-v0.1.1-alpha}\"/RELEASE_VERSION=\"\${1:-${TAG}}\"/g" "$CUSTOM_INSTALL"

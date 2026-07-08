@@ -196,6 +196,25 @@ else()
 endif()
 
 # ------------------------------------------------------------------------------
+# Install instrument-script-server executables from tools directory
+# ------------------------------------------------------------------------------
+if(WIN32)
+  install(
+    PROGRAMS
+      "${VCPKG_INSTALLED_DIR}/x64-win-llvm/tools/instrument-script-server/instrument-script-server.exe"
+      "${VCPKG_INSTALLED_DIR}/x64-win-llvm/tools/instrument-script-server/instrument-script-server-daemon.exe"
+    DESTINATION "${INSTALL_BIN_DIR}"
+  )
+else()
+  install(
+    PROGRAMS
+      "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/tools/instrument-script-server/instrument-script-server"
+      "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/tools/instrument-script-server/instrument-script-server-daemon"
+    DESTINATION "${INSTALL_BIN_DIR}"
+  )
+endif()
+
+# ------------------------------------------------------------------------------
 # Collect dependency licenses
 # ------------------------------------------------------------------------------
 
