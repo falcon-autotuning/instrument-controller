@@ -29,11 +29,13 @@ endif
 
 ifdef IS_WINDOWS
   CMAKE_ARGS := -D WIN32=TRUE
+  RUN_CMAKE := MAKELEVEL=0 cmd.exe /c cmake
+  BUILD_CMAKE := cmd.exe /c cmake
 else
   CMAKE_ARGS :=
+  RUN_CMAKE := MAKELEVEL=0 cmake
+  BUILD_CMAKE := cmake
 endif
-
-RUN_CMAKE := MAKELEVEL=0 cmake
 
 # Default target
 all: build
@@ -61,7 +63,7 @@ configure: vcpkg-bootstrap
 
 build: configure
 	@echo "Building $(PRESET)..."
-	cmake --build --preset $(PRESET)
+	$(BUILD_CMAKE) --build --preset $(PRESET)
 
 # use POSIX . instead of source to ensure compatibility with /bin/sh on all platforms
 test: build
