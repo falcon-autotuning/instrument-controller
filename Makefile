@@ -2,7 +2,6 @@
 
 # Default to using standard system shell  
 SHELL ?= /bin/sh
-export MSYS_NO_PATHCONV=1
 export LOCALAPPDATA
 export APPDATA
 export TEMP
@@ -30,11 +29,13 @@ endif
 
 ifdef IS_WINDOWS
   CMAKE_ARGS := -D WIN32=TRUE
+  RUN_CMAKE := MAKELEVEL=0 cmd.exe /c cmake
+  BUILD_CMAKE := cmd.exe /c cmake
 else
   CMAKE_ARGS :=
+  RUN_CMAKE := MAKELEVEL=0 cmake
+  BUILD_CMAKE := cmake
 endif
-
-RUN_CMAKE := MAKELEVEL=0 cmake
 
 # Default target
 all: build
@@ -54,7 +55,7 @@ help:
 
 vcpkg-bootstrap:
 	@echo "Bootstrapping vcpkg..."
-	$(RUN_CMAKE) $(CMAKE_ARGS) -P cmake/bootstrap/bootstrap-vcpkg.cmake
+	$(RUN_CMAKE) -D PRESET=$(PRESET) $(CMAKE_ARGS) -P cmake/bootstrap/bootstrap-vcpkg.cmake
 
 configure: vcpkg-bootstrap
 	@echo "Configuring $(PRESET)..."
@@ -62,7 +63,7 @@ configure: vcpkg-bootstrap
 
 build: configure
 	@echo "Building $(PRESET)..."
-	cmake --build --preset $(PRESET)
+	$(BUILD_CMAKE) --build --preset $(PRESET)
 
 # use POSIX . instead of source to ensure compatibility with /bin/sh on all platforms
 test: build
