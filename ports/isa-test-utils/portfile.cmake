@@ -2,7 +2,7 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO falcon-autotuning/isa-test-utils
     REF v${VERSION}
-    SHA512 25e72721b2a207cae61eb5099706bc0182231480150a4a11276b93da9a9fcd138ae9c73dce465310f3cd3dadb5475fe68739de6206d54ee77ac5e0ae0378edf1
+    SHA512 61a2001af09ce8e927cff48da97815636196c551d1c97ea5cc6815c25573f743cd74666c368b93fed60d4a6afb2a30e09b191cfe4653d79f89565391e40b56de
 )
 
 vcpkg_cmake_configure(
@@ -15,5 +15,8 @@ vcpkg_cmake_config_fixup()
 file(INSTALL "${SOURCE_PATH}/LICENSE"
      DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}"
      RENAME copyright)
+
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/share")
 
 vcpkg_copy_pdbs()

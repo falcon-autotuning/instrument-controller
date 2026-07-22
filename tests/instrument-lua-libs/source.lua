@@ -1,6 +1,8 @@
 local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local math = _tl_compat and _tl_compat.math or math
 
 
+
+
 local function _log10(x)
    return math.log(x) / math.log(10)
 end
@@ -47,7 +49,12 @@ function Mock1Source1:setVoltage(id, channel, voltage)
       context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
    end
    channel = math.floor(channel)
-   return context:call(id .. '.SET_VOLTAGE', { analog = channel, voltage = voltage })
+   local cs = instrument_call_stack.new({
+      instrument = id,
+      command = "SET_VOLTAGE",
+      channel = channel,
+   })
+   return context:call(cs, { channel = channel, voltage = voltage })
 end
 
 
@@ -65,14 +72,23 @@ function Mock1Source1:getVoltage(id, channel)
       context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
    end
    channel = math.floor(channel)
-   return context:call(id .. '.GET_VOLTAGE', { analog = channel })
+   local cs = instrument_call_stack.new({
+      instrument = id,
+      command = "GET_VOLTAGE",
+      channel = channel,
+   })
+   return context:call(cs, { channel = channel })
 end
 
 
 
 
 function Mock1Source1:reset(id)
-   return context:call(id .. '.RESET')
+   local cs = instrument_call_stack.new({
+      instrument = id,
+      command = "RESET",
+   })
+   return context:call(cs)
 end
 
 return Mock1Source1

@@ -1,5 +1,5 @@
 #include <instrument-data.h>
-#include <instrument-plugin.h>
+#include <plugin-api.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -22,16 +22,18 @@ static const char *MEASURE_STREAM = "MEASURE_STREAM";
 static const char *RESET = "RESET";
 static const char *RATE_IO_NAME = "sample_rate";
 static const char *BINS_IO_NAME = "bins";
-static const char *ANALOG_IO_NAME = "analog";
-static const int PLUGIN_INITIALIZATION_ERROR = -1;
-static const int MISSING_PARAMETERS_ERROR = -2;
-static const int INVALID_PARAMETER_TYPE_ERROR = -3;
-static const int BINS_OUT_OF_RANGE_ERROR = -4;
-static const int INVALID_RATE_ERROR = -5;
-static const int NO_DATA_ERROR = -6;
-static const int CHANNEL_OUT_OF_RANGE_ERROR = -7;
-static const int MEMORY_ALLOCATION_ERROR = -8;
-static const int UNKNOWN_COMMAND_ERROR = -9;
+static const char *ANALOG_IO_NAME = "channel";
+static const char *VOLTAGE_IO_NAME = "voltage";
+static const char *STREAM_IO_NAME = "stream";
+static const int PLUGIN_INITIALIZATION_ERROR = 1;
+static const int MISSING_PARAMETERS_ERROR = 2;
+static const int INVALID_PARAMETER_TYPE_ERROR = 3;
+static const int BINS_OUT_OF_RANGE_ERROR = 4;
+static const int INVALID_RATE_ERROR = 5;
+static const int NO_DATA_ERROR = 6;
+static const int CHANNEL_OUT_OF_RANGE_ERROR = 7;
+static const int MEMORY_ALLOCATION_ERROR = 8;
+static const int UNKNOWN_COMMAND_ERROR = 9;
 
 // Global state for the mock multimeter
 // Array size: MAX_CHANNEL - MIN_CHANNEL + 1 so that getArrayIndex(MAX_CHANNEL)
@@ -43,6 +45,7 @@ static double *g_data_buffer[MAX_CHANNEL - MIN_CHANNEL + 1] = {NULL};
 static int g_data_count[MAX_CHANNEL - MIN_CHANNEL + 1] = {0};
 static int g_current_index[MAX_CHANNEL - MIN_CHANNEL + 1] = {0};
 static int g_initialized = 0;
+static char g_instrument_name[PLUGIN_MAX_STRING_LEN] = {0};
 
 // Produces the matching array index for a given analog channel from config
 static int getArrayIndex(int channel) {
@@ -53,17 +56,39 @@ static int getArrayIndex(int channel) {
 }
 // Copies a message into the target buffer with proper null-termination,
 // ensuring it does not exceed the maximum payload size
-static void payloadCopy(char *target, char *message) {
+static void payloadCopy(char *target, const char *message) {
   strncpy(target, message, MOCK_PLUGIN_MAX_PAYLOAD);
   target[MOCK_PLUGIN_MAX_PAYLOAD] = '\0'; // Ensure null-termination
 }
-// Sets an error message and code in the response struct, and returns the error
-// code
 static int setPluginError(PluginResponse *resp, const char *msg,
                           int error_code) {
-  strncpy(resp->error_message, msg, MOCK_PLUGIN_MAX_PAYLOAD);
-  resp->error_code = error_code;
+  (void)resp;
+  (void)msg;
   return error_code;
+}
+static int push_int_response(PluginResponse *resp, const char *name,
+                             int64_t value) {
+  Variable out = {0};
+  out.type = PARAM_TYPE_INT64;
+  payloadCopy(out.name, name);
+  out.value.i64_val = value;
+  return plugin_response_push(resp, &out) == 0 ? 0 : MEMORY_ALLOCATION_ERROR;
+}
+static int push_double_response(PluginResponse *resp, const char *name,
+                                double value) {
+  Variable out = {0};
+  out.type = PARAM_TYPE_DOUBLE;
+  payloadCopy(out.name, name);
+  out.value.d_val = value;
+  return plugin_response_push(resp, &out) == 0 ? 0 : MEMORY_ALLOCATION_ERROR;
+}
+static int push_buffer_response(PluginResponse *resp, const char *name,
+                                const char *buffer_id) {
+  Variable out = {0};
+  out.type = PARAM_TYPE_BUFFER;
+  payloadCopy(out.name, name);
+  payloadCopy(out.value.str_val, buffer_id);
+  return plugin_response_push(resp, &out) == 0 ? 0 : MEMORY_ALLOCATION_ERROR;
 }
 // Helper to check parameter count and set error if invalid
 // cmd: the command being processed
@@ -73,13 +98,14 @@ static int setPluginError(PluginResponse *resp, const char *msg,
 // error_code: the error code to set in case of parameter count mismatch
 static int check_param_count(const PluginCommand *cmd, const int expected,
                              PluginResponse *resp) {
-  if (cmd->param_count == expected) {
+  uint8_t actual = param_storage_count(cmd->params);
+  if (actual == expected) {
     return 0;
   }
   char msg[MOCK_PLUGIN_MAX_PAYLOAD];
   int count = snprintf(msg, MOCK_PLUGIN_MAX_PAYLOAD,
                        "Invalid number of parameters, found %d but expected %d",
-                       cmd->param_count, expected);
+                       actual, expected);
   if (count < 0 || count >= MOCK_PLUGIN_MAX_PAYLOAD) {
     // Handle snprintf error or truncation if needed
     payloadCopy(msg, "Parameters names too long");
@@ -91,8 +117,10 @@ static int check_param_count(const PluginCommand *cmd, const int expected,
 // error in resp.
 static int get_param_index(const PluginCommand *cmd, const char *param_name,
                            int *out_index, PluginResponse *resp) {
-  for (uint32_t i = 0; i < cmd->param_count; i++) {
-    if (strcmp(cmd->params[i].name, param_name) == 0) {
+  uint8_t count = param_storage_count(cmd->params);
+  for (uint8_t i = 0; i < count; i++) {
+    const Variable *param = param_storage_get(cmd->params, i);
+    if (param != NULL && strcmp(param->name, param_name) == 0) {
       *out_index = (int)i;
       return 0;
     }
@@ -110,15 +138,12 @@ static int get_param_index(const PluginCommand *cmd, const char *param_name,
 static int check_param_type(const PluginCommand *cmd, const char *param_name,
                             const int idx, PluginResponse *resp,
                             const int expected_type) {
-  int actual = cmd->params[idx].value.type;
-  // Accept INT64 wherever INT32 is expected (ISS sends INT64 for Lua integers)
-  if (expected_type == PARAM_TYPE_INT32 && actual == PARAM_TYPE_INT64)
-    return 0;
-  // Accept DOUBLE wherever INT32 is expected (ISS sends DOUBLE for all Lua numbers)
-  if (expected_type == PARAM_TYPE_INT32 && actual == PARAM_TYPE_DOUBLE)
-    return 0;
-  // Accept DOUBLE wherever FLOAT is expected (ISS sends DOUBLE for Lua floats)
-  if (expected_type == PARAM_TYPE_FLOAT && actual == PARAM_TYPE_DOUBLE)
+  const Variable *param = param_storage_get(cmd->params, (uint8_t)idx);
+  if (param == NULL) {
+    return setPluginError(resp, "Missing parameter", MISSING_PARAMETERS_ERROR);
+  }
+  int actual = param->type;
+  if (expected_type == PARAM_TYPE_INT64 && actual == PARAM_TYPE_DOUBLE)
     return 0;
   if (actual != expected_type) {
     char msg[MOCK_PLUGIN_MAX_PAYLOAD];
@@ -130,11 +155,14 @@ static int check_param_type(const PluginCommand *cmd, const char *param_name,
 }
 // Read an integer param that may be INT32, INT64, or DOUBLE
 static int read_int_param(const PluginCommand *cmd, const int idx) {
-  if (cmd->params[idx].value.type == PARAM_TYPE_INT64)
-    return (int)cmd->params[idx].value.value.i64_val;
-  if (cmd->params[idx].value.type == PARAM_TYPE_DOUBLE)
-    return (int)cmd->params[idx].value.value.d_val;
-  return cmd->params[idx].value.value.i32_val;
+  const Variable *param = param_storage_get(cmd->params, (uint8_t)idx);
+  if (param == NULL)
+    return 0;
+  if (param->type == PARAM_TYPE_INT64)
+    return (int)param->value.i64_val;
+  if (param->type == PARAM_TYPE_DOUBLE)
+    return (int)param->value.d_val;
+  return 0;
 }
 /**
  * Load data from file(s) into memory for all channels.
@@ -211,14 +239,19 @@ static int load_data_from_file(void) {
 // channel.
 static int handle_bins(const PluginCommand *cmd, PluginResponse *resp) {
   int bins_idx, channel_idx;
-  if (check_param_count(cmd, 2, resp) |
-      get_param_index(cmd, BINS_IO_NAME, &bins_idx, resp) |
-      get_param_index(cmd, ANALOG_IO_NAME, &channel_idx, resp) |
-      check_param_type(cmd, BINS_IO_NAME, bins_idx, resp, PARAM_TYPE_INT32) |
-      check_param_type(cmd, ANALOG_IO_NAME, channel_idx, resp,
-                       PARAM_TYPE_INT32)) {
-    return resp->error_code;
-  }
+  int err = check_param_count(cmd, 2, resp);
+  if (!err)
+    err = get_param_index(cmd, BINS_IO_NAME, &bins_idx, resp);
+  if (!err)
+    err = get_param_index(cmd, ANALOG_IO_NAME, &channel_idx, resp);
+  if (!err)
+    err = check_param_type(cmd, BINS_IO_NAME, bins_idx, resp,
+                           PARAM_TYPE_INT64);
+  if (!err)
+    err = check_param_type(cmd, ANALOG_IO_NAME, channel_idx, resp,
+                           PARAM_TYPE_INT64);
+  if (err)
+    return err;
   int bins = read_int_param(cmd, bins_idx);
   int channel = read_int_param(cmd, channel_idx);
   if (bins <= NULL_BINS) {
@@ -234,13 +267,7 @@ static int handle_bins(const PluginCommand *cmd, PluginResponse *resp) {
   if (g_num_bins[index] > g_data_count[index]) {
     g_num_bins[index] = g_data_count[index];
   }
-  resp->success = true;
-  snprintf(resp->text_response, MOCK_PLUGIN_MAX_PAYLOAD,
-           "Number of bins set to %d on channel %d", g_num_bins[index],
-           channel);
-  resp->return_value.type = PARAM_TYPE_INT32;
-  resp->return_value.value.i32_val = g_num_bins[index];
-  return resp->error_code;
+  return push_int_response(resp, BINS_IO_NAME, g_num_bins[index]);
 }
 
 // Handler for the SET_RATE command. Expects parameters rate (int)
@@ -248,26 +275,26 @@ static int handle_bins(const PluginCommand *cmd, PluginResponse *resp) {
 // channel.
 static int handle_rate(const PluginCommand *cmd, PluginResponse *resp) {
   int rate_idx, channel_idx;
-  if (check_param_count(cmd, 2, resp) |
-      get_param_index(cmd, RATE_IO_NAME, &rate_idx, resp) |
-      get_param_index(cmd, ANALOG_IO_NAME, &channel_idx, resp) |
-      check_param_type(cmd, RATE_IO_NAME, rate_idx, resp, PARAM_TYPE_INT32) |
-      check_param_type(cmd, ANALOG_IO_NAME, channel_idx, resp,
-                       PARAM_TYPE_INT32)) {
-    return resp->error_code;
-  }
+  int err = check_param_count(cmd, 2, resp);
+  if (!err)
+    err = get_param_index(cmd, RATE_IO_NAME, &rate_idx, resp);
+  if (!err)
+    err = get_param_index(cmd, ANALOG_IO_NAME, &channel_idx, resp);
+  if (!err)
+    err = check_param_type(cmd, RATE_IO_NAME, rate_idx, resp,
+                           PARAM_TYPE_INT64);
+  if (!err)
+    err = check_param_type(cmd, ANALOG_IO_NAME, channel_idx, resp,
+                           PARAM_TYPE_INT64);
+  if (err)
+    return err;
   int rate = read_int_param(cmd, rate_idx);
   int channel = read_int_param(cmd, channel_idx);
   if (rate <= NULL_RATE) {
     return setPluginError(resp, "sample_rate must be > 0", INVALID_RATE_ERROR);
   }
   // TODO: Store and use the rate
-  resp->success = true;
-  snprintf(resp->text_response, MOCK_PLUGIN_MAX_PAYLOAD,
-           "Sample Rate set to %d", rate);
-  resp->return_value.type = PARAM_TYPE_INT32;
-  resp->return_value.value.i32_val = rate;
-  return resp->error_code;
+  return push_int_response(resp, RATE_IO_NAME, rate);
 }
 
 // Handler for the GET_DATAPOINT command. Expects parameter "analog" (int) for
@@ -275,12 +302,14 @@ static int handle_rate(const PluginCommand *cmd, PluginResponse *resp) {
 // for that channel, or an error if the channel is out of range.
 static int handle_datapoint(const PluginCommand *cmd, PluginResponse *resp) {
   int channel_idx;
-  if (check_param_count(cmd, 1, resp) |
-      get_param_index(cmd, ANALOG_IO_NAME, &channel_idx, resp) |
-      check_param_type(cmd, ANALOG_IO_NAME, channel_idx, resp,
-                       PARAM_TYPE_INT32)) {
-    return resp->error_code;
-  }
+  int err = check_param_count(cmd, 1, resp);
+  if (!err)
+    err = get_param_index(cmd, ANALOG_IO_NAME, &channel_idx, resp);
+  if (!err)
+    err = check_param_type(cmd, ANALOG_IO_NAME, channel_idx, resp,
+                           PARAM_TYPE_INT64);
+  if (err)
+    return err;
   int channel = read_int_param(cmd, channel_idx);
   int index = getArrayIndex(channel);
   if (index == NULL_CHANNEL) {
@@ -294,24 +323,22 @@ static int handle_datapoint(const PluginCommand *cmd, PluginResponse *resp) {
   if (g_current_index[index] >= g_data_count[index]) {
     g_current_index[index] = 0; // Wrap around
   }
-  resp->success = true;
-  resp->return_value.type = PARAM_TYPE_DOUBLE;
-  resp->return_value.value.d_val = g_data_buffer[index][g_current_index[index]];
+  double value = g_data_buffer[index][g_current_index[index]];
   g_current_index[index]++;
-  snprintf(resp->text_response, MOCK_PLUGIN_MAX_PAYLOAD,
-           "Channel %d measured voltage", channel);
-  return resp->error_code;
+  return push_double_response(resp, VOLTAGE_IO_NAME, value);
 }
 
 // Handler for the MEASURE_STREAM command. Expects parameter "analog" (int).
 static int handle_stream(const PluginCommand *cmd, PluginResponse *resp) {
   int channel_idx;
-  if (check_param_count(cmd, 1, resp) |
-      get_param_index(cmd, ANALOG_IO_NAME, &channel_idx, resp) |
-      check_param_type(cmd, ANALOG_IO_NAME, channel_idx, resp,
-                       PARAM_TYPE_INT32)) {
-    return resp->error_code;
-  }
+  int err = check_param_count(cmd, 1, resp);
+  if (!err)
+    err = get_param_index(cmd, ANALOG_IO_NAME, &channel_idx, resp);
+  if (!err)
+    err = check_param_type(cmd, ANALOG_IO_NAME, channel_idx, resp,
+                           PARAM_TYPE_INT64);
+  if (err)
+    return err;
   int channel = read_int_param(cmd, channel_idx);
   int index = getArrayIndex(channel);
   if (index == NULL_CHANNEL) {
@@ -338,36 +365,25 @@ static int handle_stream(const PluginCommand *cmd, PluginResponse *resp) {
   }
   // Create buffer
   const char *buffer_id = data_manager_create_buffer(
-      cmd->instrument_name, cmd->id, INST_DATA_FLOAT64, g_num_bins[index],
-      result);
+      g_instrument_name, cmd->id, INST_DATA_FLOAT64, g_num_bins[index], result);
   free(result);
   if (!buffer_id) {
     return setPluginError(resp, "Failed to create data buffer",
                           MEMORY_ALLOCATION_ERROR);
   }
-  resp->success = true;
-  resp->has_large_data = true;
-  strncpy(resp->data_buffer_id, buffer_id, PLUGIN_MAX_STRING_LEN - 1);
-  resp->data_buffer_id[PLUGIN_MAX_STRING_LEN - 1] = '\0';
-  resp->data_element_count = g_num_bins[index];
-  resp->data_type = INST_DATA_FLOAT64;
-  snprintf(resp->text_response, MOCK_PLUGIN_MAX_PAYLOAD,
-           "%d datapoints measured on channel %d", g_num_bins[index], channel);
-  return resp->error_code;
+  return push_buffer_response(resp, STREAM_IO_NAME, buffer_id);
 }
 
 // Handler for the RESET command. Expects no parameters. Resets the data pointer
 // to the beginning of the loaded data stream.
 static int handle_reset(const PluginCommand *cmd, PluginResponse *resp) {
   if (check_param_count(cmd, 0, resp)) {
-    return resp->error_code;
+    return MISSING_PARAMETERS_ERROR;
   }
   for (int i = 0; i < MAX_CHANNEL - MIN_CHANNEL + 1; ++i) {
     g_current_index[i] = 0;
   }
-  resp->success = true;
-  payloadCopy(resp->text_response, "Data stream reset");
-  return resp->error_code;
+  return 0;
 }
 
 INSTRUMENT_PLUGIN_API PluginMetadata plugin_get_metadata(void) {
@@ -382,9 +398,12 @@ INSTRUMENT_PLUGIN_API PluginMetadata plugin_get_metadata(void) {
   return meta;
 }
 
-INSTRUMENT_PLUGIN_API int32_t plugin_initialize(const PluginConfig *config) {
+INSTRUMENT_PLUGIN_API uint8_t plugin_initialize(const PluginConfig *config) {
   if (load_data_from_file() != 0) {
     return PLUGIN_INITIALIZATION_ERROR; // Failed to load data file
+  }
+  if (config != NULL) {
+    payloadCopy(g_instrument_name, config->instrument_name);
   }
   for (int i = 0; i < MAX_CHANNEL - MIN_CHANNEL + 1; ++i) {
     g_current_index[i] = 0;
@@ -393,27 +412,21 @@ INSTRUMENT_PLUGIN_API int32_t plugin_initialize(const PluginConfig *config) {
   return 0;
 }
 
-INSTRUMENT_PLUGIN_API int32_t plugin_execute_command(const PluginCommand *cmd,
+INSTRUMENT_PLUGIN_API uint8_t plugin_execute_command(const PluginCommand *cmd,
                                                      PluginResponse *resp) {
-  payloadCopy(resp->command_id, cmd->id);
-  payloadCopy(resp->instrument_name, cmd->instrument_name);
-  resp->success = false;
-  resp->error_code = 0;
-  resp->binary_response_size = 0;
-  resp->has_large_data = false;
   if (!g_initialized) {
     return setPluginError(resp, "Plugin not initialized",
                           PLUGIN_INITIALIZATION_ERROR);
   }
-  if (strcmp(cmd->verb, SET_RATE) == 0) {
+  if (strcmp(cmd->command, SET_RATE) == 0) {
     return handle_rate(cmd, resp);
-  } else if (strcmp(cmd->verb, SET_BINS) == 0) {
+  } else if (strcmp(cmd->command, SET_BINS) == 0) {
     return handle_bins(cmd, resp);
-  } else if (strcmp(cmd->verb, MEASURE_STREAM) == 0) {
+  } else if (strcmp(cmd->command, MEASURE_STREAM) == 0) {
     return handle_stream(cmd, resp);
-  } else if (strcmp(cmd->verb, GET_DATAPOINT) == 0) {
+  } else if (strcmp(cmd->command, GET_DATAPOINT) == 0) {
     return handle_datapoint(cmd, resp);
-  } else if (strcmp(cmd->verb, RESET) == 0) {
+  } else if (strcmp(cmd->command, RESET) == 0) {
     return handle_reset(cmd, resp);
   } else {
     return setPluginError(resp, "Unknown command", UNKNOWN_COMMAND_ERROR);
@@ -431,5 +444,6 @@ INSTRUMENT_PLUGIN_API void plugin_shutdown(void) {
     g_current_index[i] = 0;
     g_data_file_path[i][0] = '\0'; // Clear string
   }
+  g_instrument_name[0] = '\0';
   g_initialized = 0;
 }

@@ -1,4 +1,4 @@
-#include <instrument-plugin.h>
+#include <plugin-api.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -15,12 +15,12 @@ static const char *SET = "SET_VOLTAGE";
 static const char *GET = "GET_VOLTAGE";
 static const char *RESET = "RESET";
 static const char *VOLTAGE_IO_NAME = "voltage";
-static const char *ANALOG_IO_NAME = "analog";
-static const int PLUGIN_INITIALIZATION_ERROR = -1;
-static const int MISSING_PARAMETERS_ERROR = -2;
-static const int INVALID_PARAMETER_TYPE_ERROR = -3;
-static const int CHANNEL_OUT_OF_RANGE_ERROR = -4;
-static const int UNKNOWN_COMMAND_ERROR = -5;
+static const char *ANALOG_IO_NAME = "channel";
+static const int PLUGIN_INITIALIZATION_ERROR = 1;
+static const int MISSING_PARAMETERS_ERROR = 2;
+static const int INVALID_PARAMETER_TYPE_ERROR = 3;
+static const int CHANNEL_OUT_OF_RANGE_ERROR = 4;
+static const int UNKNOWN_COMMAND_ERROR = 5;
 
 static float g_stored_voltage[MAX_CHANNEL - MIN_CHANNEL] = {NULL_VOLTAGE};
 static int g_initialized = 0;
@@ -33,17 +33,24 @@ static int getArrayIndex(int channel) {
 }
 // Copies a message into the target buffer with proper null-termination,
 // ensuring it does not exceed the maximum payload size
-static void payloadCopy(char *target, char *message) {
+static void payloadCopy(char *target, const char *message) {
   strncpy(target, message, MOCK_PLUGIN_MAX_PAYLOAD);
   target[MOCK_PLUGIN_MAX_PAYLOAD] = '\0'; // Ensure null-termination
 }
-// Sets an error message and code in the response struct, and returns the error
-// code
 static int setPluginError(PluginResponse *resp, const char *msg,
                           int error_code) {
-  strncpy(resp->error_message, msg, MOCK_PLUGIN_MAX_PAYLOAD);
-  resp->error_code = error_code;
+  (void)resp;
+  (void)msg;
   return error_code;
+}
+static int push_double_response(PluginResponse *resp, const char *name,
+                                double value) {
+  Variable out = {0};
+  out.type = PARAM_TYPE_DOUBLE;
+  payloadCopy(out.name, name);
+  out.value.d_val = value;
+  return plugin_response_push(resp, &out) == 0 ? 0
+                                               : PLUGIN_INITIALIZATION_ERROR;
 }
 // Helper to check parameter count and set error if invalid
 // cmd: the command being processed
@@ -53,13 +60,14 @@ static int setPluginError(PluginResponse *resp, const char *msg,
 // error_code: the error code to set in case of parameter count mismatch
 static int check_param_count(const PluginCommand *cmd, const int expected,
                              PluginResponse *resp) {
-  if (cmd->param_count == expected) {
+  uint8_t actual = param_storage_count(cmd->params);
+  if (actual == expected) {
     return 0;
   }
   char msg[MOCK_PLUGIN_MAX_PAYLOAD];
   int count = snprintf(msg, MOCK_PLUGIN_MAX_PAYLOAD,
                        "Invalid number of parameters, found %d but expected %d",
-                       cmd->param_count, expected);
+                       actual, expected);
   if (count < 0 || count >= MOCK_PLUGIN_MAX_PAYLOAD) {
     // Handle snprintf error or truncation if needed
     payloadCopy(msg, "Parameters names too long");
@@ -71,8 +79,10 @@ static int check_param_count(const PluginCommand *cmd, const int expected,
 // error in resp.
 static int get_param_index(const PluginCommand *cmd, const char *param_name,
                            int *out_index, PluginResponse *resp) {
-  for (uint32_t i = 0; i < cmd->param_count; i++) {
-    if (strcmp(cmd->params[i].name, param_name) == 0) {
+  uint8_t count = param_storage_count(cmd->params);
+  for (uint8_t i = 0; i < count; i++) {
+    const Variable *param = param_storage_get(cmd->params, i);
+    if (param != NULL && strcmp(param->name, param_name) == 0) {
       *out_index = (int)i;
       return 0;
     }
@@ -90,15 +100,12 @@ static int get_param_index(const PluginCommand *cmd, const char *param_name,
 static int check_param_type(const PluginCommand *cmd, const char *param_name,
                             const int idx, PluginResponse *resp,
                             const int expected_type) {
-  int actual = cmd->params[idx].value.type;
-  // Accept INT64 wherever INT32 is expected (ISS sends INT64 for Lua integers)
-  if (expected_type == PARAM_TYPE_INT32 && actual == PARAM_TYPE_INT64)
-    return 0;
-  // Accept DOUBLE wherever INT32 is expected (ISS sends DOUBLE for all Lua numbers)
-  if (expected_type == PARAM_TYPE_INT32 && actual == PARAM_TYPE_DOUBLE)
-    return 0;
-  // Accept DOUBLE wherever FLOAT is expected (ISS sends DOUBLE for Lua floats)
-  if (expected_type == PARAM_TYPE_FLOAT && actual == PARAM_TYPE_DOUBLE)
+  const Variable *param = param_storage_get(cmd->params, (uint8_t)idx);
+  if (param == NULL) {
+    return setPluginError(resp, "Missing parameter", MISSING_PARAMETERS_ERROR);
+  }
+  int actual = param->type;
+  if (expected_type == PARAM_TYPE_INT64 && actual == PARAM_TYPE_DOUBLE)
     return 0;
   if (actual != expected_type) {
     char msg[MOCK_PLUGIN_MAX_PAYLOAD];
@@ -110,31 +117,43 @@ static int check_param_type(const PluginCommand *cmd, const char *param_name,
 }
 // Read an integer param that may be INT32, INT64, or DOUBLE
 static int read_int_param(const PluginCommand *cmd, const int idx) {
-  if (cmd->params[idx].value.type == PARAM_TYPE_INT64)
-    return (int)cmd->params[idx].value.value.i64_val;
-  if (cmd->params[idx].value.type == PARAM_TYPE_DOUBLE)
-    return (int)cmd->params[idx].value.value.d_val;
-  return cmd->params[idx].value.value.i32_val;
+  const Variable *param = param_storage_get(cmd->params, (uint8_t)idx);
+  if (param == NULL)
+    return 0;
+  if (param->type == PARAM_TYPE_INT64)
+    return (int)param->value.i64_val;
+  if (param->type == PARAM_TYPE_DOUBLE)
+    return (int)param->value.d_val;
+  return 0;
 }
-// Read a float param that may be FLOAT or DOUBLE
+// Read a floating point param.
 static float read_float_param(const PluginCommand *cmd, const int idx) {
-  if (cmd->params[idx].value.type == PARAM_TYPE_DOUBLE)
-    return (float)cmd->params[idx].value.value.d_val;
-  return cmd->params[idx].value.value.f_val;
+  const Variable *param = param_storage_get(cmd->params, (uint8_t)idx);
+  if (param == NULL)
+    return 0.0f;
+  if (param->type == PARAM_TYPE_DOUBLE)
+    return (float)param->value.d_val;
+  if (param->type == PARAM_TYPE_INT64)
+    return (float)param->value.i64_val;
+  return 0.0f;
 }
 // Handler for the SET_VOLTAGE command. Expects parameters "voltage" (float) and
 // "analog" (int). Stores the voltage for the specified channel.
 static int handle_set(const PluginCommand *cmd, PluginResponse *resp) {
   int voltage_idx, channel_idx;
-  if (check_param_count(cmd, 2, resp) |
-      get_param_index(cmd, VOLTAGE_IO_NAME, &voltage_idx, resp) |
-      get_param_index(cmd, ANALOG_IO_NAME, &channel_idx, resp) |
-      check_param_type(cmd, VOLTAGE_IO_NAME, voltage_idx, resp,
-                       PARAM_TYPE_FLOAT) |
-      check_param_type(cmd, ANALOG_IO_NAME, channel_idx, resp,
-                       PARAM_TYPE_INT32)) {
-    return resp->error_code;
-  }
+  int err = check_param_count(cmd, 2, resp);
+  if (!err)
+    err = get_param_index(cmd, VOLTAGE_IO_NAME, &voltage_idx, resp);
+  if (!err)
+    err = get_param_index(cmd, ANALOG_IO_NAME, &channel_idx, resp);
+  if (!err)
+    err = check_param_type(cmd, VOLTAGE_IO_NAME, voltage_idx, resp,
+                           PARAM_TYPE_DOUBLE);
+  if (!err)
+    err = check_param_type(cmd, ANALOG_IO_NAME, channel_idx, resp,
+                           PARAM_TYPE_INT64);
+  if (err)
+    return err;
   float voltage = read_float_param(cmd, voltage_idx);
   int channel = read_int_param(cmd, channel_idx);
   int index = getArrayIndex(channel);
@@ -143,46 +162,38 @@ static int handle_set(const PluginCommand *cmd, PluginResponse *resp) {
                           CHANNEL_OUT_OF_RANGE_ERROR);
   }
   g_stored_voltage[index] = voltage;
-  resp->success = true;
-  snprintf(resp->text_response, MOCK_PLUGIN_MAX_PAYLOAD,
-           "Channel %d voltage set to %.6f V", channel, voltage);
-  return resp->error_code;
+  return 0;
 }
 // Handler for the GET_VOLTAGE command. Expects parameter "analog" (int)
 // analyzes the specified channel and returns the stored voltage value.
 static int handle_get(const PluginCommand *cmd, PluginResponse *resp) {
   int channel_idx;
-  if (check_param_count(cmd, 1, resp) |
-      get_param_index(cmd, ANALOG_IO_NAME, &channel_idx, resp) |
-      check_param_type(cmd, ANALOG_IO_NAME, channel_idx, resp,
-                       PARAM_TYPE_INT32)) {
-    return resp->error_code;
-  }
+  int err = check_param_count(cmd, 1, resp);
+  if (!err)
+    err = get_param_index(cmd, ANALOG_IO_NAME, &channel_idx, resp);
+  if (!err)
+    err = check_param_type(cmd, ANALOG_IO_NAME, channel_idx, resp,
+                           PARAM_TYPE_INT64);
+  if (err)
+    return err;
   int channel = read_int_param(cmd, channel_idx);
   int index = getArrayIndex(channel);
   if (index == NULL_CHANNEL) {
     return setPluginError(resp, "Channel out of range (must be 1-32)",
                           CHANNEL_OUT_OF_RANGE_ERROR);
   }
-  resp->success = true;
-  resp->return_value.type = PARAM_TYPE_FLOAT;
-  resp->return_value.value.d_val = g_stored_voltage[index];
-  snprintf(resp->text_response, MOCK_PLUGIN_MAX_PAYLOAD, "%.6f",
-           g_stored_voltage[index]);
-  return resp->error_code;
+  return push_double_response(resp, VOLTAGE_IO_NAME, g_stored_voltage[index]);
 }
 // Handler for the RESET command. Expects no parameters. Resets all stored
 // voltages to 0.0 V.
 static int handle_reset(const PluginCommand *cmd, PluginResponse *resp) {
   if (check_param_count(cmd, 0, resp)) {
-    return resp->error_code;
+    return MISSING_PARAMETERS_ERROR;
   }
   for (int i = 0; i < MAX_CHANNEL - MIN_CHANNEL; ++i) {
     g_stored_voltage[i] = NULL_VOLTAGE;
   }
-  resp->success = true;
-  payloadCopy(resp->text_response, "All channel voltages reset to 0.0 V");
-  return resp->error_code;
+  return 0;
 }
 
 INSTRUMENT_PLUGIN_API PluginMetadata plugin_get_metadata(void) {
@@ -196,7 +207,7 @@ INSTRUMENT_PLUGIN_API PluginMetadata plugin_get_metadata(void) {
   return meta;
 }
 
-INSTRUMENT_PLUGIN_API int32_t plugin_initialize(const PluginConfig *config) {
+INSTRUMENT_PLUGIN_API uint8_t plugin_initialize(const PluginConfig *config) {
   // Initialize with zero voltage
   for (int i = 0; i < MAX_CHANNEL - MIN_CHANNEL; ++i) {
     g_stored_voltage[i] = NULL_VOLTAGE;
@@ -206,23 +217,17 @@ INSTRUMENT_PLUGIN_API int32_t plugin_initialize(const PluginConfig *config) {
   return 0;
 }
 
-INSTRUMENT_PLUGIN_API int32_t plugin_execute_command(const PluginCommand *cmd,
+INSTRUMENT_PLUGIN_API uint8_t plugin_execute_command(const PluginCommand *cmd,
                                                      PluginResponse *resp) {
-  payloadCopy(resp->command_id, cmd->id);
-  payloadCopy(resp->instrument_name, cmd->instrument_name);
-  resp->success = false;
-  resp->error_code = 0;
-  resp->binary_response_size = 0;
-  resp->has_large_data = false;
   if (!g_initialized) {
     return setPluginError(resp, "Plugin not initialized",
                           PLUGIN_INITIALIZATION_ERROR);
   }
-  if (strcmp(cmd->verb, SET) == 0) {
+  if (strcmp(cmd->command, SET) == 0) {
     return handle_set(cmd, resp);
-  } else if (strcmp(cmd->verb, GET) == 0) {
+  } else if (strcmp(cmd->command, GET) == 0) {
     return handle_get(cmd, resp);
-  } else if (strcmp(cmd->verb, RESET) == 0) {
+  } else if (strcmp(cmd->command, RESET) == 0) {
     return handle_reset(cmd, resp);
   } else {
     return setPluginError(resp, "Unknown command", UNKNOWN_COMMAND_ERROR);

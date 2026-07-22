@@ -1,5 +1,7 @@
 -- Auto-generated Teal module from instrument YAML (vendor=Mock model=5 id=Meter1)
 
+global instrument_call_stack: any
+
 -- Helper numeric utilities for precision handling
 local function _log10(x: number): number
   return math.log(x) / math.log(10)
@@ -47,7 +49,12 @@ function Mock5Meter1:setSampleRate(id: string, channel: number, sample_rate: any
     context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
   end
   channel = math.floor(channel)
-  return context:call(id .. '.SET_SAMPLE_RATE', {analog = channel, sample_rate = sample_rate})
+  local cs = instrument_call_stack.new({
+    instrument = id,
+    command = "SET_SAMPLE_RATE",
+    channel = channel,
+  })
+  return context:call(cs, {channel = channel, sample_rate = sample_rate})
 end
 
 --- Set the number of bins to average for each data point
@@ -66,7 +73,12 @@ function Mock5Meter1:setBins(id: string, channel: number, bins: any): any
     context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
   end
   channel = math.floor(channel)
-  return context:call(id .. '.SET_BINS', {analog = channel, bins = bins})
+  local cs = instrument_call_stack.new({
+    instrument = id,
+    command = "SET_BINS",
+    channel = channel,
+  })
+  return context:call(cs, {channel = channel, bins = bins})
 end
 
 --- Set output voltage
@@ -84,7 +96,12 @@ function Mock5Meter1:measureStream(id: string, channel: number): MeasureResponse
     context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
   end
   channel = math.floor(channel)
-  return context:call(id .. '.MEASURE_STREAM', {analog = channel})
+  local cs = instrument_call_stack.new({
+    instrument = id,
+    command = "MEASURE_STREAM",
+    channel = channel,
+  })
+  return context:call(cs, {channel = channel})
 end
 
 --- Measure a single data point
@@ -102,14 +119,23 @@ function Mock5Meter1:getDatapoint(id: string, channel: number): number
     context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
   end
   channel = math.floor(channel)
-  return context:call(id .. '.GET_DATAPOINT', {analog = channel})
+  local cs = instrument_call_stack.new({
+    instrument = id,
+    command = "GET_DATAPOINT",
+    channel = channel,
+  })
+  return context:call(cs, {channel = channel})
 end
 
 --- resets the mock instrument
 --- @param id string Instrument instance identifier
 --- @return any
 function Mock5Meter1:reset(id: string): any
-  return context:call(id .. '.RESET')
+  local cs = instrument_call_stack.new({
+    instrument = id,
+    command = "RESET",
+  })
+  return context:call(cs)
 end
 
 return Mock5Meter1

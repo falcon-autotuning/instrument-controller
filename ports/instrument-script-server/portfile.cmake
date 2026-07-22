@@ -13,12 +13,14 @@ else()
         OUT_SOURCE_PATH SOURCE_PATH
         REPO falcon-autotuning/instrument-script-server
         REF v${VERSION}
-        SHA512 9c397b24c83ad9bf10098c9065101628e19e5a127f3ca23e430033bc520dcfa356297cfb613c91f53fdbff6cc853e5c6683be4558e5c4a77f912ab157b728558
+        SHA512 e55d07a6cc09d49cbd2c666a2e1812dc0109a74c9a25bff098176f976aea7be2ba5039d15e89f152d2f482e5e2b40e7a2201f1554899b0f1275ef2be87b129b3
   )
 endif()
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
+    OPTIONS
+        -DBUILD_CLI=ON
 )
 
 vcpkg_cmake_install()
@@ -27,5 +29,9 @@ vcpkg_cmake_config_fixup()
 file(INSTALL "${SOURCE_PATH}/LICENSE"
      DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}"
      RENAME copyright)
+
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/share")
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/share/doc/instrument-script-server/assets/icons")
 
 vcpkg_copy_pdbs()
