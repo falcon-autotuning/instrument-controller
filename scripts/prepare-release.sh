@@ -20,10 +20,14 @@ if [[ "${OSTYPE:-}" == "msys" || "${OSTYPE:-}" == "cygwin" ]]; then
     # Convert USERPROFILE to forward slashes and build the LLVM path
     USER_PROFILE_POSIX="${USERPROFILE:-}"
     USER_PROFILE_POSIX="${USER_PROFILE_POSIX//\\//}"
-    export LLVMInstallDir="${LLVMInstallDir:-$USER_PROFILE_POSIX/scoop/apps/llvm/current}"
+    if [[ -d "/c/Program Files/LLVM" ]]; then
+        export LLVMInstallDir="${LLVMInstallDir:-C:/Program Files/LLVM}"
+    elif [[ -n "${USERPROFILE:-}" && -d "$USER_PROFILE_POSIX/scoop/apps/llvm/current" ]]; then
+        export LLVMInstallDir="${LLVMInstallDir:-$USER_PROFILE_POSIX/scoop/apps/llvm/current}"
+    fi
     export VCPKG_KEEP_ENV_VARS="${VCPKG_KEEP_ENV_VARS:-PATH;INCLUDE;LIB;LIBPATH;LLVMInstallDir;LLVMToolsVersion}"
-    # Prepend all required Visual Studio, SDK, and Scoop paths to PATH
-    export PATH="/c/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin:/c/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64:/c/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64:$USER_PROFILE_POSIX/scoop/shims:/c/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja:$PATH"
+    # Prepend all required Visual Studio, SDK, LLVM, and Scoop paths to PATH
+    export PATH="/c/Program Files/LLVM/bin:/c/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin:/c/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64:/c/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64:$USER_PROFILE_POSIX/scoop/shims:/c/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja:$PATH"
 else
     IS_WINDOWS=false
     DEFAULT_PRESET="linux-clang-release"

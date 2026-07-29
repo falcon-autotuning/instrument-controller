@@ -15,7 +15,7 @@
 param (
     [Parameter(Mandatory=$true)]
     [string]$Tag,
-    [string]$Preset = "windows-clang-release"
+    [string]$Preset = "windows-clang-cl-release"
 )
 
 $ErrorActionPreference = "Stop"
@@ -33,6 +33,13 @@ if ($LASTEXITCODE -ne 0) {
 
 $RepoRoot = Resolve-Path "$PSScriptRoot\.."
 $BuildDir = "$RepoRoot\build"
+
+if (-not $env:LLVMInstallDir) {
+    if (Test-Path "C:\Program Files\LLVM") {
+        $env:LLVMInstallDir = "C:\Program Files\LLVM"
+    }
+}
+$env:PATH = "C:\Program Files\LLVM\bin;$env:PATH"
 
 Write-Host "Starting release preparation for version: $Tag"
 Write-Host "--------------------------------------------------"
