@@ -92,10 +92,12 @@ package:
 	cp CMakePresets.json packaging/CMakePresets.json
 	cp -r ports/ packaging/ports
 	cp -r cmake/ packaging/cmake
+	cp -r tests/ packaging/tests
 	cp Makefile packaging/Makefile
 	cp README.md packaging/README.md
 	cp LICENSE packaging/LICENSE
 	cp -r CMakeFiles/ packaging/CMakeFiles
+	ln -s ../vcpkg packaging/vcpkg
 	# Copy NuGet credentials if present (speeds up authenticated package restores)
 	if [ -f ".nuget-credential" ]; then \
 			cp .nuget-credential packaging/.nuget-credential; \

@@ -203,6 +203,7 @@ if(WIN32)
     PROGRAMS
       "${VCPKG_INSTALLED_DIR}/x64-win-llvm/tools/instrument-script-server/instrument-script-server.exe"
       "${VCPKG_INSTALLED_DIR}/x64-win-llvm/tools/instrument-script-server/instrument-script-server-daemon.exe"
+      "${VCPKG_INSTALLED_DIR}/x64-win-llvm/tools/instrument-script-server/instrument-worker.exe"
     DESTINATION "${INSTALL_BIN_DIR}"
   )
 else()
@@ -210,6 +211,7 @@ else()
     PROGRAMS
       "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/tools/instrument-script-server/instrument-script-server"
       "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/tools/instrument-script-server/instrument-script-server-daemon"
+      "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/tools/instrument-script-server/instrument-worker"
     DESTINATION "${INSTALL_BIN_DIR}"
   )
 endif()

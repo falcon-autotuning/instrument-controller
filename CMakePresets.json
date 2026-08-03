@@ -12,7 +12,6 @@
         "VCPKG_INSTALLED_DIR": "${sourceDir}/vcpkg_installed",
         "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/my-vcpkg-triplets",
         "VCPKG_OVERLAY_PORTS": "${sourceDir}/ports",
-        "VCPKG_INSTALL_OPTIONS": "--x-buildtrees-root=C:/b",
         "CMAKE_MAKE_PROGRAM": "ninja",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "USE_CCACHE": "ON",
@@ -100,6 +99,7 @@
         "CMAKE_CXX_COMPILER": "clang-cl",
         "VCPKG_TARGET_TRIPLET": "x64-win-llvm",
         "CMAKE_PREFIX_PATH": "${sourceDir}/vcpkg_installed/x64-win-llvm/share;${sourceDir}/vcpkg_installed",
+        "VCPKG_INSTALL_OPTIONS": "--x-buildtrees-root=C:/b",
         "BUILD_TESTS": "ON"
       }
     },
@@ -113,6 +113,7 @@
         "CMAKE_CXX_COMPILER": "clang-cl",
         "VCPKG_TARGET_TRIPLET": "x64-win-llvm",
         "CMAKE_PREFIX_PATH": "${sourceDir}/vcpkg_installed/x64-win-llvm/share;${sourceDir}/vcpkg_installed",
+        "VCPKG_INSTALL_OPTIONS": "--x-buildtrees-root=C:/b",
         "BUILD_TESTS": "ON"
       }
     },
@@ -126,6 +127,7 @@
         "CMAKE_CXX_COMPILER": "clang-cl",
         "VCPKG_TARGET_TRIPLET": "x64-win-llvm",
         "CMAKE_PREFIX_PATH": "${sourceDir}/vcpkg_installed/x64-win-llvm/share;${sourceDir}/vcpkg_installed",
+        "VCPKG_INSTALL_OPTIONS": "--x-buildtrees-root=C:/b",
         "BUILD_TESTS": "OFF"
       }
     }
