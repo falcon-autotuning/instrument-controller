@@ -97,13 +97,17 @@ package:
 	cp README.md packaging/README.md
 	cp LICENSE packaging/LICENSE
 	cp -r CMakeFiles/ packaging/CMakeFiles
+ifeq ($(OS),Windows_NT)
+	cmd //c mklink /D packaging\\vcpkg vcpkg
+else
 	ln -s ../vcpkg packaging/vcpkg
+endif
 	# Copy NuGet credentials if present (speeds up authenticated package restores)
 	if [ -f ".nuget-credential" ]; then \
 			cp .nuget-credential packaging/.nuget-credential; \
 			echo "✓ Copied .nuget-credential"; \
 	fi
-	cd packaging && $(MAKE) clean build PRESET=$(PRESET)
+	$(MAKE) -C packaging clean build PRESET=$(PRESET)
 	if [ "$$(uname -s | grep -i 'mingw\|msys\|cygwin')" ]; then \
 			cd packaging/build/$(PRESET) && \
 			cpack -G ZIP -C Release && \
