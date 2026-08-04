@@ -98,9 +98,9 @@ package:
 	cp LICENSE packaging/LICENSE
 	cp -r CMakeFiles/ packaging/CMakeFiles
 	# Copy NuGet credentials if present (speeds up authenticated package restores)
-	if [ -f ".nuget-credential" ]; then \
-			cp .nuget-credential packaging/.nuget-credential; \
-			echo "✓ Copied .nuget-credential"; \
+	if [ -f ".nuget-credentials" ]; then \
+			cp .nuget-credentials packaging/.nuget-credentials; \
+			echo "✓ Copied .nuget-credentials"; \
 	fi
 	cd packaging && $(MAKE) clean build PRESET=$(PRESET)
 	if [ "$$(uname -s | grep -i 'mingw\|msys\|cygwin')" ]; then \
