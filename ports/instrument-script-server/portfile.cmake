@@ -1,14 +1,13 @@
 get_filename_component(WORKSPACE_ROOT "${CURRENT_PORT_DIR}/../../.." ABSOLUTE)
 set(LOCAL_SCRIPT_SERVER_PATH "${WORKSPACE_ROOT}/instrument-script-server")
 if(EXISTS "${LOCAL_SCRIPT_SERVER_PATH}")
-    set(SOURCE_PATH "${LOCAL_SCRIPT_SERVER_PATH}")
+  set(SOURCE_PATH "${LOCAL_SCRIPT_SERVER_PATH}")
 else()
-    vcpkg_from_github(
+  vcpkg_from_github(
         OUT_SOURCE_PATH SOURCE_PATH
         REPO falcon-autotuning/instrument-script-server
         REF v${VERSION}
         SHA512 4b935148b8e0467142c8ae6b93a31035fa447021de0426113420642bc9678902de008e80aa34fb61c0e265ddbce29e6351a9c5c758afd890b42ab3eed3805db5
-        PATCHES fix-grpc-case.patch
     )
 endif()
 

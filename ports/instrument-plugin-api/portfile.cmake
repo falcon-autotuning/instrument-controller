@@ -1,9 +1,9 @@
 get_filename_component(WORKSPACE_ROOT "${CURRENT_PORT_DIR}/../../.." ABSOLUTE)
 set(LOCAL_API_PATH "${WORKSPACE_ROOT}/instrument-plugin-api")
 if(EXISTS "${LOCAL_API_PATH}")
-    set(SOURCE_PATH "${LOCAL_API_PATH}")
+  set(SOURCE_PATH "${LOCAL_API_PATH}")
 else()
-    vcpkg_from_github(
+  vcpkg_from_github(
         OUT_SOURCE_PATH SOURCE_PATH
         REPO falcon-autotuning/instrument-plugin-api
         REF v${VERSION}
