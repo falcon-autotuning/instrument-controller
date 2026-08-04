@@ -1,0 +1,11 @@
+wiremap: /home/daniel/work/research/falcon/playground/instrument-controller/tests/instrument-control/2-dot-1-chargesensor-wiremap.yml
+quantum-dot-config: /home/daniel/work/research/falcon/playground/instrument-controller/tests/device-configs/2-dot-1-chargesensor.yml
+inst-config: /home/daniel/work/research/falcon/playground/instrument-controller/tests/instrument-control/multimeter-config.yml;/home/daniel/work/research/falcon/playground/instrument-controller/tests/instrument-control/source-config.yml
+inst-plugins: /home/daniel/work/research/falcon/playground/instrument-controller/build/linux-clang-release/tests/mock_multimeter.so;/home/daniel/work/research/falcon/playground/instrument-controller/build/linux-clang-release/tests/mock_voltage_source.so
+instrument-server-port: 5555
+local-database: /home/daniel/work/research/falcon/playground/instrument-controller/tests/test-runs/DataRetrievalTest_SetSampleRate_108705_1783435765143275866/data
+start-embedded-nats: true
+user-measurement-luas: /home/daniel/work/research/falcon/playground/instrument-controller/tests/lua
+instrument-apis:
+  - /home/daniel/work/research/falcon/playground/instrument-controller/tests/instrument-apis/generated-multimeter-api.yml
+  - /home/daniel/work/research/falcon/playground/instrument-controller/tests/instrument-apis/generated-source-api.yml

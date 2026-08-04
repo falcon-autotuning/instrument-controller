@@ -2,26 +2,47 @@
 
 # Default to using standard system shell  
 SHELL ?= /bin/sh
+export LOCALAPPDATA
+export APPDATA
+export TEMP
+export TMP
+export USERPROFILE
 
 # Build preset (user can override: make build PRESET=linux-gcc-release)
 PRESET ?= linux-clang-release
 CMAKE_BUILD_DIR := build/$(PRESET)
+
 ifeq ($(OS),Windows_NT)
   SUDO :=
 else
   SUDO := sudo
 endif
 
+# Robust Windows OS detection (works on cmd, powershell, git bash, msys)
+IS_WINDOWS :=
+ifeq ($(OS),Windows_NT)
+  IS_WINDOWS := yes
+endif
+ifneq ($(MSYSTEM),)
+  IS_WINDOWS := yes
+endif
+
+ifdef IS_WINDOWS
+  CMAKE_ARGS := -D WIN32=TRUE
+  RUN_CMAKE := MAKELEVEL=0 cmd.exe /c cmake
+  BUILD_CMAKE := cmd.exe /c cmake
+else
+  CMAKE_ARGS :=
+  RUN_CMAKE := MAKELEVEL=0 cmake
+  BUILD_CMAKE := cmake
+endif
+
+# Default target
+all: build
+
 help:
-	@echo "Instrument Controller Build System"
-	@echo "============================="
-	@echo ""
-	@echo "Available presets:"
-	@cmake --list-presets=all
-	@echo ""
-	@echo "Usage:"
-	@echo "  make configure PRESET=<preset>  - Configure build (default: $(PRESET))"
-	@echo "  make build PRESET=<preset>      - Build (default: $(PRESET))"
+	@echo "Available targets:"
+	@echo "  make build PRESET=<preset>      - Build the project (default: $(PRESET))"
 	@echo "  make test PRESET=<preset>       - Run tests (default: $(PRESET))"
 	@echo "  make install PRESET=<preset>    - Install to system"
 	@echo "  make clean                      - Clean all build artifacts"
@@ -34,15 +55,15 @@ help:
 
 vcpkg-bootstrap:
 	@echo "Bootstrapping vcpkg..."
-	MAKELEVEL=0 cmake -P cmake/bootstrap/bootstrap-vcpkg.cmake
+	$(RUN_CMAKE) -D PRESET=$(PRESET) $(CMAKE_ARGS) -P cmake/bootstrap/bootstrap-vcpkg.cmake
 
 configure: vcpkg-bootstrap
 	@echo "Configuring $(PRESET)..."
-	MAKELEVEL=0 cmake --preset $(PRESET)
+	$(RUN_CMAKE) --preset $(PRESET)
 
 build: configure
 	@echo "Building $(PRESET)..."
-	cmake --build --preset $(PRESET)
+	$(BUILD_CMAKE) --build --preset $(PRESET)
 
 # use POSIX . instead of source to ensure compatibility with /bin/sh on all platforms
 test: build
@@ -71,10 +92,12 @@ package:
 	cp CMakePresets.json packaging/CMakePresets.json
 	cp -r ports/ packaging/ports
 	cp -r cmake/ packaging/cmake
+	cp -r tests/ packaging/tests
 	cp Makefile packaging/Makefile
 	cp README.md packaging/README.md
 	cp LICENSE packaging/LICENSE
 	cp -r CMakeFiles/ packaging/CMakeFiles
+	ln -s ../vcpkg packaging/vcpkg
 	# Copy NuGet credentials if present (speeds up authenticated package restores)
 	if [ -f ".nuget-credential" ]; then \
 			cp .nuget-credential packaging/.nuget-credential; \
