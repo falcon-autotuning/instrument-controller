@@ -27,10 +27,10 @@ ifneq ($(MSYSTEM),)
   IS_WINDOWS := yes
 endif
 
-ifdef IS_WINDOWS
+ifdef ($(IS_WINDOWS),yes)
   CMAKE_ARGS := -D WIN32=TRUE
-  RUN_CMAKE := MAKELEVEL=0 cmd.exe /c cmake
-  BUILD_CMAKE := cmd.exe /c cmake
+  RUN_CMAKE := MAKELEVEL=0 cmake
+  BUILD_CMAKE := cmake
 else
   CMAKE_ARGS :=
   RUN_CMAKE := MAKELEVEL=0 cmake
@@ -98,7 +98,7 @@ package:
 	cp LICENSE packaging/LICENSE
 	cp -r CMakeFiles/ packaging/CMakeFiles
 ifeq ($(OS),Windows_NT)
-	cmd //c mklink /D packaging\\vcpkg vcpkg
+	cp -r vcpkg packaging/
 else
 	ln -s ../vcpkg packaging/vcpkg
 endif
@@ -107,7 +107,7 @@ endif
 			cp .nuget-credential packaging/.nuget-credential; \
 			echo "✓ Copied .nuget-credential"; \
 	fi
-	$(MAKE) -C packaging clean build PRESET=$(PRESET)
+	cd packaging && $(MAKE) clean build PRESET=$(PRESET)
 	if [ "$$(uname -s | grep -i 'mingw\|msys\|cygwin')" ]; then \
 			cd packaging/build/$(PRESET) && \
 			cpack -G ZIP -C Release && \
