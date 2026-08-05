@@ -7,8 +7,8 @@ else()
         OUT_SOURCE_PATH SOURCE_PATH
         REPO falcon-autotuning/instrument-script-server
         REF v${VERSION}
-        SHA512 4b935148b8e0467142c8ae6b93a31035fa447021de0426113420642bc9678902de008e80aa34fb61c0e265ddbce29e6351a9c5c758afd890b42ab3eed3805db5
-    )
+        SHA512 a8164fcba4fec125b74b8262aa62a15ce4fd75e8d333e3ff3697f367f08f6f61272f3b85e9315716f59cd828d0b49afa0a245d20b5c01440a5b3454bc3f94879
+  )
 endif()
 
 vcpkg_cmake_configure(
