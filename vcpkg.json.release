@@ -27,7 +27,7 @@
     },
     {
       "name": "isa-test-utils",
-      "version>=": "1.0.4"
+      "version>=": "1.2.5"
     },
     {
       "name": "visa-plugin",
@@ -41,7 +41,7 @@
       ]
     }
   ],
-  "builtin-baseline": "9942fb5f996ea431c5ed8fb8d2a53f31d08df62e",
+  "builtin-baseline": "e5a1490e1409d175932ef6014519e9ae149ddb7c",
   "overrides": [
     {
       "name": "xtensor",

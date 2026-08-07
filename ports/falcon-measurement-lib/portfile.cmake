@@ -17,14 +17,15 @@ file(MAKE_DIRECTORY "${LUA_VENV_TREE}")
 # Create venv Lua launcher
 find_program(LUA_EXECUTABLE NAMES lua5.4 lua)
 file(WRITE "${LUA_VENV_BIN}/lua"
-   "#!/bin/sh\nLUA_PATH=\"${LUA_VENV_TREE}/share/lua/5.4/?.lua;${LUA_VENV_TREE}/share/lua/5.4/?/init.lua;;\" LUA_CPATH=\"${LUA_VENV_TREE}/lib/lua/5.4/?.so;;\" exec ${LUA_EXECUTABLE} \"\$@\"\n")
+   "#!/bin/sh\nunset LD_LIBRARY_PATH\nLUA_PATH=\"${LUA_VENV_TREE}/share/lua/5.4/?.lua;${LUA_VENV_TREE}/share/lua/5.4/?/init.lua;;\" LUA_CPATH=\"${LUA_VENV_TREE}/lib/lua/5.4/?.so;;\" exec ${LUA_EXECUTABLE} \"\$@\"\n")
 execute_process(COMMAND chmod +x "${LUA_VENV_BIN}/lua")
 
 # Create venv luarocks launcher
 find_program(LUAROCKS_EXECUTABLE NAMES luarocks luarocks5.4)
 file(WRITE "${LUA_VENV_BIN}/luarocks"
-"#!/bin/sh\nLUAROCKS_TREE=\"${LUA_VENV_TREE}\" exec luarocks --tree=\"${LUA_VENV_TREE}\" \"\$@\"\n")
+"#!/bin/sh\nunset LD_LIBRARY_PATH\nLUAROCKS_TREE=\"${LUA_VENV_TREE}\" exec luarocks --tree=\"${LUA_VENV_TREE}\" \"\$@\"\n")
 execute_process(COMMAND chmod +x "${LUA_VENV_BIN}/luarocks")
+
 
 # Install Lua dependencies into the venv
 foreach(MODULE dkjson luafilesystem compat53 argparse)

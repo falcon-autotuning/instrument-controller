@@ -84,6 +84,7 @@ clean:
 	@echo "✓ Clean complete"
 
 package:  
+	rm -rf packaging
 	mkdir -p packaging
 	mkdir -p build
 	mkdir -p build/$(PRESET)
@@ -97,6 +98,17 @@ package:
 	cp README.md packaging/README.md
 	cp LICENSE packaging/LICENSE
 	cp -r CMakeFiles/ packaging/CMakeFiles
+	if [ -d "my-vcpkg-triplets" ]; then \
+			cp -r my-vcpkg-triplets packaging/my-vcpkg-triplets; \
+	fi
+	if [ -d "vcpkg" ]; then \
+			cp -r vcpkg packaging/vcpkg; \
+	fi
+	if [ -d "vcpkg/downloads" ]; then \
+			mkdir -p packaging/vcpkg/downloads && \
+			cp -r vcpkg/downloads/* packaging/vcpkg/downloads/; \
+			echo "✓ Copied vcpkg downloads cache"; \
+	fi
 	# Copy NuGet credentials if present (speeds up authenticated package restores)
 	if [ -f ".nuget-credentials" ]; then \
 			cp .nuget-credentials packaging/.nuget-credentials; \
