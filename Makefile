@@ -105,13 +105,69 @@ package:
 	cd packaging && $(MAKE) clean build PRESET=$(PRESET)
 	if [ "$$(uname -s | grep -i 'mingw\|msys\|cygwin')" ]; then \
 			cd packaging/build/$(PRESET) && \
-			cpack -G ZIP -C Release && \
+			if [ -n "$(TAG)" ]; then \
+				cpack -G ZIP -C Release -D CPACK_PACKAGE_FILE_NAME="instrument-controller-$(TAG)-Windows-AMD64"; \
+			else \
+				cpack -G ZIP -C Release; \
+			fi && \
 			mv *.zip ../../../build/$(PRESET)/ && \
 			echo "✓ Windows package moved to build/$(PRESET)/"; \
 	else \
 			cd packaging/build/$(PRESET) && \
-			cpack -G TGZ -C Release && \
+			if [ -n "$(TAG)" ]; then \
+				cpack -G TGZ -C Release -D CPACK_PACKAGE_FILE_NAME="instrument-controller-$(TAG)-Linux-x86_64"; \
+			else \
+				cpack -G TGZ -C Release; \
+			fi && \
 			mv *.tar.gz ../../../build/$(PRESET)/ && \
 			echo "✓ Linux package moved to build/$(PRESET)/"; \
 	fi
 	rm -rf packaging
+
+package-release:
+	@if [ -z "$(TAG)" ]; then \
+		echo "ERROR: TAG is required. Usage: make package-release TAG=v0.1.3-alpha [PRESET=...]"; \
+		exit 1; \
+	fi
+	@if ! command -v gh >/dev/null 2>&1; then \
+		echo "ERROR: GitHub CLI ('gh') is not installed."; \
+		exit 1; \
+	fi
+	@if ! gh auth status >/dev/null 2>&1; then \
+		echo "ERROR: gh is not authenticated. Run 'gh auth login'."; \
+		exit 1; \
+	fi
+	@PRESET_TO_USE="$(PRESET)"; \
+	if [ "$$PRESET_TO_USE" = "linux-clang-release" ]; then \
+		if [ -n "$(IS_WINDOWS)" ]; then \
+			PRESET_TO_USE="windows-clang-cl-package"; \
+		else \
+			PRESET_TO_USE="linux-clang-package"; \
+		fi \
+	fi; \
+	echo "Building package with preset $$PRESET_TO_USE..."; \
+	$(MAKE) package PRESET=$$PRESET_TO_USE TAG=$(TAG); \
+	\
+	ACTUAL_BUILD_DIR="build/$$PRESET_TO_USE"; \
+	if [ -n "$(IS_WINDOWS)" ]; then \
+		PACKAGE_FILE="instrument-controller-$(TAG)-Windows-AMD64.zip"; \
+	else \
+		PACKAGE_FILE="instrument-controller-$(TAG)-Linux-x86_64.tar.gz"; \
+	fi; \
+	\
+	echo "Creating customized install.sh..."; \
+	cp scripts/install.sh $$ACTUAL_BUILD_DIR/install.sh; \
+	sed -i "s/RELEASE_VERSION=\"\$${1:-v0.1.1-alpha}\"/RELEASE_VERSION=\"\$${1:-$(TAG)}\"/g" $$ACTUAL_BUILD_DIR/install.sh; \
+	\
+	echo "Uploading to GitHub releases..."; \
+	if ! gh release view "$(TAG)" >/dev/null 2>&1; then \
+		echo "Creating new draft release for tag $(TAG)..."; \
+		gh release create "$(TAG)" --draft --title "Release $(TAG)" --notes "Pre-release version $(TAG)"; \
+	fi; \
+	\
+	echo "Uploading release assets..."; \
+	cd $$ACTUAL_BUILD_DIR && \
+	gh release upload "$(TAG)" "$$PACKAGE_FILE" "install.sh" --clobber && \
+	echo "--------------------------------------------------" && \
+	echo "Release $(TAG) completed." && \
+	echo "Release URL: $$(gh release view "$(TAG)" --web)"
