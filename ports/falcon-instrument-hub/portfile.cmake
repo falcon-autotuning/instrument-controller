@@ -37,7 +37,7 @@ else()
         OUT_SOURCE_PATH SOURCE_PATH
         REPO falcon-autotuning/falcon-instrument-hub
         REF v${VERSION}
-        SHA512 56a88338d5652514ab5e5ae8b0b869c4e2df99eb5cbb42a75c4be7a1d3d637646ace6c834ab267b3a08be5c111f7dd5f53d83c46f158072ef8e9464e682f2b33
+        SHA512 ac2e0e99295bb9d813b3e4ee4c21b1074613e977b94b2e46a2a9d71ab9eb686f0dcef3cd9e0ee84fb34a60fba8478acb130585464885b176279657a5d8f3d263
     )
   set(USING_LOCAL_SOURCE FALSE)
 endif()
