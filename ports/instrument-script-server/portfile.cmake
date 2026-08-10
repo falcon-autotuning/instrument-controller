@@ -7,7 +7,7 @@ else()
         OUT_SOURCE_PATH SOURCE_PATH
         REPO falcon-autotuning/instrument-script-server
         REF v${VERSION}
-        SHA512 a8164fcba4fec125b74b8262aa62a15ce4fd75e8d333e3ff3697f367f08f6f61272f3b85e9315716f59cd828d0b49afa0a245d20b5c01440a5b3454bc3f94879
+        SHA512 0bc8141bb07540e5180d19e8571a6ab8200c9757f28f5bc0443c111dcdec09182fe821fe46374709a5b1a7a3f1a58403062efaec6c26de0028fd71b6ddb78f32
   )
 endif()
 
