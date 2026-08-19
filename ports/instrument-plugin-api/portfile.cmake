@@ -1,21 +1,8 @@
-get_filename_component(WORKSPACE_ROOT "${CURRENT_PORT_DIR}/../../.." ABSOLUTE)
-set(LOCAL_API_PATH "${WORKSPACE_ROOT}/instrument-plugin-api")
-if(EXISTS "${LOCAL_API_PATH}")
-  set(SOURCE_PATH "${LOCAL_API_PATH}")
-else()
-  vcpkg_from_github(
-        OUT_SOURCE_PATH SOURCE_PATH
-        REPO falcon-autotuning/instrument-plugin-api
-        REF v${VERSION}
-        SHA512 724a1204d33e6a82a265018af16edfad5c2393b5e45f1d8dfe372042d8fbc58a7de4862af6eb4c7414783965d3829b42ee230f652cc7a5bc6d35c53c8b05ff3f
-    )
-endif()
-
-# Correct positional syntax
-vcpkg_replace_string(
-    "${SOURCE_PATH}/cmake/instrument-plugin-api-config.cmake"
-    "instrument-plugin-api::plugin"
-    "instrument-plugin-api::instrument-plugin-api-plugin"
+vcpkg_from_github(
+    OUT_SOURCE_PATH SOURCE_PATH
+    REPO falcon-autotuning/instrument-plugin-api
+    REF v${VERSION}
+    SHA512 331a3c4fb3ebf0531c38d60a76b31c076c71c7965dc2026a65ba673b6818b0ad3fad4826cf5a082d668f08491c935cd3bb4f0afff9f804d6ead9cb3d56407452
 )
 
 if("plugin" IN_LIST FEATURES)

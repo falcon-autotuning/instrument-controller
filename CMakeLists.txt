@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(
   instrument-controller
-  VERSION 0.1.9
+  VERSION 0.1.11
   DESCRIPTION "Instrument Controller - Full instrument control stack for Falcon"
   HOMEPAGE_URL "https://github.com/falcon-autotuning/instrument-controller"
   LANGUAGES CXX C
@@ -73,6 +73,12 @@ if(BUILD_TESTS)
       \"PRESET_NAME\": \"${CMAKE_PRESET_NAME}\"
     }")
 
+  file(CHMOD "${CMAKE_BINARY_DIR}/env.sh"
+    PERMISSIONS
+      OWNER_READ OWNER_WRITE OWNER_EXECUTE
+      GROUP_READ GROUP_EXECUTE
+      WORLD_READ WORLD_EXECUTE
+  )
   message(STATUS "Generated env.sh and build-info.json in ${CMAKE_BINARY_DIR}")
 endif()
 # ============================================================================
