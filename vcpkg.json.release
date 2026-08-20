@@ -41,7 +41,7 @@
       ]
     }
   ],
-  "builtin-baseline": "3a56780f5de28e35e4db30a827329226fde9ecbe",
+  "builtin-baseline": "3b34205f7dd006ef92d14e511c216a0d81257ea7",
   "overrides": [
     {
       "name": "xtensor",
