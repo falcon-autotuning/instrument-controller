@@ -22,6 +22,10 @@
       "name": "linux-clang-debug",
       "description": "Linux Debug build with Clang",
       "inherits": "default",
+      "environment": {
+        "CC": "clang",
+        "CXX": "clang++"
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER": "clang",
@@ -37,6 +41,10 @@
       "name": "linux-clang-release",
       "description": "Linux Release build with Clang",
       "inherits": "default",
+      "environment": {
+        "CC": "clang",
+        "CXX": "clang++"
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_C_COMPILER": "clang",
@@ -52,6 +60,10 @@
       "name": "linux-clang-package",
       "description": "Linux Package build with Clang",
       "inherits": "default",
+      "environment": {
+        "CC": "clang",
+        "CXX": "clang++"
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_C_COMPILER": "clang",
@@ -67,6 +79,10 @@
       "name": "linux-gcc-debug",
       "description": "Linux Debug build with GCC",
       "inherits": "default",
+      "environment": {
+        "CC": "gcc",
+        "CXX": "gcc++"
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER": "gcc",
@@ -80,6 +96,10 @@
       "name": "linux-gcc-release",
       "description": "Linux Release build with GCC",
       "inherits": "default",
+      "environment": {
+        "CC": "gcc",
+        "CXX": "gcc++"
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_C_COMPILER": "gcc",
