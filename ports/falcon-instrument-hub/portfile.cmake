@@ -25,9 +25,9 @@ endif()
 # endif()
 
 # ------------------------------------------------------------------------------
-# Source selection (prefer vcpkg/GitHub unless explicitly overridden)
+# Source selection (prefer the local workspace checkout when available)
 # ------------------------------------------------------------------------------
-if(USE_LOCAL_HUB AND FALCON_DEV_MODE_ENABLED)
+if(USE_LOCAL_HUB)
   message(STATUS "falcon-instrument-hub: using LOCAL workspace source")
   set(SOURCE_PATH "${_LOCAL_HUB_DIR}")
   set(USING_LOCAL_SOURCE TRUE)
@@ -37,7 +37,7 @@ else()
         OUT_SOURCE_PATH SOURCE_PATH
         REPO falcon-autotuning/falcon-instrument-hub
         REF v${VERSION}
-        SHA512 115e33f91c91a87e279ce8234aeab76d2f9e3f2361f4ed33932677bee27719ac71255c4eb45d6236433306c6d97b4803fd44f9d79231d8a2a05c6d81b1ee3fb3
+        SHA512 ac2e0e99295bb9d813b3e4ee4c21b1074613e977b94b2e46a2a9d71ab9eb686f0dcef3cd9e0ee84fb34a60fba8478acb130585464885b176279657a5d8f3d263
     )
   set(USING_LOCAL_SOURCE FALSE)
 endif()

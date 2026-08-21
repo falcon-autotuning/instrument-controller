@@ -1,7 +1,7 @@
 .nuget-credentials
 
 # test data/logs
-/tests/test-run
+/tests/test-runs
 
 vcpkg/
 my-vcpkg-triplets/

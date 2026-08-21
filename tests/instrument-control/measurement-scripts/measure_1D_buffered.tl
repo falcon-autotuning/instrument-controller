@@ -43,32 +43,28 @@ local function Measure1DBuffered(
 ): string
   local bins = math.max(numPoints, numSteps)
 
-  ctx:parallel(function()
-    for _, setter in ipairs(setters) do
-      Mock1Source1:setVoltage(
-        setter.id,
-        setter.channel,
-        resolveEndVoltage(setVoltageDomains, setter)
-      )
-    end
-    for _, setter in ipairs(bufferedSetters) do
-      Mock1Source1:setVoltage(
-        setter.id,
-        setter.channel,
-        resolveEndVoltage(setVoltageDomains, setter)
-      )
-    end
-    for _, getter in ipairs(bufferedGetters) do
-      Mock5Meter1:setSampleRate(getter.id, getter.channel, sampleRate)
-      Mock5Meter1:setBins(getter.id, getter.channel, bins)
-    end
-  end)
+  for _, setter in ipairs(setters) do
+    Mock1Source1:setVoltage(
+      setter.id,
+      setter.channel,
+      resolveEndVoltage(setVoltageDomains, setter)
+    )
+  end
+  for _, setter in ipairs(bufferedSetters) do
+    Mock1Source1:setVoltage(
+      setter.id,
+      setter.channel,
+      resolveEndVoltage(setVoltageDomains, setter)
+    )
+  end
+  for _, getter in ipairs(bufferedGetters) do
+    Mock5Meter1:setSampleRate(getter.id, getter.channel, sampleRate)
+    Mock5Meter1:setBins(getter.id, getter.channel, bins)
+  end
 
-  ctx:parallel(function()
-    for _, getter in ipairs(bufferedGetters) do
-      Mock5Meter1:measureStream(getter.id, getter.channel)
-    end
-  end)
+  for _, getter in ipairs(bufferedGetters) do
+    Mock5Meter1:measureStream(getter.id, getter.channel)
+  end
 
   return ""
 end

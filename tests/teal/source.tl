@@ -1,5 +1,7 @@
 -- Auto-generated Teal module from instrument YAML (vendor=Mock model=1 id=Source1)
 
+global instrument_call_stack: any
+
 -- Helper numeric utilities for precision handling
 local function _log10(x: number): number
   return math.log(x) / math.log(10)
@@ -47,7 +49,12 @@ function Mock1Source1:setVoltage(id: string, channel: number, voltage: any): any
     context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
   end
   channel = math.floor(channel)
-  return context:call(id .. '.SET_VOLTAGE', {analog = channel, voltage = voltage})
+  local cs = instrument_call_stack.new({
+    instrument = id,
+    command = "SET_VOLTAGE",
+    channel = channel,
+  })
+  return context:call(cs, {channel = channel, voltage = voltage})
 end
 
 --- Measure DC voltage
@@ -65,14 +72,23 @@ function Mock1Source1:getVoltage(id: string, channel: number): number
     context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
   end
   channel = math.floor(channel)
-  return context:call(id .. '.GET_VOLTAGE', {analog = channel})
+  local cs = instrument_call_stack.new({
+    instrument = id,
+    command = "GET_VOLTAGE",
+    channel = channel,
+  })
+  return context:call(cs, {channel = channel})
 end
 
 --- resets the mock instrument
 --- @param id string Instrument instance identifier
 --- @return any
 function Mock1Source1:reset(id: string): any
-  return context:call(id .. '.RESET')
+  local cs = instrument_call_stack.new({
+    instrument = id,
+    command = "RESET",
+  })
+  return context:call(cs)
 end
 
 return Mock1Source1

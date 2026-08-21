@@ -1,6 +1,8 @@
 local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local math = _tl_compat and _tl_compat.math or math
 
 
+
+
 local function _log10(x)
    return math.log(x) / math.log(10)
 end
@@ -47,7 +49,12 @@ function Mock5Meter1:setSampleRate(id, channel, sample_rate)
       context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
    end
    channel = math.floor(channel)
-   return context:call(id .. '.SET_SAMPLE_RATE', { analog = channel, sample_rate = sample_rate })
+   local cs = instrument_call_stack.new({
+      instrument = id,
+      command = "SET_SAMPLE_RATE",
+      channel = channel,
+   })
+   return context:call(cs, { channel = channel, sample_rate = sample_rate })
 end
 
 
@@ -66,7 +73,12 @@ function Mock5Meter1:setBins(id, channel, bins)
       context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
    end
    channel = math.floor(channel)
-   return context:call(id .. '.SET_BINS', { analog = channel, bins = bins })
+   local cs = instrument_call_stack.new({
+      instrument = id,
+      command = "SET_BINS",
+      channel = channel,
+   })
+   return context:call(cs, { channel = channel, bins = bins })
 end
 
 
@@ -84,7 +96,12 @@ function Mock5Meter1:measureStream(id, channel)
       context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
    end
    channel = math.floor(channel)
-   return context:call(id .. '.MEASURE_STREAM', { analog = channel })
+   local cs = instrument_call_stack.new({
+      instrument = id,
+      command = "MEASURE_STREAM",
+      channel = channel,
+   })
+   return context:call(cs, { channel = channel })
 end
 
 
@@ -102,14 +119,23 @@ function Mock5Meter1:getDatapoint(id, channel)
       context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
    end
    channel = math.floor(channel)
-   return context:call(id .. '.GET_DATAPOINT', { analog = channel })
+   local cs = instrument_call_stack.new({
+      instrument = id,
+      command = "GET_DATAPOINT",
+      channel = channel,
+   })
+   return context:call(cs, { channel = channel })
 end
 
 
 
 
 function Mock5Meter1:reset(id)
-   return context:call(id .. '.RESET')
+   local cs = instrument_call_stack.new({
+      instrument = id,
+      command = "RESET",
+   })
+   return context:call(cs)
 end
 
 return Mock5Meter1
