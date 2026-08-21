@@ -50,32 +50,28 @@ local function Measure2DBuffered(
    end
 
    for _ = 1, numYSteps do
-      ctx:parallel(function()
-         for _, setter in ipairs(bufferedYSetters) do
-            Mock1Source1:setVoltage(
-            setter.id,
-            setter.channel,
-            resolveEndVoltage(setYVoltageDomains, setter))
+      for _, setter in ipairs(bufferedYSetters) do
+         Mock1Source1:setVoltage(
+         setter.id,
+         setter.channel,
+         resolveEndVoltage(setYVoltageDomains, setter))
 
-         end
-         for _, setter in ipairs(bufferedXSetters) do
-            Mock1Source1:setVoltage(
-            setter.id,
-            setter.channel,
-            resolveEndVoltage(setXVoltageDomains, setter))
+      end
+      for _, setter in ipairs(bufferedXSetters) do
+         Mock1Source1:setVoltage(
+         setter.id,
+         setter.channel,
+         resolveEndVoltage(setXVoltageDomains, setter))
 
-         end
-         for _, getter in ipairs(bufferedGetters) do
-            Mock5Meter1:setSampleRate(getter.id, getter.channel, sampleRate)
-            Mock5Meter1:setBins(getter.id, getter.channel, bins)
-         end
-      end)
+      end
+      for _, getter in ipairs(bufferedGetters) do
+         Mock5Meter1:setSampleRate(getter.id, getter.channel, sampleRate)
+         Mock5Meter1:setBins(getter.id, getter.channel, bins)
+      end
 
-      ctx:parallel(function()
-         for _, getter in ipairs(bufferedGetters) do
-            Mock5Meter1:measureStream(getter.id, getter.channel)
-         end
-      end)
+      for _, getter in ipairs(bufferedGetters) do
+         Mock5Meter1:measureStream(getter.id, getter.channel)
+      end
    end
 
    return ""
