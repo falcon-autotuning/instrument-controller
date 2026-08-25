@@ -73,38 +73,6 @@ const char *HUB_METER_BINS_PORT = "Mock.Meter1.analog.bins";
 const char *HUB_SOURCE_SLOPE_PORT = "Mock.Source1.analog.slope";
 const char *HUB_METER_TRIGGER_LEADER_PORT = "Mock.Meter1.analog.trigger_leader";
 
-static InstrumentPortSP request_knob(const std::string &port_name,
-                                     const ConnectionSP &connection,
-                                     int timeout_ms) {
-  try {
-    auto [knobs, meters] = request_port_payload(timeout_ms);
-    for (const auto &knob : *knobs.ports()) {
-      if (knob->default_name() == port_name) {
-        return knob;
-      }
-    }
-  } catch (...) {
-  }
-  return InstrumentPort::Knob(port_name, connection,
-                              InstrumentTypes::DC_VOLTAGE_SOURCE);
-}
-
-static InstrumentPortSP request_meter(const std::string &port_name,
-                                      const ConnectionSP &connection,
-                                      int timeout_ms) {
-  try {
-    auto [knobs, meters] = request_port_payload(timeout_ms);
-    for (const auto &meter : *meters.ports()) {
-      if (meter->default_name() == port_name) {
-        return meter;
-      }
-    }
-  } catch (...) {
-  }
-  return InstrumentPort::Meter(port_name, connection,
-                               InstrumentTypes::VOLTMETER);
-}
-
 class DataRetrievalTest : public ::testing::Test {
 protected:
   fs::path current_run_dir_;
@@ -483,11 +451,11 @@ protected:
   }
   InstrumentPortSP LookupKnobPort(const char *port_name,
                                   const ConnectionSP &connection) {
-    return request_knob(port_name, connection, TIMEOUT_MS);
+    return falcon::routine::request_knob(port_name, connection, TIMEOUT_MS);
   }
   InstrumentPortSP LookupMeterPort(const char *port_name,
                                    const ConnectionSP &connection) {
-    return request_meter(port_name, connection, TIMEOUT_MS);
+    return falcon::routine::request_meter(port_name, connection, TIMEOUT_MS);
   }
   InstrumentPortSP BuildSettingPort(const char *port_name,
                                     const ConnectionSP &connection,
@@ -1130,14 +1098,15 @@ TEST_F(DataRetrievalTest, Gaussian1DMeasureGetSet) {
   ConfigSP config = request_config(TIMEOUT_MS);
   ASSERT_NE(config, nullptr) << "Failed to get config from request_config";
 
-  InstrumentPortSP getter = request_meter(
+  InstrumentPortSP getter = falcon::routine::request_meter(
       HUB_METER_STREAM_PORT, Connection::Ohmic(GETTER_NAME), TIMEOUT_MS);
   PortsSP getters =
       std::make_shared<Ports>(std::vector<InstrumentPortSP>{getter});
 
   InstrumentPortSP independantKnob =
-      request_knob(HUB_SOURCE_VOLTAGE_PORT,
-                   Connection::PlungerGate(DEPENDANT_NAME), TIMEOUT_MS);
+      falcon::routine::request_knob(
+          HUB_SOURCE_VOLTAGE_PORT, Connection::PlungerGate(DEPENDANT_NAME),
+          TIMEOUT_MS);
   InstrumentPortSP clock = InstrumentPort::ExecutionClock();
 
   MapSP<InstrumentPort, PortTransform> transforms =
@@ -1199,7 +1168,7 @@ TEST_F(DataRetrievalTest, VoltageSweepCurrent) {
   ConfigSP config = request_config(TIMEOUT_MS);
   ASSERT_NE(config, nullptr) << "Failed to get config from request_config";
 
-  InstrumentPortSP currentMeter = request_meter(
+  InstrumentPortSP currentMeter = falcon::routine::request_meter(
       HUB_METER_STREAM_PORT, Connection::Ohmic(GETTER_NAME), TIMEOUT_MS);
   PortsSP getters =
       std::make_shared<Ports>(std::vector<InstrumentPortSP>{currentMeter});
@@ -1209,7 +1178,7 @@ TEST_F(DataRetrievalTest, VoltageSweepCurrent) {
   // In a physical setup the raw mV reading would be scaled to nA by the
   // transresistance amplifier gain; the test data (linear-1d.txt) represents
   // that conceptual current sweep.
-  InstrumentPortSP voltageKnob = request_knob(
+  InstrumentPortSP voltageKnob = falcon::routine::request_knob(
       HUB_SOURCE_VOLTAGE_PORT, Connection::PlungerGate(SWEEP_NAME), TIMEOUT_MS);
   InstrumentPortSP clock = InstrumentPort::ExecutionClock();
 
@@ -1273,14 +1242,14 @@ TEST_F(DataRetrievalTest, VoltageSweepCurrent2D) {
   ConfigSP config = request_config(TIMEOUT_MS);
   ASSERT_NE(config, nullptr) << "Failed to get config from request_config";
 
-  InstrumentPortSP currentMeter = request_meter(
+  InstrumentPortSP currentMeter = falcon::routine::request_meter(
       HUB_METER_STREAM_PORT, Connection::Ohmic(GETTER_NAME), TIMEOUT_MS);
   PortsSP getters =
       std::make_shared<Ports>(std::vector<InstrumentPortSP>{currentMeter});
 
-  InstrumentPortSP fastKnob = request_knob(
+  InstrumentPortSP fastKnob = falcon::routine::request_knob(
       HUB_SOURCE_VOLTAGE_PORT, Connection::PlungerGate(FAST_GATE), TIMEOUT_MS);
-  InstrumentPortSP slowKnob = request_knob(
+  InstrumentPortSP slowKnob = falcon::routine::request_knob(
       HUB_SOURCE_VOLTAGE_PORT, Connection::PlungerGate(SLOW_GATE), TIMEOUT_MS);
   InstrumentPortSP clock = InstrumentPort::ExecutionClock();
 

@@ -2,9 +2,7 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO falcon-autotuning/teal-api-gen
     REF v${VERSION}
-    SHA512 02f52f6afa1ceb16bb25fcc3db609215db9738359fc1ecce10ce59838f07f26fda51ee233bccca074293d1f440ba704b4544f00170e0277f4b11920fe52079d2
-    PATCHES
-        fix-export.patch
+    SHA512 6e8571fb15485e8126e9c54741e355d66d29d172b04d2e45d3068c08b214631f37e8a1fcd595ffc5a6f7db216dc23601389a6228faaae1dde8990cf2017d5a32
 )
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"

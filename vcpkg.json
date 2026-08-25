@@ -15,6 +15,7 @@
       "version>=": "1.2.4"
     },
     "instrument-script-server",
+    "falcon-instrument-hub",
     "instrument-data",
     "gtest",
     "teal-api-gen",
@@ -49,6 +50,10 @@
   ],
   "builtin-baseline": "9942fb5f996ea431c5ed8fb8d2a53f31d08df62e",
   "overrides": [
+    {
+      "name": "libpqxx",
+      "version": "7.10.5"
+    },
     {
       "name": "xtensor",
       "version": "0.25.0"
