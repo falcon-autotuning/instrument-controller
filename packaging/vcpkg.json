@@ -1,0 +1,55 @@
+{
+  "name": "instrument-controller",
+  "description": "For running integration tests",
+  "license": "MPL-2.0",
+  "dependencies": [
+    {
+      "name": "falcon-core",
+      "features": [
+        "c-api"
+      ],
+      "version>=": "1.2.4"
+    },
+    "instrument-script-server",
+    "instrument-data",
+    "cjson",
+    {
+      "name": "instrument-plugin-api",
+      "version>=": "2.0.4"
+    },
+    {
+      "name": "instrument-data",
+      "version>=": "1.1.8"
+    },
+    {
+      "name": "instrument-log",
+      "version>=": "1.0.5"
+    },
+    {
+      "name": "isa-test-utils",
+      "version>=": "1.2.6"
+    },
+    {
+      "name": "visa-plugin",
+      "version>=": "1.1.6"
+    },
+    {
+      "name": "instrument-call-stack",
+      "version>=": "1.0.6",
+      "features": [
+        "lua"
+      ]
+    }
+  ],
+  "builtin-baseline": "9942fb5f996ea431c5ed8fb8d2a53f31d08df62e",
+  "overrides": [
+    {
+      "name": "xtensor",
+      "version": "0.25.0"
+    },
+    {
+      "name": "xtl",
+      "version": "0.7.5"
+    }
+  ]
+}

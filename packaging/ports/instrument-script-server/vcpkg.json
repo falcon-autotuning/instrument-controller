@@ -1,0 +1,45 @@
+{
+  "name": "instrument-script-server",
+  "version-string": "2.0.13",
+  "port-version": 14,
+  "description": "a modular, process-isolated system for controlling scientific instruments for FAlCon use",
+  "builtin-baseline": "e5a1490e1409d175932ef6014519e9ae149ddb7c",
+  "dependencies": [
+    "vcpkg-cmake",
+    "vcpkg-cmake-config",
+    "grpc",
+    "protobuf",
+    "lua",
+    "nlohmann-json",
+    "spdlog",
+    "sol2",
+    "cxxopts",
+    "yaml-cpp",
+    "boost-interprocess",
+    "boost-date-time",
+    "cxxopts",
+    {
+      "name": "instrument-data",
+      "version>=": "1.1.8"
+    },
+    {
+      "name": "instrument-plugin-api",
+      "version>=": "2.0.2",
+      "features": [
+        "plugin",
+        "host"
+      ]
+    },
+    {
+      "name": "instrument-log",
+      "version>=": "1.0.5"
+    },
+    {
+      "name": "instrument-call-stack",
+      "version>=": "1.0.6",
+      "features": [
+        "lua"
+      ]
+    }
+  ]
+}

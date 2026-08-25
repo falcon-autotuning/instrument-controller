@@ -56,6 +56,10 @@
     {
       "name": "xtl",
       "version": "0.7.5"
+    },
+    {
+      "name": "libpqxx",
+      "version": "7.10.5#0"
     }
   ]
 }
