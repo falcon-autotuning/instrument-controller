@@ -3,6 +3,9 @@
 # test data/logs
 /tests/test-runs
 
+# test output
+make_test_out.txt
+
 vcpkg/
 my-vcpkg-triplets/
 vcpkg_installed/

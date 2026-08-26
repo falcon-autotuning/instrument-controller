@@ -3,13 +3,24 @@ find_package(GTest                    CONFIG REQUIRED)
 find_package(falcon-routine           CONFIG REQUIRED)
 include(GoogleTest)
 
+add_library(plugin-helpers INTERFACE)
+
+target_include_directories(plugin-helpers
+  INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/instrument-plugins/plugin-helpers.h
+)
+
 message(STATUS "Building mock instrument plugins...")
 add_instrument_plugin(mock_multimeter
   SOURCES instrument-plugins/mock-multimeter.c
-  LINK_LIBRARIES instrument-data::instrument-data
+  LINK_LIBRARIES
+    instrument-data::instrument-data
+    plugin-helpers
 )
 add_instrument_plugin(mock_voltage_source
   SOURCES instrument-plugins/mock-voltage-source.c
+  LINK_LIBRARIES
+    plugin-helpers
 )
 
 set(TEST_SOURCES

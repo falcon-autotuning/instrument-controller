@@ -1,15 +1,9 @@
-get_filename_component(WORKSPACE_ROOT "${CURRENT_PORT_DIR}/../../.." ABSOLUTE)
-set(LOCAL_SCRIPT_SERVER_PATH "${WORKSPACE_ROOT}/instrument-script-server")
-if(EXISTS "${LOCAL_SCRIPT_SERVER_PATH}")
-  set(SOURCE_PATH "${LOCAL_SCRIPT_SERVER_PATH}")
-else()
-  vcpkg_from_github(
-        OUT_SOURCE_PATH SOURCE_PATH
-        REPO falcon-autotuning/instrument-script-server
-        REF v${VERSION}
-        SHA512 47210ed61378046ffa3717fb8127af265d12d02ce869dced3e43f73abaeaf1615baac344ad47ad0576fea2f6bcc144e27248c27726366a3145ae27098a9850c1
-  )
-endif()
+vcpkg_from_github(
+      OUT_SOURCE_PATH SOURCE_PATH
+      REPO falcon-autotuning/instrument-script-server
+      REF v${VERSION}
+      SHA512 531bea2023519ba58000e354f38ceafd745e64b65d38837cf766aaf0b77f020af3b3d42be69bc823866ad9097639d40ae4ecf6bcc07b93790f27236bd64203a3
+)
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
