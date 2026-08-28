@@ -1,6 +1,6 @@
 {
   "name": "instrument-script-server",
-  "version-string": "2.0.13",
+  "version-string": "2.0.14",
   "port-version": 14,
   "description": "a modular, process-isolated system for controlling scientific instruments for FAlCon use",
   "dependencies": [
