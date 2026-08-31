@@ -3,6 +3,7 @@
   "description": "For running integration tests",
   "license": "MPL-2.0",
   "dependencies": [
+    "yaml-config-validator",
     {
       "name": "falcon-routine",
       "version>=": "1.0.5"
