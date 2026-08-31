@@ -1,6 +1,6 @@
 {
   "name": "falcon-core",
-  "version": "1.2.13",
+  "version": "1.2.16",
   "license": "BSD-3-Clause",
   "features": {
     "c-api": {
@@ -8,6 +8,7 @@
     }
   },
   "dependencies": [
+    "yaml-config-validator",
     {
       "name": "vcpkg-cmake"
     },
