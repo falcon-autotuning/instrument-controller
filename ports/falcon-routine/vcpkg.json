@@ -1,7 +1,7 @@
 {
   "name": "falcon-routine",
-  "version": "1.0.5",
-  "port-version": 3,
+  "version": "1.0.7",
+  "port-version": 4,
   "description": "Standard routine helpers for connecting to the instrument hub through the FFI interface and requesting measurements and data",
   "homepage": "https://github.com/falcon-autotuning/falcon-routine",
   "license": "MPL-2.0",
@@ -29,11 +29,17 @@
     },
     {
       "name": "falcon-comms",
-      "version>=": "1.0.0"
+      "version>=": "1.0.12"
     },
     {
       "name": "falcon-core",
       "version>=": "1.2.1"
+    },
+    {
+      "name": "ensmallen"
+    },
+    {
+      "name": "armadillo"
     }
   ],
   "overrides": [

@@ -5,7 +5,8 @@ instrument:
   identifier: Source1
   description: Mock Voltage Source
 protocol:
-  type: MockVoltageSource
+  type: Custom
+  name: MockVoltageSource
 channel_groups:
   - name: analog
     description: Analog output channels

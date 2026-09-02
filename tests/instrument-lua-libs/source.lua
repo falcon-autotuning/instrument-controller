@@ -54,7 +54,7 @@ function Mock1Source1:setVoltage(id, channel, voltage)
       command = "SET_VOLTAGE",
       channel = channel,
    })
-   return context:call(cs, { channel = channel, voltage = voltage })
+   return context:call(cs, voltage)
 end
 
 
@@ -77,7 +77,7 @@ function Mock1Source1:getVoltage(id, channel)
       command = "GET_VOLTAGE",
       channel = channel,
    })
-   return context:call(cs, { channel = channel })
+   return context:call(cs)
 end
 
 

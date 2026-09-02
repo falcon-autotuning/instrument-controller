@@ -54,7 +54,7 @@ function Mock5Meter1:setSampleRate(id: string, channel: number, sample_rate: any
     command = "SET_SAMPLE_RATE",
     channel = channel,
   })
-  return context:call(cs, {channel = channel, sample_rate = sample_rate})
+  return context:call(cs, sample_rate)
 end
 
 --- Set the number of bins to average for each data point
@@ -78,7 +78,7 @@ function Mock5Meter1:setBins(id: string, channel: number, bins: any): any
     command = "SET_BINS",
     channel = channel,
   })
-  return context:call(cs, {channel = channel, bins = bins})
+  return context:call(cs, bins)
 end
 
 --- Set output voltage
@@ -101,7 +101,7 @@ function Mock5Meter1:measureStream(id: string, channel: number): MeasureResponse
     command = "MEASURE_STREAM",
     channel = channel,
   })
-  return context:call(cs, {channel = channel})
+  return context:call(cs)
 end
 
 --- Measure a single data point
@@ -124,7 +124,7 @@ function Mock5Meter1:getDatapoint(id: string, channel: number): number
     command = "GET_DATAPOINT",
     channel = channel,
   })
-  return context:call(cs, {channel = channel})
+  return context:call(cs)
 end
 
 --- resets the mock instrument

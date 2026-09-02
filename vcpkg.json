@@ -63,5 +63,18 @@
       "name": "xtl",
       "version": "0.7.5"
     }
-  ]
+  ],
+  "features": {
+    "local-teal-api-gen": {
+      "description": "Build teal-api-gen from the sibling workspace checkout",
+      "dependencies": [
+        {
+          "name": "teal-api-gen",
+          "features": [
+            "local-source"
+          ]
+        }
+      ]
+    }
+  }
 }

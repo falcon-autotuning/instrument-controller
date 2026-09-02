@@ -11,6 +11,12 @@ export USERPROFILE
 # Build preset (user can override: make build PRESET=linux-gcc-release)
 PRESET ?= linux-clang-release
 CMAKE_BUILD_DIR := build/$(PRESET)
+LOCAL_TEAL_API_GEN ?= OFF
+
+VCPKG_MANIFEST_FEATURES :=
+ifeq ($(LOCAL_TEAL_API_GEN),ON)
+  VCPKG_MANIFEST_FEATURES := local-teal-api-gen
+endif
 
 ifeq ($(OS),Windows_NT)
   SUDO :=
@@ -45,6 +51,7 @@ help:
 	@echo "  make build PRESET=<preset>      - Build the project (default: $(PRESET))"
 	@echo "  make test PRESET=<preset>       - Run tests (default: $(PRESET))"
 	@echo "  make install PRESET=<preset>    - Install to system"
+	@echo "  make test LOCAL_TEAL_API_GEN=ON - Test with the sibling teal-api-gen checkout"
 	@echo "  make clean                      - Clean all build artifacts"
 	@echo ""
 	@echo "Examples:"
@@ -55,11 +62,11 @@ help:
 
 vcpkg-bootstrap:
 	@echo "Bootstrapping vcpkg..."
-	$(RUN_CMAKE) -D PRESET=$(PRESET) $(CMAKE_ARGS) -P cmake/bootstrap/bootstrap-vcpkg.cmake
+	$(RUN_CMAKE) -D PRESET=$(PRESET) -D "VCPKG_MANIFEST_FEATURES=$(VCPKG_MANIFEST_FEATURES)" $(CMAKE_ARGS) -P cmake/bootstrap/bootstrap-vcpkg.cmake
 
 configure: vcpkg-bootstrap
 	@echo "Configuring $(PRESET)..."
-	$(RUN_CMAKE) --preset $(PRESET)
+	$(RUN_CMAKE) --preset $(PRESET) -D "VCPKG_MANIFEST_FEATURES=$(VCPKG_MANIFEST_FEATURES)"
 
 build: configure
 	@echo "Building $(PRESET)..."

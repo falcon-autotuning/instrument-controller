@@ -54,7 +54,7 @@ function Mock1Source1:setVoltage(id: string, channel: number, voltage: any): any
     command = "SET_VOLTAGE",
     channel = channel,
   })
-  return context:call(cs, {channel = channel, voltage = voltage})
+  return context:call(cs, voltage)
 end
 
 --- Measure DC voltage
@@ -77,7 +77,7 @@ function Mock1Source1:getVoltage(id: string, channel: number): number
     command = "GET_VOLTAGE",
     channel = channel,
   })
-  return context:call(cs, {channel = channel})
+  return context:call(cs)
 end
 
 --- resets the mock instrument

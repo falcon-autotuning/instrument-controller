@@ -20,8 +20,8 @@ static int check_param_count(const PluginCommand *cmd, const int expected) {
 // Copies a message into the target buffer with proper null-termination,
 // ensuring it does not exceed the maximum payload size
 static void payloadCopy(char *target, const char *message) {
-  strncpy(target, message, PLUGIN_MAX_STRING_LEN);
-  target[PLUGIN_MAX_STRING_LEN] = '\0'; // Ensure null-termination
+  strncpy(target, message, PLUGIN_MAX_STRING_LEN - 1);
+  target[PLUGIN_MAX_STRING_LEN - 1] = '\0';
 }
 static int setPluginError(PluginResponse *resp, const char *msg,
                           int error_code) {

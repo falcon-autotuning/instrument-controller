@@ -102,6 +102,7 @@ static int load_data_from_file(void) {
 }
 
 static int handle_bins(const PluginCommand *cmd, PluginResponse *resp) {
+  (void)resp;
   int bins_idx, channel_idx;
   int err = check_param_count(cmd, 2);
   if (!err)
@@ -127,10 +128,11 @@ static int handle_bins(const PluginCommand *cmd, PluginResponse *resp) {
   if (g_num_bins[index] > g_data_count[index]) {
     g_num_bins[index] = g_data_count[index];
   }
-  return push_int_response(resp, BINS_IO_NAME, g_num_bins[index]);
+  return 0;
 }
 
 static int handle_rate(const PluginCommand *cmd, PluginResponse *resp) {
+  (void)resp;
   int rate_idx, channel_idx;
   int err = check_param_count(cmd, 2);
   if (!err)
@@ -149,7 +151,7 @@ static int handle_rate(const PluginCommand *cmd, PluginResponse *resp) {
     return setPluginError(resp, "sample_rate must be > 0", INVALID_RATE_ERROR);
   }
   // TODO: Store and use the rate
-  return push_int_response(resp, RATE_IO_NAME, rate);
+  return 0;
 }
 
 static int handle_datapoint(const PluginCommand *cmd, PluginResponse *resp) {

@@ -2,7 +2,7 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO falcon-autotuning/falcon-comms
     REF v${VERSION}
-    SHA512 51e2315de2eaa37b0fafe8ccd93b60393945715737ac661c6e64cd4380a56cc03b952e8143cb4d4e676e556e5727132166398c9ef289f3954a0fb28b3359879f
+    SHA512 c55d4a9b60b9e3fe24ced871b191b3c783c5339456064176fc22ae9a218ac3cae024d4aafcacb8543b0f5b84d26d15d3a928e49c6f6426596d575ffe66a8caef
 )
 
 # Override natsManager.cpp with the locally-fixed version from the falcon-comms

@@ -1,6 +1,6 @@
 {
   "name": "falcon-instrument-hub",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "port-version": 66,
   "description": "Falcon Instrument Hub Go binary",
   "license": "BSD-3-Clause",

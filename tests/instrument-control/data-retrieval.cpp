@@ -1,5 +1,6 @@
 #include <cctype>
 #include <chrono>
+#include <cmath>
 #include <falcon-comms/runtime_comms.hpp>
 #include <falcon-core/generic/Map.hpp>
 #include <falcon-core/instrument_interfaces/Waveform.hpp>
@@ -11,7 +12,10 @@
 #include <fstream>
 #include <future>
 #include <gtest/gtest.h>
+#include <limits>
 #include <map>
+#include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -42,6 +46,13 @@ using namespace falcon_core::autotuner_interfaces::names;
 using namespace falcon_core::math::domains;
 using namespace falcon_core::generic;
 const int TIMEOUT_MS = 5000;
+
+double FloatEchoTolerance(double expected_value) {
+  const double magnitude = std::abs(expected_value);
+  const double scale = magnitude > 1.0 ? magnitude : 1.0;
+  return std::numeric_limits<float>::epsilon() * scale;
+}
+
 namespace fs = std::filesystem;
 const fs::path DATA_1D_DIR = fs::path(__FILE__).parent_path();
 const fs::path TEST_ROOT_DIR = DATA_1D_DIR.parent_path();
@@ -75,6 +86,13 @@ const char *HUB_METER_TRIGGER_LEADER_PORT = "Mock.Meter1.analog.trigger_leader";
 
 class DataRetrievalTest : public ::testing::Test {
 protected:
+  using PortPayload = std::tuple<Ports, Ports>;
+
+  enum class PayloadPortRole {
+    Knob,
+    Meter,
+  };
+
   fs::path current_run_dir_;
   fs::path current_working_dir_;
   fs::path current_data_dir_;
@@ -86,6 +104,7 @@ protected:
   bool had_tmpdir_ = false;
   bool had_tmp_ = false;
   bool had_temp_ = false;
+  std::unique_ptr<PortPayload> port_payload_;
 
   void SetUp() override {
     // Initialize paths from environment variables here, not at global scope
@@ -180,10 +199,13 @@ protected:
                        VCPKG_LIB_DIR, current_working_dir_, VCPKG_BIN_DIR);
     WaitForNats("127.0.0.1", 4222, 10000);
     WaitForHubReady(10000); // Wait for hub to finish setting up handlers
+    port_payload_ = std::make_unique<PortPayload>(
+        falcon::routine::request_port_payload(TIMEOUT_MS));
     std::cout << "Setup complete, starting test" << std::endl;
   }
 
   void TearDown() override {
+    port_payload_.reset();
     unsetenv("MOCK_MULTIMETER_DATA_FILE");
     unsetenv("NATS_URL");
     StopInstrumentHub();
@@ -449,13 +471,71 @@ protected:
       CompileTeal(script_path.string(), out_path.string());
     }
   }
+  static const char *PayloadPortRoleName(PayloadPortRole role) {
+    return role == PayloadPortRole::Knob ? "knob" : "meter";
+  }
+
+  InstrumentPortSP FindPayloadPort(const std::string &port_name,
+                                   const ConnectionSP &connection,
+                                   PayloadPortRole role) const {
+    if (!port_payload_) {
+      throw std::runtime_error("PORT_PAYLOAD has not been requested");
+    }
+
+    const Ports &ports = role == PayloadPortRole::Knob
+                             ? std::get<0>(*port_payload_)
+                             : std::get<1>(*port_payload_);
+    std::ostringstream available_ports;
+    bool first_port = true;
+
+    for (const InstrumentPortSP &port : ports.items()) {
+      if (!port) {
+        continue;
+      }
+
+      const bool role_matches = role == PayloadPortRole::Knob
+                                    ? port->is_knob()
+                                    : port->is_meter();
+      bool connection_matches = false;
+      std::string connection_name = "<missing pseudo_name>";
+      try {
+        const ConnectionSP port_connection = port->pseudo_name();
+        if (port_connection) {
+          connection_name = port_connection->name();
+          connection_matches =
+              connection && *port_connection == *connection;
+        }
+      } catch (const std::exception &) {
+      }
+
+      if (role_matches && port->default_name() == port_name &&
+          connection_matches) {
+        return port;
+      }
+
+      if (!first_port) {
+        available_ports << ", ";
+      }
+      first_port = false;
+      available_ports << port->default_name() << " (" << connection_name
+                      << ")";
+    }
+
+    throw std::runtime_error(
+        "Failed to find " + std::string(PayloadPortRoleName(role)) +
+        " port with default_name=\"" + port_name + "\" and pseudo_name=\"" +
+        (connection ? connection->name() : "<null>") +
+        "\" in cached PORT_PAYLOAD. Available ports: [" +
+        available_ports.str() + "]");
+  }
+
   InstrumentPortSP LookupKnobPort(const char *port_name,
-                                  const ConnectionSP &connection) {
-    return falcon::routine::request_knob(port_name, connection, TIMEOUT_MS);
+                                  const ConnectionSP &connection) const {
+    return FindPayloadPort(port_name, connection, PayloadPortRole::Knob);
   }
   InstrumentPortSP LookupMeterPort(const char *port_name,
-                                   const ConnectionSP &connection) {
-    return falcon::routine::request_meter(port_name, connection, TIMEOUT_MS);
+                                   const ConnectionSP &connection) const {
+    return FindPayloadPort(port_name, connection, PayloadPortRole::Meter);
   }
   InstrumentPortSP BuildSettingPort(const char *port_name,
                                     const ConnectionSP &connection,
@@ -468,11 +548,12 @@ protected:
     return InstrumentPort::Knob(port_name, connection, instrument_type, units,
                                 description);
   }
-  InstrumentPortSP BuildGetterPort(const char *port_name,
-                                   const ConnectionSP &connection,
-                                   const Instrument &instrument_type,
-                                   const SymbolUnitSP &units,
-                                   const std::string &description) {
+  InstrumentPortSP BuildSettingGetterPort(
+      const char *port_name, const ConnectionSP &connection,
+      const Instrument &instrument_type, const SymbolUnitSP &units,
+      const std::string &description) {
+    // Temporary counterpart to BuildSettingPort for setting readbacks. Remove
+    // once ISS exposes settings through the capability contract.
     return InstrumentPort::Meter(port_name, connection, instrument_type, units,
                                  description);
   }
@@ -657,7 +738,8 @@ protected:
           << "Expected units to match target metadata";
       ASSERT_EQ(labelledArray->size(), 1)
           << "Expected 1 data point for " << connection->name();
-      EXPECT_NEAR((*labelledArray)(0), expected_value, 1e-9)
+      EXPECT_NEAR((*labelledArray)(0), expected_value,
+                  FloatEchoTolerance(expected_value))
           << "Expected schema response to echo the applied value for "
           << connection->name();
     }
@@ -860,10 +942,8 @@ TEST_F(DataRetrievalTest, GetVoltage) {
                              setter, TARGET_VOLTAGE);
   (void)request_measurement(set_request, TIMEOUT_MS);
 
-  InstrumentPortSP getter = BuildGetterPort(
-      HUB_SOURCE_MEASURED_VOLTAGE_PORT, Connection::PlungerGate(TARGET_NAME),
-      InstrumentTypes::DC_VOLTAGE_SOURCE, SymbolUnit::Volt(),
-      "Measured voltage getter for source channel");
+  InstrumentPortSP getter = LookupMeterPort(
+      HUB_SOURCE_MEASURED_VOLTAGE_PORT, Connection::PlungerGate(TARGET_NAME));
   auto request = MakeGetterOnlyRequest("Reading P1 via get_voltage schema",
                                        "get_voltage", getter);
   auto resp = request_measurement(request, TIMEOUT_MS);
@@ -884,7 +964,7 @@ TEST_F(DataRetrievalTest, GetSampleRate) {
       setter, TARGET_SAMPLE_RATE);
   (void)request_measurement(set_request, TIMEOUT_MS);
 
-  InstrumentPortSP getter = BuildGetterPort(
+  InstrumentPortSP getter = BuildSettingGetterPort(
       HUB_METER_SAMPLE_RATE_PORT, Connection::Ohmic(GETTER_NAME),
       InstrumentTypes::VOLTMETER, SymbolUnit::Hertz(),
       "Sample rate getter for multimeter channel");
@@ -910,9 +990,10 @@ TEST_F(DataRetrievalTest, GetNumberOfSamples) {
   (void)request_measurement(set_request, TIMEOUT_MS);
 
   InstrumentPortSP getter =
-      BuildGetterPort(HUB_METER_BINS_PORT, Connection::Ohmic(GETTER_NAME),
-                      InstrumentTypes::VOLTMETER, SymbolUnit::Dimensionless(),
-                      "Averaging bin-count getter for multimeter channel");
+      BuildSettingGetterPort(
+          HUB_METER_BINS_PORT, Connection::Ohmic(GETTER_NAME),
+          InstrumentTypes::VOLTMETER, SymbolUnit::Dimensionless(),
+          "Averaging bin-count getter for multimeter channel");
   auto request =
       MakeGetterOnlyRequest("Reading O1 bins via get_number_of_samples schema",
                             "get_number_of_samples", getter);
@@ -934,7 +1015,7 @@ TEST_F(DataRetrievalTest, GetSlope) {
                              "set_slope", setter, TARGET_SLOPE);
   (void)request_measurement(set_request, TIMEOUT_MS);
 
-  InstrumentPortSP getter = BuildGetterPort(
+  InstrumentPortSP getter = BuildSettingGetterPort(
       HUB_SOURCE_SLOPE_PORT, Connection::PlungerGate(TARGET_NAME),
       InstrumentTypes::DC_VOLTAGE_SOURCE, SymbolUnit::VoltsPerSecond(),
       "Slope getter for source channel");
@@ -958,7 +1039,7 @@ TEST_F(DataRetrievalTest, GetTriggerLeader) {
       "set_trigger_leader", setter);
   (void)request_measurement(set_request, TIMEOUT_MS);
 
-  InstrumentPortSP getter = BuildGetterPort(
+  InstrumentPortSP getter = BuildSettingGetterPort(
       HUB_METER_TRIGGER_LEADER_PORT, Connection::Ohmic(GETTER_NAME),
       InstrumentTypes::VOLTMETER, SymbolUnit::Dimensionless(),
       "Trigger leader getter for multimeter channel");
@@ -984,14 +1065,10 @@ TEST_F(DataRetrievalTest, GetManyVoltages) {
       {{setter1, P1_VOLTAGE}, {setter2, P2_VOLTAGE}});
   (void)request_measurement(set_request, TIMEOUT_MS);
 
-  InstrumentPortSP getter1 = BuildGetterPort(
-      HUB_SOURCE_MEASURED_VOLTAGE_PORT, Connection::PlungerGate("P1"),
-      InstrumentTypes::DC_VOLTAGE_SOURCE, SymbolUnit::Volt(),
-      "Measured voltage getter for source channel P1");
-  InstrumentPortSP getter2 = BuildGetterPort(
-      HUB_SOURCE_MEASURED_VOLTAGE_PORT, Connection::PlungerGate("P2"),
-      InstrumentTypes::DC_VOLTAGE_SOURCE, SymbolUnit::Volt(),
-      "Measured voltage getter for source channel P2");
+  InstrumentPortSP getter1 = LookupMeterPort(
+      HUB_SOURCE_MEASURED_VOLTAGE_PORT, Connection::PlungerGate("P1"));
+  InstrumentPortSP getter2 = LookupMeterPort(
+      HUB_SOURCE_MEASURED_VOLTAGE_PORT, Connection::PlungerGate("P2"));
   auto request = MakeGetterOnlyRequest(
       "Reading P1/P2 via get_many_voltages schema", "get_many_voltages",
       std::vector<InstrumentPortSP>{getter1, getter2});
@@ -1015,14 +1092,10 @@ TEST_F(DataRetrievalTest, GetAllVoltages) {
       "set_many_voltages", {{setter1, P1_VOLTAGE}, {setter2, P2_VOLTAGE}});
   (void)request_measurement(set_request, TIMEOUT_MS);
 
-  InstrumentPortSP getter1 = BuildGetterPort(
-      HUB_SOURCE_MEASURED_VOLTAGE_PORT, Connection::PlungerGate("P1"),
-      InstrumentTypes::DC_VOLTAGE_SOURCE, SymbolUnit::Volt(),
-      "Measured voltage getter for source channel P1");
-  InstrumentPortSP getter2 = BuildGetterPort(
-      HUB_SOURCE_MEASURED_VOLTAGE_PORT, Connection::PlungerGate("P2"),
-      InstrumentTypes::DC_VOLTAGE_SOURCE, SymbolUnit::Volt(),
-      "Measured voltage getter for source channel P2");
+  InstrumentPortSP getter1 = LookupMeterPort(
+      HUB_SOURCE_MEASURED_VOLTAGE_PORT, Connection::PlungerGate("P1"));
+  InstrumentPortSP getter2 = LookupMeterPort(
+      HUB_SOURCE_MEASURED_VOLTAGE_PORT, Connection::PlungerGate("P2"));
   auto request = MakeGetterOnlyRequest(
       "Reading all voltages via get_all_voltages schema", "get_all_voltages",
       std::vector<InstrumentPortSP>{getter1, getter2});
@@ -1037,10 +1110,8 @@ TEST_F(DataRetrievalTest, MeasureCurrent) {
   const char *GETTER_NAME = "O1";
   const double EXPECTED_CURRENT = ReadFirstScalarFromFile(TEST_DATA_FILE);
 
-  InstrumentPortSP getter =
-      BuildGetterPort(HUB_METER_VOLTAGE_PORT, Connection::Ohmic(GETTER_NAME),
-                      InstrumentTypes::VOLTMETER, SymbolUnit::NanoAmpere(),
-                      "Current measurement getter for multimeter channel");
+  InstrumentPortSP getter = LookupMeterPort(
+      HUB_METER_VOLTAGE_PORT, Connection::Ohmic(GETTER_NAME));
   auto request =
       MakeGetterOnlyRequest("Measuring current via measure_current schema",
                             "measure_current", getter);
@@ -1055,10 +1126,8 @@ TEST_F(DataRetrievalTest, MeasureIllumination) {
   const double EXPECTED_CURRENT =
       ReadFirstScalarFromFile(TEST_DATA_DIR_PATH / "linear-1d.txt");
 
-  InstrumentPortSP getter =
-      BuildGetterPort(HUB_METER_VOLTAGE_PORT, Connection::Ohmic(GETTER_NAME),
-                      InstrumentTypes::VOLTMETER, SymbolUnit::NanoAmpere(),
-                      "Illumination measurement getter for multimeter channel");
+  InstrumentPortSP getter = LookupMeterPort(
+      HUB_METER_VOLTAGE_PORT, Connection::Ohmic(GETTER_NAME));
   auto request = MakeGetterOnlyRequest(
       "Measuring illumination via measure_illumination schema",
       "measure_illumination", getter);
@@ -1074,10 +1143,8 @@ TEST_F(DataRetrievalTest, MeasureLeakage) {
 
   InstrumentPortSP setter = LookupKnobPort(
       HUB_SOURCE_VOLTAGE_PORT, Connection::PlungerGate(TARGET_NAME));
-  InstrumentPortSP getter = BuildGetterPort(
-      HUB_SOURCE_MEASURED_VOLTAGE_PORT, Connection::PlungerGate(TARGET_NAME),
-      InstrumentTypes::DC_VOLTAGE_SOURCE, SymbolUnit::NanoAmpere(),
-      "Leakage measurement getter for source channel");
+  InstrumentPortSP getter = LookupMeterPort(
+      HUB_SOURCE_MEASURED_VOLTAGE_PORT, Connection::PlungerGate(TARGET_NAME));
   auto request = MakeSinglePointGetterRequest(
       "Measuring leakage via measure_leakage schema", "measure_leakage", setter,
       LEAKAGE_VOLTAGE, std::vector<InstrumentPortSP>{getter});
@@ -1098,15 +1165,13 @@ TEST_F(DataRetrievalTest, Gaussian1DMeasureGetSet) {
   ConfigSP config = request_config(TIMEOUT_MS);
   ASSERT_NE(config, nullptr) << "Failed to get config from request_config";
 
-  InstrumentPortSP getter = falcon::routine::request_meter(
-      HUB_METER_STREAM_PORT, Connection::Ohmic(GETTER_NAME), TIMEOUT_MS);
+  InstrumentPortSP getter =
+      LookupMeterPort(HUB_METER_STREAM_PORT, Connection::Ohmic(GETTER_NAME));
   PortsSP getters =
       std::make_shared<Ports>(std::vector<InstrumentPortSP>{getter});
 
-  InstrumentPortSP independantKnob =
-      falcon::routine::request_knob(
-          HUB_SOURCE_VOLTAGE_PORT, Connection::PlungerGate(DEPENDANT_NAME),
-          TIMEOUT_MS);
+  InstrumentPortSP independantKnob = LookupKnobPort(
+      HUB_SOURCE_VOLTAGE_PORT, Connection::PlungerGate(DEPENDANT_NAME));
   InstrumentPortSP clock = InstrumentPort::ExecutionClock();
 
   MapSP<InstrumentPort, PortTransform> transforms =
@@ -1168,8 +1233,8 @@ TEST_F(DataRetrievalTest, VoltageSweepCurrent) {
   ConfigSP config = request_config(TIMEOUT_MS);
   ASSERT_NE(config, nullptr) << "Failed to get config from request_config";
 
-  InstrumentPortSP currentMeter = falcon::routine::request_meter(
-      HUB_METER_STREAM_PORT, Connection::Ohmic(GETTER_NAME), TIMEOUT_MS);
+  InstrumentPortSP currentMeter =
+      LookupMeterPort(HUB_METER_STREAM_PORT, Connection::Ohmic(GETTER_NAME));
   PortsSP getters =
       std::make_shared<Ports>(std::vector<InstrumentPortSP>{currentMeter});
 
@@ -1178,8 +1243,8 @@ TEST_F(DataRetrievalTest, VoltageSweepCurrent) {
   // In a physical setup the raw mV reading would be scaled to nA by the
   // transresistance amplifier gain; the test data (linear-1d.txt) represents
   // that conceptual current sweep.
-  InstrumentPortSP voltageKnob = falcon::routine::request_knob(
-      HUB_SOURCE_VOLTAGE_PORT, Connection::PlungerGate(SWEEP_NAME), TIMEOUT_MS);
+  InstrumentPortSP voltageKnob = LookupKnobPort(
+      HUB_SOURCE_VOLTAGE_PORT, Connection::PlungerGate(SWEEP_NAME));
   InstrumentPortSP clock = InstrumentPort::ExecutionClock();
 
   MapSP<InstrumentPort, PortTransform> transforms =
@@ -1242,15 +1307,15 @@ TEST_F(DataRetrievalTest, VoltageSweepCurrent2D) {
   ConfigSP config = request_config(TIMEOUT_MS);
   ASSERT_NE(config, nullptr) << "Failed to get config from request_config";
 
-  InstrumentPortSP currentMeter = falcon::routine::request_meter(
-      HUB_METER_STREAM_PORT, Connection::Ohmic(GETTER_NAME), TIMEOUT_MS);
+  InstrumentPortSP currentMeter =
+      LookupMeterPort(HUB_METER_STREAM_PORT, Connection::Ohmic(GETTER_NAME));
   PortsSP getters =
       std::make_shared<Ports>(std::vector<InstrumentPortSP>{currentMeter});
 
-  InstrumentPortSP fastKnob = falcon::routine::request_knob(
-      HUB_SOURCE_VOLTAGE_PORT, Connection::PlungerGate(FAST_GATE), TIMEOUT_MS);
-  InstrumentPortSP slowKnob = falcon::routine::request_knob(
-      HUB_SOURCE_VOLTAGE_PORT, Connection::PlungerGate(SLOW_GATE), TIMEOUT_MS);
+  InstrumentPortSP fastKnob = LookupKnobPort(
+      HUB_SOURCE_VOLTAGE_PORT, Connection::PlungerGate(FAST_GATE));
+  InstrumentPortSP slowKnob = LookupKnobPort(
+      HUB_SOURCE_VOLTAGE_PORT, Connection::PlungerGate(SLOW_GATE));
   InstrumentPortSP clock = InstrumentPort::ExecutionClock();
 
   MapSP<InstrumentPort, PortTransform> transforms =

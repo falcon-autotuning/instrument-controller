@@ -54,7 +54,7 @@ function Mock5Meter1:setSampleRate(id, channel, sample_rate)
       command = "SET_SAMPLE_RATE",
       channel = channel,
    })
-   return context:call(cs, { channel = channel, sample_rate = sample_rate })
+   return context:call(cs, sample_rate)
 end
 
 
@@ -78,7 +78,7 @@ function Mock5Meter1:setBins(id, channel, bins)
       command = "SET_BINS",
       channel = channel,
    })
-   return context:call(cs, { channel = channel, bins = bins })
+   return context:call(cs, bins)
 end
 
 
@@ -101,7 +101,7 @@ function Mock5Meter1:measureStream(id, channel)
       command = "MEASURE_STREAM",
       channel = channel,
    })
-   return context:call(cs, { channel = channel })
+   return context:call(cs)
 end
 
 
@@ -124,7 +124,7 @@ function Mock5Meter1:getDatapoint(id, channel)
       command = "GET_DATAPOINT",
       channel = channel,
    })
-   return context:call(cs, { channel = channel })
+   return context:call(cs)
 end
 
 
