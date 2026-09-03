@@ -493,17 +493,15 @@ protected:
         continue;
       }
 
-      const bool role_matches = role == PayloadPortRole::Knob
-                                    ? port->is_knob()
-                                    : port->is_meter();
+      const bool role_matches =
+          role == PayloadPortRole::Knob ? port->is_knob() : port->is_meter();
       bool connection_matches = false;
       std::string connection_name = "<missing pseudo_name>";
       try {
         const ConnectionSP port_connection = port->pseudo_name();
         if (port_connection) {
           connection_name = port_connection->name();
-          connection_matches =
-              connection && *port_connection == *connection;
+          connection_matches = connection && *port_connection == *connection;
         }
       } catch (const std::exception &) {
       }
@@ -517,8 +515,7 @@ protected:
         available_ports << ", ";
       }
       first_port = false;
-      available_ports << port->default_name() << " (" << connection_name
-                      << ")";
+      available_ports << port->default_name() << " (" << connection_name << ")";
     }
 
     throw std::runtime_error(
@@ -548,10 +545,11 @@ protected:
     return InstrumentPort::Knob(port_name, connection, instrument_type, units,
                                 description);
   }
-  InstrumentPortSP BuildSettingGetterPort(
-      const char *port_name, const ConnectionSP &connection,
-      const Instrument &instrument_type, const SymbolUnitSP &units,
-      const std::string &description) {
+  InstrumentPortSP BuildSettingGetterPort(const char *port_name,
+                                          const ConnectionSP &connection,
+                                          const Instrument &instrument_type,
+                                          const SymbolUnitSP &units,
+                                          const std::string &description) {
     // Temporary counterpart to BuildSettingPort for setting readbacks. Remove
     // once ISS exposes settings through the capability contract.
     return InstrumentPort::Meter(port_name, connection, instrument_type, units,
@@ -824,17 +822,23 @@ protected:
 };
 
 TEST_F(DataRetrievalTest, SetVoltage) {
+  std::cerr << "Running SetVoltage test" << std::endl;
   const char *SETTER_NAME = "P1";
   const double TARGET_VOLTAGE = 0.123;
   InstrumentPortSP setter = LookupKnobPort(
       HUB_SOURCE_VOLTAGE_PORT, Connection::PlungerGate(SETTER_NAME));
+  std::cerr << "SetVoltage test: Found setter port for " << SETTER_NAME
+            << std::endl;
   MeasurementRequestSP request =
       MakeSinglePointRequest("Setting P1 via set_voltage schema", "set_voltage",
                              setter, TARGET_VOLTAGE);
+  std::cerr << "SetVoltage test: Sending request to hub" << std::endl;
   auto resp = request_measurement(request, TIMEOUT_MS);
+  std::cerr << "SetVoltage test: Received response from hub" << std::endl;
 
   ExpectSinglePointEchoResponse(
       resp, setter, Connection::PlungerGate(SETTER_NAME), TARGET_VOLTAGE);
+  std::cerr << "SetVoltage test: Response validated successfully" << std::endl;
 }
 
 TEST_F(DataRetrievalTest, SetSampleRate) {
@@ -989,11 +993,10 @@ TEST_F(DataRetrievalTest, GetNumberOfSamples) {
       "set_number_of_samples", setter, TARGET_NUMBER_OF_SAMPLES);
   (void)request_measurement(set_request, TIMEOUT_MS);
 
-  InstrumentPortSP getter =
-      BuildSettingGetterPort(
-          HUB_METER_BINS_PORT, Connection::Ohmic(GETTER_NAME),
-          InstrumentTypes::VOLTMETER, SymbolUnit::Dimensionless(),
-          "Averaging bin-count getter for multimeter channel");
+  InstrumentPortSP getter = BuildSettingGetterPort(
+      HUB_METER_BINS_PORT, Connection::Ohmic(GETTER_NAME),
+      InstrumentTypes::VOLTMETER, SymbolUnit::Dimensionless(),
+      "Averaging bin-count getter for multimeter channel");
   auto request =
       MakeGetterOnlyRequest("Reading O1 bins via get_number_of_samples schema",
                             "get_number_of_samples", getter);
@@ -1065,10 +1068,10 @@ TEST_F(DataRetrievalTest, GetManyVoltages) {
       {{setter1, P1_VOLTAGE}, {setter2, P2_VOLTAGE}});
   (void)request_measurement(set_request, TIMEOUT_MS);
 
-  InstrumentPortSP getter1 = LookupMeterPort(
-      HUB_SOURCE_MEASURED_VOLTAGE_PORT, Connection::PlungerGate("P1"));
-  InstrumentPortSP getter2 = LookupMeterPort(
-      HUB_SOURCE_MEASURED_VOLTAGE_PORT, Connection::PlungerGate("P2"));
+  InstrumentPortSP getter1 = LookupMeterPort(HUB_SOURCE_MEASURED_VOLTAGE_PORT,
+                                             Connection::PlungerGate("P1"));
+  InstrumentPortSP getter2 = LookupMeterPort(HUB_SOURCE_MEASURED_VOLTAGE_PORT,
+                                             Connection::PlungerGate("P2"));
   auto request = MakeGetterOnlyRequest(
       "Reading P1/P2 via get_many_voltages schema", "get_many_voltages",
       std::vector<InstrumentPortSP>{getter1, getter2});
@@ -1092,10 +1095,10 @@ TEST_F(DataRetrievalTest, GetAllVoltages) {
       "set_many_voltages", {{setter1, P1_VOLTAGE}, {setter2, P2_VOLTAGE}});
   (void)request_measurement(set_request, TIMEOUT_MS);
 
-  InstrumentPortSP getter1 = LookupMeterPort(
-      HUB_SOURCE_MEASURED_VOLTAGE_PORT, Connection::PlungerGate("P1"));
-  InstrumentPortSP getter2 = LookupMeterPort(
-      HUB_SOURCE_MEASURED_VOLTAGE_PORT, Connection::PlungerGate("P2"));
+  InstrumentPortSP getter1 = LookupMeterPort(HUB_SOURCE_MEASURED_VOLTAGE_PORT,
+                                             Connection::PlungerGate("P1"));
+  InstrumentPortSP getter2 = LookupMeterPort(HUB_SOURCE_MEASURED_VOLTAGE_PORT,
+                                             Connection::PlungerGate("P2"));
   auto request = MakeGetterOnlyRequest(
       "Reading all voltages via get_all_voltages schema", "get_all_voltages",
       std::vector<InstrumentPortSP>{getter1, getter2});
@@ -1110,8 +1113,8 @@ TEST_F(DataRetrievalTest, MeasureCurrent) {
   const char *GETTER_NAME = "O1";
   const double EXPECTED_CURRENT = ReadFirstScalarFromFile(TEST_DATA_FILE);
 
-  InstrumentPortSP getter = LookupMeterPort(
-      HUB_METER_VOLTAGE_PORT, Connection::Ohmic(GETTER_NAME));
+  InstrumentPortSP getter =
+      LookupMeterPort(HUB_METER_VOLTAGE_PORT, Connection::Ohmic(GETTER_NAME));
   auto request =
       MakeGetterOnlyRequest("Measuring current via measure_current schema",
                             "measure_current", getter);
@@ -1126,8 +1129,8 @@ TEST_F(DataRetrievalTest, MeasureIllumination) {
   const double EXPECTED_CURRENT =
       ReadFirstScalarFromFile(TEST_DATA_DIR_PATH / "linear-1d.txt");
 
-  InstrumentPortSP getter = LookupMeterPort(
-      HUB_METER_VOLTAGE_PORT, Connection::Ohmic(GETTER_NAME));
+  InstrumentPortSP getter =
+      LookupMeterPort(HUB_METER_VOLTAGE_PORT, Connection::Ohmic(GETTER_NAME));
   auto request = MakeGetterOnlyRequest(
       "Measuring illumination via measure_illumination schema",
       "measure_illumination", getter);
