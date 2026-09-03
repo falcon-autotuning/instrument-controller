@@ -86,9 +86,9 @@ endif()
 # ============================================================================
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   if(WIN32)
-    set(CMAKE_INSTALL_PREFIX "C:/falcon" CACHE PATH "Installation prefix" FORCE)
+    set(CMAKE_INSTALL_PREFIX "C:/instrument-controller" CACHE PATH "Installation prefix" FORCE)
   else()
-    set(CMAKE_INSTALL_PREFIX "/opt/falcon" CACHE PATH "Installation prefix" FORCE)
+    set(CMAKE_INSTALL_PREFIX "/opt/instrument-controller" CACHE PATH "Installation prefix" FORCE)
   endif()
 endif()
 # ============================================================================
