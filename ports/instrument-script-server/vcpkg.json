@@ -1,7 +1,6 @@
 {
   "name": "instrument-script-server",
-  "version-string": "2.0.18",
-  "port-version": 14,
+  "version-string": "2.0.20",
   "description": "a modular, process-isolated system for controlling scientific instruments for FAlCon use",
   "dependencies": [
     "vcpkg-cmake",
