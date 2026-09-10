@@ -81,19 +81,19 @@ if(BUILD_TESTS)
   )
   message(STATUS "Generated env.sh and build-info.json in ${CMAKE_BINARY_DIR}")
 endif()
+# ============================================================================
+# Installation Prefix Configuration
+# ============================================================================
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  if(WIN32)
+    set(CMAKE_INSTALL_PREFIX "C:/instrument-controller" CACHE PATH "Installation prefix" FORCE)
+  else()
+    set(CMAKE_INSTALL_PREFIX "/opt/instrument-controller" CACHE PATH "Installation prefix" FORCE)
+  endif()
+endif()
 if(USE_CPACK)
   # TODO: insert demo qarray stuff here
   find_package(visa-plugin CONFIG REQUIRED)
-  # ============================================================================
-  # Installation Prefix Configuration
-  # ============================================================================
-  if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    if(WIN32)
-      set(CMAKE_INSTALL_PREFIX "C:/instrument-controller" CACHE PATH "Installation prefix" FORCE)
-    else()
-      set(CMAKE_INSTALL_PREFIX "/opt/instrument-controller" CACHE PATH "Installation prefix" FORCE)
-    endif()
-  endif()
   # ============================================================================
   # CPack General Settings
   # ============================================================================
@@ -128,106 +128,108 @@ if(USE_CPACK)
     set(CPACK_GENERATOR "TGZ")
     set(CPACK_ARCHIVE_THREADS 0)
   endif()
+endif()
 
-  # ============================================================================
-  # Installation Directory Structure
-  # ============================================================================
-  set(INSTALL_BIN_DIR "bin")
-  set(INSTALL_LIB_DIR "lib")
-  set(INSTALL_INCLUDE_DIR "include")
-  set(INSTALL_SHARE_DIR "share")
-  set(INSTALL_DOC_DIR "doc")
+# ============================================================================
+# Installation Directory Structure
+# ============================================================================
+set(INSTALL_BIN_DIR "bin")
+set(INSTALL_LIB_DIR "lib")
+set(INSTALL_INCLUDE_DIR "include")
+set(INSTALL_SHARE_DIR "share")
+set(INSTALL_DOC_DIR "doc")
 
-  # ============================================================================
-  # Install Targets
-  # ============================================================================
+# ============================================================================
+# Install Targets
+# ============================================================================
 
-  configure_file(
+configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/CMakeFiles/DependencyInfo.txt.in"
   "${CMAKE_BINARY_DIR}/FALCON_DEPENDENCIES.txt"
   @ONLY
 )
 
-  install(
+install(
   FILES "${CMAKE_BINARY_DIR}/FALCON_DEPENDENCIES.txt"
   DESTINATION "."
 )
 
-  install(
+install(
   FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
     "${CMAKE_CURRENT_SOURCE_DIR}/README.md"
   DESTINATION "${INSTALL_DOC_DIR}"
 )
 
-  # ============================================================================
-  # Install vcpkg dependencies
-  # ============================================================================
-  if(WIN32)
-    install(
+# ============================================================================
+# Install vcpkg dependencies
+# ============================================================================
+if(WIN32)
+  install(
     DIRECTORY "${VCPKG_INSTALLED_DIR}/x64-win-llvm/bin/"
     DESTINATION "${INSTALL_BIN_DIR}"
   )
-    install(
+  install(
     DIRECTORY "${VCPKG_INSTALLED_DIR}/x64-win-llvm/lib/"
     DESTINATION "${INSTALL_LIB_DIR}"
   )
-    install(
+  install(
     DIRECTORY "${VCPKG_INSTALLED_DIR}/x64-win-llvm/include/"
     DESTINATION "${INSTALL_INCLUDE_DIR}"
   )
-    install(
+  install(
     DIRECTORY "${VCPKG_INSTALLED_DIR}/x64-win-llvm/share/"
     DESTINATION "${INSTALL_SHARE_DIR}"
   )
-  else()
-    file(GLOB_RECURSE LINUX_BINS "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/bin/*")
-    install(
+else()
+  file(GLOB_RECURSE LINUX_BINS "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/bin/*")
+  install(
     PROGRAMS ${LINUX_BINS}
     DESTINATION "${INSTALL_BIN_DIR}"
   )
-    file(GLOB_RECURSE LINUX_LIBS_A "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/lib/*.a")
-    file(GLOB_RECURSE LINUX_LIBS_SO "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/lib/*.so*")
-    install(
+  file(GLOB_RECURSE LINUX_LIBS_A "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/lib/*.a")
+  file(GLOB_RECURSE LINUX_LIBS_SO "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/lib/*.so*")
+  install(
     FILES ${LINUX_LIBS_A} ${LINUX_LIBS_SO}
     DESTINATION "${INSTALL_LIB_DIR}"
   )
-    file(GLOB_RECURSE LINUX_INCLUDES "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/include/*")
-    install(
+  file(GLOB_RECURSE LINUX_INCLUDES "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/include/*")
+  install(
     FILES ${LINUX_INCLUDES}
     DESTINATION "${INSTALL_INCLUDE_DIR}"
   )
-    file(GLOB_RECURSE LINUX_SHARE "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/share/*")
-    install(
+  file(GLOB_RECURSE LINUX_SHARE "${VCPKG_INSTALLED_DIR}/x64-linux-dynamic/share/*")
+  install(
     FILES ${LINUX_SHARE}
     DESTINATION "${INSTALL_SHARE_DIR}"
   )
-  endif()
+endif()
 
-  # ------------------------------------------------------------------------------
-  # Collect dependency licenses
-  # ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# Collect dependency licenses
+# ------------------------------------------------------------------------------
 
-  function(install_vcpkg_licenses)
-    set(_share_dir "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share")
+function(install_vcpkg_licenses)
+  set(_share_dir "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share")
 
-    file(GLOB dirs "${_share_dir}/*")
+  file(GLOB dirs "${_share_dir}/*")
 
-    foreach(dir ${dirs})
-      if(IS_DIRECTORY "${dir}")
-        get_filename_component(pkg "${dir}" NAME)
+  foreach(dir ${dirs})
+    if(IS_DIRECTORY "${dir}")
+      get_filename_component(pkg "${dir}" NAME)
 
-        # Most vcpkg ports install license as "copyright"
-        if(EXISTS "${dir}/copyright")
-          install(
+      # Most vcpkg ports install license as "copyright"
+      if(EXISTS "${dir}/copyright")
+        install(
           FILES "${dir}/copyright"
           DESTINATION "${INSTALL_DOC_DIR}/licenses/${pkg}"
         )
-        endif()
       endif()
-    endforeach()
-  endfunction()
+    endif()
+  endforeach()
+endfunction()
 
-  install_vcpkg_licenses()
+install_vcpkg_licenses()
+if (USE_CPACK)
   include(CPack)
 endif()
