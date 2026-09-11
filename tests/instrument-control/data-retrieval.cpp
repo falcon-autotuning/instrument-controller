@@ -805,6 +805,7 @@ protected:
 };
 
 TEST_F(DataRetrievalTest, SetVoltage) {
+  std::cerr << "Running SetVoltage test" << std::endl;
   const char *SETTER_NAME = "P1";
   const double TARGET_VOLTAGE = 0.123;
   ConnectionSP setter_connection = Connection::PlungerGate(SETTER_NAME);
@@ -815,6 +816,7 @@ TEST_F(DataRetrievalTest, SetVoltage) {
   MeasurementRequestSP request =
       MakeSinglePointRequest("Setting P1 via set_voltage schema", "set_voltage",
                              setter, TARGET_VOLTAGE);
+  std::cerr << "SetVoltage test: Sending request to hub" << std::endl;
   auto resp = request_measurement(request, TIMEOUT_MS);
   ExpectSinglePointEchoResponse(
       resp, setter, setter_connection, TARGET_VOLTAGE);

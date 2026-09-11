@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(
   instrument-controller
-  VERSION 0.1.13
+  VERSION 0.1.19
   DESCRIPTION "Instrument Controller - Full instrument control stack for Falcon"
   HOMEPAGE_URL "https://github.com/falcon-autotuning/instrument-controller"
   LANGUAGES CXX C
@@ -14,6 +14,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Build Options
 option(BUILD_TESTS "Build tests" OFF)
 option(BUILD_EXAMPLES "Build example plugins" ON)
+option(USE_CPACK "Build the release package" OFF)
 
 # Performance options
 option(USE_CCACHE "Enable ccache or sccache if available" ON)
@@ -50,7 +51,6 @@ find_package(falcon-core              CONFIG REQUIRED)
 find_package(instrument-data          CONFIG REQUIRED)
 find_package(instrument-log           CONFIG REQUIRED)
 find_package(instrument-script-server CONFIG REQUIRED)
-find_package(visa-plugin              CONFIG REQUIRED)
 find_package(instrument-plugin-api    CONFIG REQUIRED)
 # find_package(teal-api-gen             CONFIG REQUIRED)
 
@@ -86,44 +86,48 @@ endif()
 # ============================================================================
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   if(WIN32)
-    set(CMAKE_INSTALL_PREFIX "C:/falcon" CACHE PATH "Installation prefix" FORCE)
+    set(CMAKE_INSTALL_PREFIX "C:/instrument-controller" CACHE PATH "Installation prefix" FORCE)
   else()
-    set(CMAKE_INSTALL_PREFIX "/opt/falcon" CACHE PATH "Installation prefix" FORCE)
+    set(CMAKE_INSTALL_PREFIX "/opt/instrument-controller" CACHE PATH "Installation prefix" FORCE)
   endif()
 endif()
-# ============================================================================
-# CPack General Settings
-# ============================================================================
+if(USE_CPACK)
+  # TODO: insert demo qarray stuff here
+  find_package(visa-plugin CONFIG REQUIRED)
+  # ============================================================================
+  # CPack General Settings
+  # ============================================================================
 
-set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
-set(CPACK_PROJECT_NAME "${PROJECT_NAME}")
-set(CPACK_PACKAGE_VENDOR "Falcon")
-set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+  set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
+  set(CPACK_PROJECT_NAME "${PROJECT_NAME}")
+  set(CPACK_PACKAGE_VENDOR "Falcon")
+  set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 
-set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+  set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+  set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 
-set(CPACK_SOURCE_IGNORE_FILES
+  set(CPACK_SOURCE_IGNORE_FILES
   build/
   ".*~$"
   vcpkg/
   vcpkg_installed/
 )
 
-set(CPACK_PACKAGE_FILE_NAME
+  set(CPACK_PACKAGE_FILE_NAME
   "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}"
 )
 
-# ============================================================================
-# Platform-Specific CPack Configuration
-# ============================================================================
-if(WIN32)
-  set(CPACK_GENERATOR "ZIP")
-  set(CPACK_ARCHIVE_THREADS 0)
-else()
-  # Linux: TGZ format (extractable via curl | tar xz)
-  set(CPACK_GENERATOR "TGZ")
-  set(CPACK_ARCHIVE_THREADS 0)
+  # ============================================================================
+  # Platform-Specific CPack Configuration
+  # ============================================================================
+  if(WIN32)
+    set(CPACK_GENERATOR "ZIP")
+    set(CPACK_ARCHIVE_THREADS 0)
+  else()
+    # Linux: TGZ format (extractable via curl | tar xz)
+    set(CPACK_GENERATOR "TGZ")
+    set(CPACK_ARCHIVE_THREADS 0)
+  endif()
 endif()
 
 # ============================================================================
@@ -226,4 +230,6 @@ function(install_vcpkg_licenses)
 endfunction()
 
 install_vcpkg_licenses()
-include(CPack)
+if (USE_CPACK)
+  include(CPack)
+endif()

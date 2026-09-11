@@ -21,9 +21,10 @@ curl -fsSL https://github.com/falcon-autotuning/instrument-controller/releases/d
 | Platform | Supported Environments |
 | -------- | ---------------------- |
 | Linux    | Bash-compatible shells |
-| Windows  | Git Bash, MSYS2, WSL   |
 
 Native PowerShell and `cmd.exe` environments are not supported for direct execution of the installer script.
+Note: Windows support has been dropped in favor of linux support only currently.
+The Windows support could be developed in the future if there is enough demand.
 
 ***
 
@@ -34,13 +35,13 @@ By default, the installer places files in the following locations:
 * **Linux:**
 
   ```
-  ~/.falcon
+  /opt/instrument-controller
   ```
 
 * **Windows (Git Bash / MSYS2):**
 
   ```
-  /c/falcon
+  /c/instrument-controller
   ```
 
 ***
@@ -65,9 +66,9 @@ After installation, the binaries and libraries must be added to the environment.
 Add the following to your shell configuration (`~/.bashrc` or `~/.zshrc`):
 
 ```bash
-export PATH="$HOME/.falcon/bin:$PATH"
-export LD_LIBRARY_PATH="$HOME/.falcon/lib:$LD_LIBRARY_PATH"
-export PKG_CONFIG_PATH="$HOME/.falcon/lib/pkgconfig:$PKG_CONFIG_PATH"
+export PATH="/opt/instrument-controller:$PATH"
+export LD_LIBRARY_PATH="/opt/instrument-controller/lib:$LD_LIBRARY_PATH"
+export PKG_CONFIG_PATH="/opt/instrument-controller/lib/pkgconfig:$PKG_CONFIG_PATH"
 ```
 
 Reload the shell:
@@ -81,13 +82,13 @@ source ~/.bashrc
 ### Windows (Git Bash)
 
 ```bash
-export PATH="/c/falcon/bin:$PATH"
+export PATH="/c/instrument-controller/bin:$PATH"
 ```
 
 For PowerShell sessions:
 
 ```powershell
-$env:PATH = "C:\falcon\bin;" + $env:PATH
+$env:PATH = "C:\instrument-controller\bin;" + $env:PATH
 ```
 
 ***
@@ -144,59 +145,13 @@ instrument-worker --version
 Remove the installation directory:
 
 ```bash
-rm -rf ~/.falcon
+sudo rm -rf /opt/instrument-controller
 ```
 
 or on Windows (Git Bash):
 
 ```bash
-rm -rf /c/falcon
-```
-
-***
-
-## Troubleshooting
-
-### Permission Errors
-
-If installation fails due to insufficient permissions:
-
-```bash
-sudo bash install.sh
-```
-
-Alternatively, install to a user directory:
-
-```bash
-FALCON_INSTALL_DIR=$HOME/.falcon bash install.sh
-```
-
-***
-
-### Missing `unzip` (Windows)
-
-Install using an appropriate package manager:
-
-* MSYS2:
-
-  ```bash
-  pacman -S unzip
-  ```
-
-* Windows:
-
-  ```powershell
-  winget install unzip
-  ```
-
-***
-
-### Commands Not Found
-
-Ensure the `bin` directory has been added to `PATH`:
-
-```bash
-export PATH="$INSTALL_DIR/bin:$PATH"
+rm -rf /c/instrument-controller
 ```
 
 ***
