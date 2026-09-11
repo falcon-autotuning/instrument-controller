@@ -40,6 +40,17 @@ channel_groups:
         role: setting
         description: "Number of bins to average for each data point"
         suffix: bins
+      - name: slope
+        type: float
+        role: setting
+        description: "Slope to adjust output reading sensitivity to input"
+        suffix: slope
+      - name: trigger_level
+        type: float
+        role: setting
+        unit: V
+        description: Trigger level
+        suffix: trigger_level
 io: []
 commands:
   SET_SAMPLE_RATE:
@@ -56,6 +67,27 @@ commands:
     parameters:
       - io: bins
     outputs: []
+  SET_SLOPE:
+    template: "SOUR:SLOPE:{analog}:{slope}"
+    description: "Set the slope to adjust output reading sensitivity to input"
+    channel_group: analog
+    parameters:
+      - io: slope
+    outputs: []
+  GET_SLOPE:
+    template: "SOUR:SLOPE? {analog}"
+    description: "Query slope for channel"
+    channel_group: analog
+    parameters: []
+    outputs: [slope]
+    query: true
+  SET_TRIGGER_LEVEL:
+    template: "TRIG:LEV:{analog}:{trigger_level}"
+    description: "Set trigger level for channel"
+    channel_group: analog
+    parameters:
+      - io: trigger_level
+    outputs: []
   MEASURE_STREAM:
     template: "MEAS:VOLT:{analog}"
     description: "Set output voltage"
@@ -68,6 +100,13 @@ commands:
     channel_group: analog
     parameters: []
     outputs: [voltage]
+  GET_TRIGGER_LEVEL:
+    template: TRIG:LEV? {analog}
+    description: Query trigger level for channel
+    parameters: []
+    channel_group: analog
+    outputs: [trigger_level]
+    query: true
   RESET:
     template: "RESET"
     description: "resets the mock instrument"

@@ -1,17 +1,22 @@
 {
   "name": "falcon-instrument-hub",
-  "version": "2.0.4",
+  "version": "2.0.9",
   "port-version": 66,
   "description": "Falcon Instrument Hub Go binary",
   "license": "BSD-3-Clause",
   "dependencies": [
+    "json-schema-validator",
+    "nlohmann-json",
     {
       "name": "falcon-core",
       "features": [
         "c-api"
       ],
       "version>=": "1.2.3"
-    }
+    },
+    "vcpkg-cmake",
+    "vcpkg-cmake-config",
+    "yaml-cpp"
   ],
   "overrides": [
     {

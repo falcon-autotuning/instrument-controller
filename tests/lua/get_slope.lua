@@ -10,10 +10,9 @@
 
 local function Get_Slope(
    ctx,
-   getter,
-   slope)
+   getter)
 
-   return slope
+   return Mock5Meter1:getSlope(getter.id, getter.channel)
 end
 
 return { main = Get_Slope }

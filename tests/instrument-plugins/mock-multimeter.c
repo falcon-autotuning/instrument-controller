@@ -9,13 +9,21 @@ static const int NULL_CHANNEL = -1;
 static const int NULL_PARAM_INDEX = -1;
 static const int NULL_BINS = 0;
 static const int NULL_RATE = 0;
+static const float NULL_SLOPE = 0.0;
+static const float NULL_TRIGGER_LEVEL = 0.0;
 static const char *SET_RATE = "SET_SAMPLE_RATE";
 static const char *SET_BINS = "SET_BINS";
+static const char *SET_SLOPE = "SET_SLOPE";
+static const char *GET_SLOPE = "GET_SLOPE";
+static const char *SET_TRIGGER_LEVEL = "SET_TRIGGER_LEVEL";
+static const char *GET_TRIGGER_LEVEL = "GET_TRIGGER_LEVEL";
 static const char *GET_DATAPOINT = "GET_DATAPOINT";
 static const char *MEASURE_STREAM = "MEASURE_STREAM";
 static const char *RESET = "RESET";
 static const char *RATE_IO_NAME = "sample_rate";
 static const char *BINS_IO_NAME = "bins";
+static const char *SLOPE_IO_NAME = "slope";
+static const char *TRIGGER_LEVEL_IO_NAME = "trigger_level";
 static const char *ANALOG_IO_NAME = "analog";
 static const char *VOLTAGE_IO_NAME = "voltage";
 static const char *STREAM_IO_NAME = "stream";
@@ -28,6 +36,8 @@ static const int UNKNOWN_COMMAND_ERROR = 9;
 // Global state for the mock multimeter
 static char g_data_file_path[8][PLUGIN_MAX_STRING_LEN] = {{0}};
 static int g_num_bins[8] = {0};
+static float g_slope[8] = {0};
+static float g_trigger_level[8] = {0};
 static double *g_data_buffer[8] = {NULL};
 static int g_data_count[8] = {0};
 static int g_current_index[8] = {0};
@@ -154,6 +164,52 @@ static int handle_rate(const PluginCommand *cmd, PluginResponse *resp) {
   return 0;
 }
 
+static int handle_set_float_setting(const PluginCommand *cmd,
+                                    PluginResponse *resp, const char *io_name,
+                                    float *values) {
+  (void)resp;
+  int value_idx, channel_idx;
+  int err = check_param_count(cmd, 2);
+  if (!err)
+    err = get_param_index(cmd, io_name, &value_idx);
+  if (!err)
+    err = get_param_index(cmd, ANALOG_IO_NAME, &channel_idx);
+  if (!err)
+    err = check_param_type(cmd, io_name, value_idx, PARAM_TYPE_DOUBLE);
+  if (!err)
+    err = check_param_type(cmd, ANALOG_IO_NAME, channel_idx, PARAM_TYPE_INT64);
+  if (err)
+    return err;
+
+  int channel = read_int_param(cmd, channel_idx);
+  int index = getArrayIndex(channel);
+  if (index == NULL_CHANNEL) {
+    return CHANNEL_OUT_OF_RANGE_ERROR;
+  }
+  values[index] = read_float_param(cmd, value_idx);
+  return 0;
+}
+
+static int handle_get_float_setting(const PluginCommand *cmd,
+                                    PluginResponse *resp, const char *io_name,
+                                    float *values) {
+  int channel_idx;
+  int err = check_param_count(cmd, 1);
+  if (!err)
+    err = get_param_index(cmd, ANALOG_IO_NAME, &channel_idx);
+  if (!err)
+    err = check_param_type(cmd, ANALOG_IO_NAME, channel_idx, PARAM_TYPE_INT64);
+  if (err)
+    return err;
+
+  int channel = read_int_param(cmd, channel_idx);
+  int index = getArrayIndex(channel);
+  if (index == NULL_CHANNEL) {
+    return CHANNEL_OUT_OF_RANGE_ERROR;
+  }
+  return push_double_response(resp, io_name, values[index]);
+}
+
 static int handle_datapoint(const PluginCommand *cmd, PluginResponse *resp) {
   int channel_idx;
   int err = check_param_count(cmd, 1);
@@ -224,6 +280,8 @@ static int handle_reset(const PluginCommand *cmd, PluginResponse *resp) {
   }
   for (int i = 0; i < MAX_CHANNEL - MIN_CHANNEL + 1; ++i) {
     g_current_index[i] = 0;
+    g_slope[i] = NULL_SLOPE;
+    g_trigger_level[i] = NULL_TRIGGER_LEVEL;
   }
   return 0;
 }
@@ -248,6 +306,8 @@ INSTRUMENT_PLUGIN_API uint8_t plugin_initialize(const PluginConfig *config) {
   }
   for (int i = 0; i < MAX_CHANNEL - MIN_CHANNEL + 1; ++i) {
     g_current_index[i] = 0;
+    g_slope[i] = NULL_SLOPE;
+    g_trigger_level[i] = NULL_TRIGGER_LEVEL;
   }
   g_initialized = 1;
   return 0;
@@ -262,6 +322,16 @@ INSTRUMENT_PLUGIN_API uint8_t plugin_execute_command(const PluginCommand *cmd,
     return handle_rate(cmd, resp);
   } else if (strcmp(cmd->command, SET_BINS) == 0) {
     return handle_bins(cmd, resp);
+  } else if (strcmp(cmd->command, SET_SLOPE) == 0) {
+    return handle_set_float_setting(cmd, resp, SLOPE_IO_NAME, g_slope);
+  } else if (strcmp(cmd->command, GET_SLOPE) == 0) {
+    return handle_get_float_setting(cmd, resp, SLOPE_IO_NAME, g_slope);
+  } else if (strcmp(cmd->command, SET_TRIGGER_LEVEL) == 0) {
+    return handle_set_float_setting(cmd, resp, TRIGGER_LEVEL_IO_NAME,
+                                    g_trigger_level);
+  } else if (strcmp(cmd->command, GET_TRIGGER_LEVEL) == 0) {
+    return handle_get_float_setting(cmd, resp, TRIGGER_LEVEL_IO_NAME,
+                                    g_trigger_level);
   } else if (strcmp(cmd->command, MEASURE_STREAM) == 0) {
     return handle_stream(cmd, resp);
   } else if (strcmp(cmd->command, GET_DATAPOINT) == 0) {
@@ -280,6 +350,8 @@ INSTRUMENT_PLUGIN_API void plugin_shutdown(void) {
       g_data_buffer[i] = NULL;
     }
     g_num_bins[i] = 0;
+    g_slope[i] = NULL_SLOPE;
+    g_trigger_level[i] = NULL_TRIGGER_LEVEL;
     g_data_count[i] = 0;
     g_current_index[i] = 0;
     g_data_file_path[i][0] = '\0';

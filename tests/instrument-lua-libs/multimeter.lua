@@ -85,6 +85,77 @@ end
 
 
 
+
+function Mock5Meter1:setSlope(id, channel, slope)
+   local _old_channel = channel
+   if channel < 1.000000 then
+      channel = 1.000000
+      context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
+   end
+   if channel > 8.000000 then
+      channel = 8.000000
+      context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
+   end
+   channel = math.floor(channel)
+   local cs = instrument_call_stack.new({
+      instrument = id,
+      command = "SET_SLOPE",
+      channel = channel,
+   })
+   return context:call(cs, slope)
+end
+
+
+
+
+
+function Mock5Meter1:getSlope(id, channel)
+   local _old_channel = channel
+   if channel < 1.000000 then
+      channel = 1.000000
+      context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
+   end
+   if channel > 8.000000 then
+      channel = 8.000000
+      context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
+   end
+   channel = math.floor(channel)
+   local cs = instrument_call_stack.new({
+      instrument = id,
+      command = "GET_SLOPE",
+      channel = channel,
+   })
+   return context:call(cs)
+end
+
+
+
+
+
+
+function Mock5Meter1:setTriggerLevel(id, channel, trigger_level)
+   local _old_channel = channel
+   if channel < 1.000000 then
+      channel = 1.000000
+      context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
+   end
+   if channel > 8.000000 then
+      channel = 8.000000
+      context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
+   end
+   channel = math.floor(channel)
+   local cs = instrument_call_stack.new({
+      instrument = id,
+      command = "SET_TRIGGER_LEVEL",
+      channel = channel,
+   })
+   return context:call(cs, trigger_level)
+end
+
+
+
+
+
 function Mock5Meter1:measureStream(id, channel)
    local _old_channel = channel
    if channel < 1.000000 then
@@ -122,6 +193,29 @@ function Mock5Meter1:getDatapoint(id, channel)
    local cs = instrument_call_stack.new({
       instrument = id,
       command = "GET_DATAPOINT",
+      channel = channel,
+   })
+   return context:call(cs)
+end
+
+
+
+
+
+function Mock5Meter1:getTriggerLevel(id, channel)
+   local _old_channel = channel
+   if channel < 1.000000 then
+      channel = 1.000000
+      context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
+   end
+   if channel > 8.000000 then
+      channel = 8.000000
+      context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
+   end
+   channel = math.floor(channel)
+   local cs = instrument_call_stack.new({
+      instrument = id,
+      command = "GET_TRIGGER_LEVEL",
       channel = channel,
    })
    return context:call(cs)

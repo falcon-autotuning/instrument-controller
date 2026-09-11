@@ -81,6 +81,77 @@ function Mock5Meter1:setBins(id: string, channel: number, bins: any): any
   return context:call(cs, bins)
 end
 
+--- Set the slope to adjust output reading sensitivity to input
+--- @param id string Instrument instance identifier
+--- @param channel number Voltage meter channel number (1-8)
+--- @param slope any
+--- @return any
+function Mock5Meter1:setSlope(id: string, channel: number, slope: any): any
+  local _old_channel = channel
+  if channel < 1.000000 then
+    channel = 1.000000
+    context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
+  end
+  if channel > 8.000000 then
+    channel = 8.000000
+    context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
+  end
+  channel = math.floor(channel)
+  local cs = instrument_call_stack.new({
+    instrument = id,
+    command = "SET_SLOPE",
+    channel = channel,
+  })
+  return context:call(cs, slope)
+end
+
+--- Query slope for channel
+--- @param id string Instrument instance identifier
+--- @param channel number Voltage meter channel number (1-8)
+--- @return number slope
+function Mock5Meter1:getSlope(id: string, channel: number): number
+  local _old_channel = channel
+  if channel < 1.000000 then
+    channel = 1.000000
+    context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
+  end
+  if channel > 8.000000 then
+    channel = 8.000000
+    context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
+  end
+  channel = math.floor(channel)
+  local cs = instrument_call_stack.new({
+    instrument = id,
+    command = "GET_SLOPE",
+    channel = channel,
+  })
+  return context:call(cs)
+end
+
+--- Set trigger level for channel
+--- @param id string Instrument instance identifier
+--- @param channel number Voltage meter channel number (1-8)
+--- @param trigger_level any
+--- @return any
+function Mock5Meter1:setTriggerLevel(id: string, channel: number, trigger_level: any): any
+  local _old_channel = channel
+  if channel < 1.000000 then
+    channel = 1.000000
+    context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
+  end
+  if channel > 8.000000 then
+    channel = 8.000000
+    context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
+  end
+  channel = math.floor(channel)
+  local cs = instrument_call_stack.new({
+    instrument = id,
+    command = "SET_TRIGGER_LEVEL",
+    channel = channel,
+  })
+  return context:call(cs, trigger_level)
+end
+
 --- Set output voltage
 --- @param id string Instrument instance identifier
 --- @param channel number Voltage meter channel number (1-8)
@@ -122,6 +193,29 @@ function Mock5Meter1:getDatapoint(id: string, channel: number): number
   local cs = instrument_call_stack.new({
     instrument = id,
     command = "GET_DATAPOINT",
+    channel = channel,
+  })
+  return context:call(cs)
+end
+
+--- Query trigger level for channel
+--- @param id string Instrument instance identifier
+--- @param channel number Voltage meter channel number (1-8)
+--- @return number trigger_level
+function Mock5Meter1:getTriggerLevel(id: string, channel: number): number
+  local _old_channel = channel
+  if channel < 1.000000 then
+    channel = 1.000000
+    context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
+  end
+  if channel > 8.000000 then
+    channel = 8.000000
+    context:log("Clamped channel from " .. tostring(_old_channel) .. " to " .. tostring(channel))
+  end
+  channel = math.floor(channel)
+  local cs = instrument_call_stack.new({
+    instrument = id,
+    command = "GET_TRIGGER_LEVEL",
     channel = channel,
   })
   return context:call(cs)

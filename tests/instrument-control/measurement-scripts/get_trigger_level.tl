@@ -1,5 +1,5 @@
--- Get_Trigger_Leader
--- Returns the hub-managed trigger leader selection for the requested getter.
+-- Get_Trigger_Level
+-- Queries the trigger level from the mock multimeter channel.
 
 local record RuntimeContext
   log: function(self: RuntimeContext, msg: string)
@@ -8,12 +8,11 @@ local record RuntimeContext
   call: function(self: RuntimeContext, method: string, ...: any)
 end
 
-local function Get_Trigger_Leader(
+local function Get_Trigger_Level(
   ctx: RuntimeContext,
-  getter: InstrumentTarget,
-  triggerLeader: boolean
-): boolean
-  return triggerLeader
+  getter: InstrumentTarget
+): number
+  return Mock5Meter1:getTriggerLevel(getter.id, getter.channel)
 end
 
-return { main = Get_Trigger_Leader }
+return { main = Get_Trigger_Level }

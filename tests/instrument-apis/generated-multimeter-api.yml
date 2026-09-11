@@ -40,6 +40,17 @@ channel_groups:
         role: setting
         description: Number of bins to average for each data point
         suffix: bins
+      - name: slope
+        type: float
+        role: setting
+        description: Slope to adjust output reading sensitivity to input
+        suffix: slope
+      - name: trigger_level
+        type: float
+        role: setting
+        unit: V
+        description: Trigger level
+        suffix: trigger_level
 io:
   - name: analog1_stream
     type: array
@@ -60,6 +71,15 @@ io:
     type: int
     role: setting
     description: Number of bins to average for each data point
+  - name: analog1_slope
+    type: float
+    role: setting
+    description: Slope to adjust output reading sensitivity to input
+  - name: analog1_trigger_level
+    type: float
+    role: setting
+    description: Trigger level
+    unit: V
   - name: analog2_stream
     type: array
     role: input
@@ -79,6 +99,15 @@ io:
     type: int
     role: setting
     description: Number of bins to average for each data point
+  - name: analog2_slope
+    type: float
+    role: setting
+    description: Slope to adjust output reading sensitivity to input
+  - name: analog2_trigger_level
+    type: float
+    role: setting
+    description: Trigger level
+    unit: V
   - name: analog3_stream
     type: array
     role: input
@@ -98,6 +127,15 @@ io:
     type: int
     role: setting
     description: Number of bins to average for each data point
+  - name: analog3_slope
+    type: float
+    role: setting
+    description: Slope to adjust output reading sensitivity to input
+  - name: analog3_trigger_level
+    type: float
+    role: setting
+    description: Trigger level
+    unit: V
   - name: analog4_stream
     type: array
     role: input
@@ -117,6 +155,15 @@ io:
     type: int
     role: setting
     description: Number of bins to average for each data point
+  - name: analog4_slope
+    type: float
+    role: setting
+    description: Slope to adjust output reading sensitivity to input
+  - name: analog4_trigger_level
+    type: float
+    role: setting
+    description: Trigger level
+    unit: V
   - name: analog5_stream
     type: array
     role: input
@@ -136,6 +183,15 @@ io:
     type: int
     role: setting
     description: Number of bins to average for each data point
+  - name: analog5_slope
+    type: float
+    role: setting
+    description: Slope to adjust output reading sensitivity to input
+  - name: analog5_trigger_level
+    type: float
+    role: setting
+    description: Trigger level
+    unit: V
   - name: analog6_stream
     type: array
     role: input
@@ -155,6 +211,15 @@ io:
     type: int
     role: setting
     description: Number of bins to average for each data point
+  - name: analog6_slope
+    type: float
+    role: setting
+    description: Slope to adjust output reading sensitivity to input
+  - name: analog6_trigger_level
+    type: float
+    role: setting
+    description: Trigger level
+    unit: V
   - name: analog7_stream
     type: array
     role: input
@@ -174,6 +239,15 @@ io:
     type: int
     role: setting
     description: Number of bins to average for each data point
+  - name: analog7_slope
+    type: float
+    role: setting
+    description: Slope to adjust output reading sensitivity to input
+  - name: analog7_trigger_level
+    type: float
+    role: setting
+    description: Trigger level
+    unit: V
   - name: analog8_stream
     type: array
     role: input
@@ -193,6 +267,15 @@ io:
     type: int
     role: setting
     description: Number of bins to average for each data point
+  - name: analog8_slope
+    type: float
+    role: setting
+    description: Slope to adjust output reading sensitivity to input
+  - name: analog8_trigger_level
+    type: float
+    role: setting
+    description: Trigger level
+    unit: V
 commands:
   SET_SAMPLE_RATE:
     template: SOUR:SAMPle:{analog}:{sample_rate}
@@ -208,6 +291,27 @@ commands:
     parameters:
       - io: bins
     outputs: []
+  SET_SLOPE:
+    template: SOUR:SLOPE:{analog}:{slope}
+    description: Set the slope to adjust output reading sensitivity to input
+    channel_group: analog
+    parameters:
+      - io: slope
+    outputs: []
+  GET_SLOPE:
+    template: SOUR:SLOPE? {analog}
+    description: Query slope for channel
+    channel_group: analog
+    parameters: []
+    outputs: [slope]
+    query: true
+  SET_TRIGGER_LEVEL:
+    template: TRIG:LEV:{analog}:{trigger_level}
+    description: Set trigger level for channel
+    channel_group: analog
+    parameters:
+      - io: trigger_level
+    outputs: []
   MEASURE_STREAM:
     template: MEAS:VOLT:{analog}
     description: Set output voltage
@@ -220,6 +324,13 @@ commands:
     channel_group: analog
     parameters: []
     outputs: [voltage]
+  GET_TRIGGER_LEVEL:
+    template: TRIG:LEV? {analog}
+    description: Query trigger level for channel
+    parameters: []
+    channel_group: analog
+    outputs: [trigger_level]
+    query: true
   RESET:
     template: RESET
     description: resets the mock instrument

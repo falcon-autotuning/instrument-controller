@@ -1,5 +1,5 @@
 -- Get_Slope
--- Returns the hub-managed slope value for the requested getter target.
+-- Queries the slope from the mock multimeter channel.
 
 local record RuntimeContext
   log: function(self: RuntimeContext, msg: string)
@@ -10,10 +10,9 @@ end
 
 local function Get_Slope(
   ctx: RuntimeContext,
-  getter: InstrumentTarget,
-  slope: number
+  getter: InstrumentTarget
 ): number
-  return slope
+  return Mock5Meter1:getSlope(getter.id, getter.channel)
 end
 
 return { main = Get_Slope }

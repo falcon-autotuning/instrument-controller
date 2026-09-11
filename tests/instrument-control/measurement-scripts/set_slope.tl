@@ -1,7 +1,5 @@
 -- Set_Slope
--- The current mock source API does not expose a dedicated slope-setting
--- command, so this schema currently acts as a no-op acknowledgement while
--- preserving the generated contract for higher-level tests.
+-- Sets the slope on the mock multimeter channel.
 
 local record RuntimeContext
   log: function(self: RuntimeContext, msg: string)
@@ -15,8 +13,11 @@ local function Set_Slope(
   setter: InstrumentTarget,
   slope: number
 ): string
-  ctx:log("Acknowledged slope update for " .. setter.id .. ":" .. tostring(setter.channel))
-  return ""
+  if setter.id ~= "Meter1" then
+    ctx:error("Invalid setter id: " .. setter.id)
+    return nil
+  end
+  Mock5Meter1:setSlope(setter.id, setter.channel, slope)
 end
 
 return { main = Set_Slope }

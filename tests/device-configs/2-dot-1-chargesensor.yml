@@ -22,7 +22,7 @@ groups:
     BarrierGates: "B4;B5"
     Order: "O3;R3;B4;P3;B5;R4;O4"
 adjacency:
-  S2: "P1;P2;P3;P4;R1;R2;R3;R4;B1;B2;B3;B4;B5"
+  S2: "P1;P2;P3;R1;R2;R3;R4;B1;B2;B3;B4;B5"
   S1: "P1;P2;R1;R2;B1;B2;B3"
   S3: "P3;B4;B5;R3;R4"
   B1: "R1;P1"
