@@ -11,6 +11,7 @@ export USERPROFILE
 # Build preset (user can override: make build PRESET=linux-gcc-release)
 PRESET ?= linux-clang-release
 CMAKE_BUILD_DIR := build/$(PRESET)
+INSTALL_PREFIX ?= /opt/instrument-controller
 LOCAL_TEAL_API_GEN ?= OFF
 
 VCPKG_MANIFEST_FEATURES :=
@@ -50,7 +51,7 @@ help:
 	@echo "Available targets:"
 	@echo "  make build PRESET=<preset>      - Build the project (default: $(PRESET))"
 	@echo "  make test PRESET=<preset>       - Run tests (default: $(PRESET))"
-	@echo "  make install PRESET=<preset>    - Install to system"
+	@echo "  make install PRESET=<preset>    - Install to $(INSTALL_PREFIX)"
 	@echo "  make test LOCAL_TEAL_API_GEN=ON - Test with the sibling teal-api-gen checkout"
 	@echo "  make clean                      - Clean all build artifacts"
 	@echo ""
@@ -82,8 +83,8 @@ test: build
 	. $(CMAKE_BUILD_DIR)/env.sh && LD_LIBRARY_PATH=$$VCPKG_INSTALLED_DIR/$$VCPKG_TRIPLET/lib:$$LD_LIBRARY_PATH ctest --preset $(PRESET) -V
 
 install: build
-	@echo "Installing $(PRESET) to system..."
-	$(SUDO) cmake --install $(CMAKE_BUILD_DIR)
+	@echo "Installing $(PRESET) to $(INSTALL_PREFIX)..."
+	$(SUDO) cmake --install $(CMAKE_BUILD_DIR) --prefix $(INSTALL_PREFIX)
 
 clean:
 	@echo "Cleaning all build artifacts..."

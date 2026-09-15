@@ -66,7 +66,7 @@ After installation, the binaries and libraries must be added to the environment.
 Add the following to your shell configuration (`~/.bashrc` or `~/.zshrc`):
 
 ```bash
-export PATH="/opt/instrument-controller:$PATH"
+export PATH="/opt/instrument-controller/bin:$PATH"
 export LD_LIBRARY_PATH="/opt/instrument-controller/lib:$LD_LIBRARY_PATH"
 export PKG_CONFIG_PATH="/opt/instrument-controller/lib/pkgconfig:$PKG_CONFIG_PATH"
 ```

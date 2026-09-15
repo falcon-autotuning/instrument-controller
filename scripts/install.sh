@@ -45,10 +45,10 @@ fi
 # Platform-specific configuration
 if [ "$PLATFORM" = "windows" ]; then
   PACKAGE_FILE="instrument-controller-${RELEASE_VERSION}-Windows-AMD64.zip"
-  INSTALL_DIR="${FALCON_INSTALL_DIR:-/c/falcon}"
+  INSTALL_DIR="${FALCON_INSTALL_DIR:-/c/instrument-controller}"
 else
   PACKAGE_FILE="instrument-controller-${RELEASE_VERSION}-Linux-x86_64.tar.gz"
-  INSTALL_DIR="${FALCON_INSTALL_DIR:-/opt/falcon}"
+  INSTALL_DIR="${FALCON_INSTALL_DIR:-/opt/instrument-controller}"
 fi
 
 PACKAGE_URL="$RELEASE_URL/$PACKAGE_FILE"
