@@ -8,6 +8,14 @@
 
 
 
+
+
+
+
+
+
+
+
 local function Get_Slope(
    ctx,
    getter)

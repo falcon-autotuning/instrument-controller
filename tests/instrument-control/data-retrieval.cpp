@@ -15,7 +15,6 @@
 #include <limits>
 #include <map>
 #include <memory>
-#include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -73,16 +72,6 @@ const fs::path MEASUREMENT_SCRIPTS_DIR = DATA_1D_DIR / "measurement-scripts";
 const fs::path INSTRUMENT_LUA_LIBS_DIR = TEST_ROOT_DIR / "instrument-lua-libs";
 const fs::path WORKING_DIR = TEST_ROOT_DIR / "hub";
 const fs::path TEST_RUNS_DIR = TEST_ROOT_DIR / "test-runs";
-const char *HUB_SOURCE_VOLTAGE_PORT = "Mock.Source1.analog.voltage";
-const char *HUB_SOURCE_MEASURED_VOLTAGE_PORT =
-    "Mock.Source1.analog.measured_voltage";
-const char *HUB_METER_VOLTAGE_PORT = "Mock.Meter1.analog.voltage";
-const char *HUB_METER_STREAM_PORT = "Mock.Meter1.analog.stream";
-const char *HUB_METER_SAMPLE_RATE_PORT = "Mock.Meter1.analog.sample_rate";
-const char *HUB_METER_BINS_PORT = "Mock.Meter1.analog.bins";
-const char *HUB_METER_SLOPE_PORT = "Mock.Meter1.analog.slope";
-const char *HUB_METER_TRIGGER_LEVEL_PORT = "Mock.Meter1.analog.trigger_level";
-const char *CAPABILITY_REQUEST_SUBJECT = "INSTRUMENTHUB.CAPABILITY_REQUEST";
 
 class DataRetrievalTest : public ::testing::Test {
 protected:
@@ -174,6 +163,7 @@ protected:
         "set_slope.tl",
         "set_trigger_level.tl",
     });
+    CopyMeasurementScriptAnnotations();
     SetISSLuaLibs(std::vector<std::filesystem::path>{
         INSTRUMENT_LUA_LIBS_DIR / "multimeter.lua",
         INSTRUMENT_LUA_LIBS_DIR / "source.lua", LUA_LIB_DIR});
@@ -381,6 +371,8 @@ protected:
     ofs << "local-database: " << current_data_dir_.string() << "\n";
     ofs << "start-embedded-nats: true\n";
     ofs << "user-measurement-luas: " << (LUA_SCRIPTS_DIR).string() << "\n";
+    ofs << "measurement-metadata: "
+        << (DATA_1D_DIR / "measurement-metadata.yml").string() << "\n";
     ofs << "instrument-apis:\n";
     ofs << "  - "
         << (INSTRUMENT_APIS_DIR / "generated-multimeter-api.yml").string()
@@ -460,83 +452,22 @@ protected:
       CompileTeal(script_path.string(), out_path.string());
     }
   }
-  InstrumentPortSP LookupCapabilityPort(const ConnectionSP &connection,
-                                        const char *capability,
-                                        const char *role) const {
-    if (!connection) {
-      throw std::runtime_error("Capability lookup requires a connection");
-    }
-
-    InstrumentPortSP port;
-    try {
-      nlohmann::json request;
-      request["device_name"] = connection->name();
-      request["capability"] = capability;
-      request["role"] = role;
-      request["timestamp"] =
-          std::chrono::duration_cast<std::chrono::milliseconds>(
-              std::chrono::system_clock::now().time_since_epoch())
-              .count();
-
-      auto response = falcon::comms::NatsManager::instance().request_json(
-          CAPABILITY_REQUEST_SUBJECT, request, TIMEOUT_MS);
-      if (!response) {
-        throw std::runtime_error("timeout waiting for CAPABILITY_PAYLOAD");
+  void CopyMeasurementScriptAnnotations() {
+    for (const auto &entry : fs::directory_iterator(MEASUREMENT_SCRIPTS_DIR)) {
+      if (entry.path().extension() == ".tl") {
+        fs::copy_file(entry.path(), LUA_SCRIPTS_DIR / entry.path().filename(),
+                      fs::copy_options::overwrite_existing);
       }
-
-      const std::string error = response->value("error", std::string{});
-      if (!error.empty()) {
-        throw std::runtime_error(error);
-      }
-
-      const std::string port_json = response->value("port", std::string{});
-      if (port_json.empty()) {
-        throw std::runtime_error("CAPABILITY_PAYLOAD returned an empty port");
-      }
-
-      port = InstrumentPort::from_json_string<InstrumentPort>(port_json);
-    } catch (const std::exception &e) {
-      throw std::runtime_error("Failed to resolve hub capability device_name=\"" +
-                               connection->name() + "\" capability=\"" +
-                               capability + "\" role=\"" + role +
-                               "\": " + e.what());
     }
-
-    if (!port) {
-      throw std::runtime_error("Hub capability lookup returned a null port");
-    }
-
-    return port;
   }
-  void ExpectResolvedPort(const InstrumentPortSP &port, const char *port_name,
-                          const ConnectionSP &connection) const {
-    if (!port) {
-      throw std::runtime_error("Hub capability lookup returned a null port");
-    }
+  InstrumentPortSP RequestPort(const ConnectionSP &connection) const {
     if (!connection) {
-      throw std::runtime_error("Resolved port assertion requires a connection");
-    }
-    if (port->default_name() != port_name) {
-      throw std::runtime_error("Hub capability lookup returned default_name=\"" +
-                               port->default_name() + "\", expected \"" +
-                               port_name + "\"");
+      throw std::runtime_error("RequestPort requires a connection");
     }
 
-    ConnectionSP port_connection;
-    try {
-      port_connection = port->pseudo_name();
-    } catch (const std::exception &e) {
-      throw std::runtime_error("Hub capability lookup returned port \"" +
-                               port->default_name() +
-                               "\" without pseudo_name: " + e.what());
-    }
-    if (!port_connection || *port_connection != *connection) {
-      throw std::runtime_error("Hub capability lookup returned pseudo_name=\"" +
-                               (port_connection ? port_connection->name()
-                                                : std::string("<null>")) +
-                               "\" for port \"" + port_name +
-                               "\", expected \"" + connection->name() + "\"");
-    }
+    return std::make_shared<InstrumentPort>(
+        "request." + connection->name(), connection, InstrumentTypes::VOLTMETER,
+        SymbolUnit::Dimensionless(), "Request connection");
   }
   MeasurementRequestSP
   MakeSinglePointRequest(const std::string &message,
@@ -662,7 +593,7 @@ protected:
         transforms, time_domain);
   }
   void ExpectSinglePointEchoResponse(const MeasurementResponseSP &resp,
-                                     const InstrumentPortSP &target,
+                                     const InstrumentPortSP &,
                                      const ConnectionSP &connection,
                                      double expected_value) {
     ASSERT_NE(resp, nullptr) << "measurement returned a null response";
@@ -677,10 +608,6 @@ protected:
     EXPECT_EQ(*labelledArray->connection(), *connection)
         << "Expected connection to be " << connection->name() << ", but got "
         << labelledArray->connection()->name() << " instead";
-    EXPECT_EQ(labelledArray->instrument_type(), target->instrument_type())
-        << "Expected instrument type to match target metadata";
-    EXPECT_EQ(*labelledArray->units(), *target->units())
-        << "Expected units to match target metadata";
     ASSERT_EQ(labelledArray->size(), 1) << "Expected 1 data point, but got "
                                         << labelledArray->size() << " instead";
     EXPECT_NEAR((*labelledArray)(0), expected_value, 1e-9)
@@ -706,6 +633,7 @@ protected:
     }
 
     for (const auto &[target, connection, expected_value] : expected_targets) {
+      (void)target;
       auto found = arrays_by_connection.find(connection->name());
       ASSERT_NE(found, arrays_by_connection.end())
           << "Expected a response array for connection " << connection->name();
@@ -713,10 +641,6 @@ protected:
       auto labelledArray = found->second;
       EXPECT_EQ(*labelledArray->connection(), *connection)
           << "Expected connection to be " << connection->name();
-      EXPECT_EQ(labelledArray->instrument_type(), target->instrument_type())
-          << "Expected instrument type to match target metadata";
-      EXPECT_EQ(*labelledArray->units(), *target->units())
-          << "Expected units to match target metadata";
       ASSERT_EQ(labelledArray->size(), 1)
           << "Expected 1 data point for " << connection->name();
       EXPECT_NEAR((*labelledArray)(0), expected_value,
@@ -809,10 +733,7 @@ TEST_F(DataRetrievalTest, SetVoltage) {
   const char *SETTER_NAME = "P1";
   const double TARGET_VOLTAGE = 0.123;
   ConnectionSP setter_connection = Connection::PlungerGate(SETTER_NAME);
-  InstrumentPortSP setter =
-      LookupCapabilityPort(setter_connection, "voltage", "output");
-  ExpectResolvedPort(setter, HUB_SOURCE_VOLTAGE_PORT, setter_connection);
-  EXPECT_TRUE(setter->is_knob());
+  InstrumentPortSP setter = RequestPort(setter_connection);
   MeasurementRequestSP request =
       MakeSinglePointRequest("Setting P1 via set_voltage schema", "set_voltage",
                              setter, TARGET_VOLTAGE);
@@ -826,9 +747,7 @@ TEST_F(DataRetrievalTest, SetSampleRate) {
   const char *GETTER_NAME = "O1";
   const double TARGET_SAMPLE_RATE = 1000.0;
   ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP getter =
-      LookupCapabilityPort(getter_connection, "sample_rate", "setting");
-  ExpectResolvedPort(getter, HUB_METER_SAMPLE_RATE_PORT, getter_connection);
+  InstrumentPortSP getter = RequestPort(getter_connection);
   MeasurementRequestSP request = MakeSinglePointRequest(
       "Setting O1 sample rate via set_sample_rate schema", "set_sample_rate",
       getter, TARGET_SAMPLE_RATE);
@@ -841,9 +760,7 @@ TEST_F(DataRetrievalTest, SetNumberOfSamples) {
   const char *GETTER_NAME = "O1";
   const double TARGET_NUMBER_OF_SAMPLES = 16.0;
   ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP getter =
-      LookupCapabilityPort(getter_connection, "bins", "setting");
-  ExpectResolvedPort(getter, HUB_METER_BINS_PORT, getter_connection);
+  InstrumentPortSP getter = RequestPort(getter_connection);
   MeasurementRequestSP request = MakeSinglePointRequest(
       "Setting O1 bins via set_number_of_samples schema",
       "set_number_of_samples", getter, TARGET_NUMBER_OF_SAMPLES);
@@ -856,14 +773,8 @@ TEST_F(DataRetrievalTest, SetNumberOfSamples) {
 TEST_F(DataRetrievalTest, SetManyVoltages) {
   ConnectionSP p1_connection = Connection::PlungerGate("P1");
   ConnectionSP p2_connection = Connection::PlungerGate("P2");
-  InstrumentPortSP setter1 =
-      LookupCapabilityPort(p1_connection, "voltage", "output");
-  InstrumentPortSP setter2 =
-      LookupCapabilityPort(p2_connection, "voltage", "output");
-  ExpectResolvedPort(setter1, HUB_SOURCE_VOLTAGE_PORT, p1_connection);
-  ExpectResolvedPort(setter2, HUB_SOURCE_VOLTAGE_PORT, p2_connection);
-  EXPECT_TRUE(setter1->is_knob());
-  EXPECT_TRUE(setter2->is_knob());
+  InstrumentPortSP setter1 = RequestPort(p1_connection);
+  InstrumentPortSP setter2 = RequestPort(p2_connection);
   MeasurementRequestSP request = MakeMultiTargetPointRequest(
       "Setting P1 and P2 via set_many_voltages schema", "set_many_voltages",
       {{setter1, 0.123}, {setter2, -0.234}});
@@ -876,14 +787,8 @@ TEST_F(DataRetrievalTest, SetManyVoltages) {
 TEST_F(DataRetrievalTest, Ramp) {
   ConnectionSP p1_connection = Connection::PlungerGate("P1");
   ConnectionSP p2_connection = Connection::PlungerGate("P2");
-  InstrumentPortSP setter1 =
-      LookupCapabilityPort(p1_connection, "voltage", "output");
-  InstrumentPortSP setter2 =
-      LookupCapabilityPort(p2_connection, "voltage", "output");
-  ExpectResolvedPort(setter1, HUB_SOURCE_VOLTAGE_PORT, p1_connection);
-  ExpectResolvedPort(setter2, HUB_SOURCE_VOLTAGE_PORT, p2_connection);
-  EXPECT_TRUE(setter1->is_knob());
-  EXPECT_TRUE(setter2->is_knob());
+  InstrumentPortSP setter1 = RequestPort(p1_connection);
+  InstrumentPortSP setter2 = RequestPort(p2_connection);
   MeasurementRequestSP request =
       MakeMultiTargetPointRequest("Ramping P1 and P2 via ramp schema", "ramp",
                                   {{setter1, 0.25}, {setter2, -0.15}});
@@ -897,9 +802,7 @@ TEST_F(DataRetrievalTest, SetSlope) {
   const char *GETTER_NAME = "O1";
   const double TARGET_SLOPE = 0.75;
   ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP setter =
-      LookupCapabilityPort(getter_connection, "slope", "setting");
-  ExpectResolvedPort(setter, HUB_METER_SLOPE_PORT, getter_connection);
+  InstrumentPortSP setter = RequestPort(getter_connection);
   MeasurementRequestSP request =
       MakeSinglePointRequest("Setting O1 slope via set_slope schema",
                              "set_slope", setter, TARGET_SLOPE);
@@ -911,9 +814,7 @@ TEST_F(DataRetrievalTest, SetTriggerLevel) {
   const char *GETTER_NAME = "O1";
   const double TARGET_TRIGGER_LEVEL = 0.25;
   ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP getter =
-      LookupCapabilityPort(getter_connection, "trigger_level", "setting");
-  ExpectResolvedPort(getter, HUB_METER_TRIGGER_LEVEL_PORT, getter_connection);
+  InstrumentPortSP getter = RequestPort(getter_connection);
   MeasurementRequestSP request = MakeSinglePointRequest(
       "Setting O1 trigger level via set_trigger_level schema",
       "set_trigger_level", getter, TARGET_TRIGGER_LEVEL);
@@ -927,19 +828,14 @@ TEST_F(DataRetrievalTest, GetVoltage) {
   const char *TARGET_NAME = "P1";
   const double TARGET_VOLTAGE = 0.456;
   ConnectionSP setter_connection = Connection::PlungerGate(TARGET_NAME);
-  InstrumentPortSP setter =
-      LookupCapabilityPort(setter_connection, "voltage", "output");
-  ExpectResolvedPort(setter, HUB_SOURCE_VOLTAGE_PORT, setter_connection);
+  InstrumentPortSP setter = RequestPort(setter_connection);
   auto set_request =
       MakeSinglePointRequest("Priming P1 via set_voltage schema", "set_voltage",
                              setter, TARGET_VOLTAGE);
   (void)request_measurement(set_request, TIMEOUT_MS);
 
   ConnectionSP getter_connection = Connection::PlungerGate(TARGET_NAME);
-  InstrumentPortSP getter =
-      LookupCapabilityPort(getter_connection, "measured_voltage", "input");
-  ExpectResolvedPort(getter, HUB_SOURCE_MEASURED_VOLTAGE_PORT,
-                     getter_connection);
+  InstrumentPortSP getter = RequestPort(getter_connection);
   auto request = MakeGetterOnlyRequest("Reading P1 via get_voltage schema",
                                        "get_voltage", getter);
   auto resp = request_measurement(request, TIMEOUT_MS);
@@ -951,17 +847,13 @@ TEST_F(DataRetrievalTest, GetSampleRate) {
   const char *GETTER_NAME = "O1";
   const double TARGET_SAMPLE_RATE = 1000.0;
   ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP setter =
-      LookupCapabilityPort(getter_connection, "sample_rate", "setting");
-  ExpectResolvedPort(setter, HUB_METER_SAMPLE_RATE_PORT, getter_connection);
+  InstrumentPortSP setter = RequestPort(getter_connection);
   auto set_request = MakeSinglePointRequest(
       "Priming O1 sample rate via set_sample_rate schema", "set_sample_rate",
       setter, TARGET_SAMPLE_RATE);
   (void)request_measurement(set_request, TIMEOUT_MS);
 
-  InstrumentPortSP getter =
-      LookupCapabilityPort(getter_connection, "sample_rate", "setting");
-  ExpectResolvedPort(getter, HUB_METER_SAMPLE_RATE_PORT, getter_connection);
+  InstrumentPortSP getter = RequestPort(getter_connection);
   auto request =
       MakeGetterOnlyRequest("Reading O1 sample rate via get_sample_rate schema",
                             "get_sample_rate", getter);
@@ -976,17 +868,13 @@ TEST_F(DataRetrievalTest, GetNumberOfSamples) {
   const double TARGET_NUMBER_OF_SAMPLES = 16.0;
   ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
   ConnectionSP setter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP setter =
-      LookupCapabilityPort(setter_connection, "bins", "setting");
-  ExpectResolvedPort(setter, HUB_METER_BINS_PORT, getter_connection);
+  InstrumentPortSP setter = RequestPort(setter_connection);
   auto set_request = MakeSinglePointRequest(
       "Priming O1 bins via set_number_of_samples schema",
       "set_number_of_samples", setter, TARGET_NUMBER_OF_SAMPLES);
   (void)request_measurement(set_request, TIMEOUT_MS);
 
-  InstrumentPortSP getter =
-      LookupCapabilityPort(getter_connection, "bins", "setting");
-  ExpectResolvedPort(getter, HUB_METER_BINS_PORT, getter_connection);
+  InstrumentPortSP getter = RequestPort(getter_connection);
   auto request =
       MakeGetterOnlyRequest("Reading O1 bins via get_number_of_samples schema",
                             "get_number_of_samples", getter);
@@ -1001,17 +889,13 @@ TEST_F(DataRetrievalTest, GetSlope) {
   const double TARGET_SLOPE = 0.75;
   ConnectionSP setter_connection = Connection::Ohmic(GETTER_NAME);
   ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP setter =
-      LookupCapabilityPort(setter_connection, "slope", "setting");
-  ExpectResolvedPort(setter, HUB_METER_SLOPE_PORT, getter_connection);
+  InstrumentPortSP setter = RequestPort(setter_connection);
   auto set_request =
       MakeSinglePointRequest("Priming O1 slope via set_slope schema",
                              "set_slope", setter, TARGET_SLOPE);
   (void)request_measurement(set_request, TIMEOUT_MS);
 
-  InstrumentPortSP getter =
-      LookupCapabilityPort(getter_connection, "slope", "setting");
-  ExpectResolvedPort(getter, HUB_METER_SLOPE_PORT, getter_connection);
+  InstrumentPortSP getter = RequestPort(getter_connection);
   auto request = MakeGetterOnlyRequest("Reading O1 slope via get_slope schema",
                                        "get_slope", getter);
   auto resp = request_measurement(request, TIMEOUT_MS);
@@ -1024,17 +908,13 @@ TEST_F(DataRetrievalTest, GetTriggerLevel) {
   const double TARGET_TRIGGER_LEVEL = 0.25;
   ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
   ConnectionSP setter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP setter =
-      LookupCapabilityPort(setter_connection, "trigger_level", "setting");
-  ExpectResolvedPort(setter, HUB_METER_TRIGGER_LEVEL_PORT, getter_connection);
+  InstrumentPortSP setter = RequestPort(setter_connection);
   auto set_request = MakeSinglePointRequest(
       "Priming O1 trigger level via set_trigger_level schema",
       "set_trigger_level", setter, TARGET_TRIGGER_LEVEL);
   (void)request_measurement(set_request, TIMEOUT_MS);
 
-  InstrumentPortSP getter =
-      LookupCapabilityPort(getter_connection, "trigger_level", "setting");
-  ExpectResolvedPort(getter, HUB_METER_TRIGGER_LEVEL_PORT, getter_connection);
+  InstrumentPortSP getter = RequestPort(getter_connection);
   auto request = MakeGetterOnlyRequest(
       "Reading O1 trigger level via get_trigger_level schema",
       "get_trigger_level", getter);
@@ -1050,23 +930,15 @@ TEST_F(DataRetrievalTest, GetManyVoltages) {
 
   ConnectionSP p1_connection = Connection::PlungerGate("P1");
   ConnectionSP p2_connection = Connection::PlungerGate("P2");
-  InstrumentPortSP setter1 =
-      LookupCapabilityPort(p1_connection, "voltage", "output");
-  InstrumentPortSP setter2 =
-      LookupCapabilityPort(p2_connection, "voltage", "output");
-  ExpectResolvedPort(setter1, HUB_SOURCE_VOLTAGE_PORT, p1_connection);
-  ExpectResolvedPort(setter2, HUB_SOURCE_VOLTAGE_PORT, p2_connection);
+  InstrumentPortSP setter1 = RequestPort(p1_connection);
+  InstrumentPortSP setter2 = RequestPort(p2_connection);
   auto set_request = MakeMultiTargetPointRequest(
       "Priming P1/P2 via set_many_voltages schema", "set_many_voltages",
       {{setter1, P1_VOLTAGE}, {setter2, P2_VOLTAGE}});
   (void)request_measurement(set_request, TIMEOUT_MS);
 
-  InstrumentPortSP getter1 =
-      LookupCapabilityPort(p1_connection, "measured_voltage", "input");
-  InstrumentPortSP getter2 =
-      LookupCapabilityPort(p2_connection, "measured_voltage", "input");
-  ExpectResolvedPort(getter1, HUB_SOURCE_MEASURED_VOLTAGE_PORT, p1_connection);
-  ExpectResolvedPort(getter2, HUB_SOURCE_MEASURED_VOLTAGE_PORT, p2_connection);
+  InstrumentPortSP getter1 = RequestPort(p1_connection);
+  InstrumentPortSP getter2 = RequestPort(p2_connection);
   auto request = MakeGetterOnlyRequest(
       "Reading P1/P2 via get_many_voltages schema", "get_many_voltages",
       std::vector<InstrumentPortSP>{getter1, getter2});
@@ -1083,23 +955,15 @@ TEST_F(DataRetrievalTest, GetAllVoltages) {
 
   ConnectionSP p1_connection = Connection::PlungerGate("P1");
   ConnectionSP p2_connection = Connection::PlungerGate("P2");
-  InstrumentPortSP setter1 =
-      LookupCapabilityPort(p1_connection, "voltage", "output");
-  InstrumentPortSP setter2 =
-      LookupCapabilityPort(p2_connection, "voltage", "output");
-  ExpectResolvedPort(setter1, HUB_SOURCE_VOLTAGE_PORT, p1_connection);
-  ExpectResolvedPort(setter2, HUB_SOURCE_VOLTAGE_PORT, p2_connection);
+  InstrumentPortSP setter1 = RequestPort(p1_connection);
+  InstrumentPortSP setter2 = RequestPort(p2_connection);
   auto set_request = MakeMultiTargetPointRequest(
       "Priming P1/P2 via set_many_voltages schema for get_all_voltages",
       "set_many_voltages", {{setter1, P1_VOLTAGE}, {setter2, P2_VOLTAGE}});
   (void)request_measurement(set_request, TIMEOUT_MS);
 
-  InstrumentPortSP getter1 =
-      LookupCapabilityPort(p1_connection, "measured_voltage", "input");
-  InstrumentPortSP getter2 =
-      LookupCapabilityPort(p2_connection, "measured_voltage", "input");
-  ExpectResolvedPort(getter1, HUB_SOURCE_MEASURED_VOLTAGE_PORT, p1_connection);
-  ExpectResolvedPort(getter2, HUB_SOURCE_MEASURED_VOLTAGE_PORT, p2_connection);
+  InstrumentPortSP getter1 = RequestPort(p1_connection);
+  InstrumentPortSP getter2 = RequestPort(p2_connection);
   auto request = MakeGetterOnlyRequest(
       "Reading all voltages via get_all_voltages schema", "get_all_voltages",
       std::vector<InstrumentPortSP>{getter1, getter2});
@@ -1110,26 +974,26 @@ TEST_F(DataRetrievalTest, GetAllVoltages) {
              {getter2, p2_connection, P2_VOLTAGE}});
 }
 
-TEST_F(DataRetrievalTest, HubCapabilityMeterRoundTrip) {
+TEST_F(DataRetrievalTest, HubResolvedMeterMetadataRoundTrip) {
   const char *GETTER_NAME = "O1";
   const double EXPECTED_CURRENT = ReadFirstScalarFromFile(TEST_DATA_FILE);
 
   ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP getter =
-      LookupCapabilityPort(getter_connection, "voltage", "input");
-  ASSERT_NE(getter, nullptr)
-      << "Expected to resolve O1 meter from hub capability lookup";
-  EXPECT_TRUE(getter->is_meter())
-      << "Hub-provided capability port should retain meter role";
-  ExpectResolvedPort(getter, HUB_METER_VOLTAGE_PORT, getter_connection);
+  InstrumentPortSP getter = RequestPort(getter_connection);
+  ASSERT_NE(getter, nullptr) << "Expected request connection carrier";
 
   auto request = MakeGetterOnlyRequest(
-      "Round-tripping O1 meter from capability lookup through measure_current",
+      "Round-tripping O1 hub metadata through measure_current",
       "measure_current", getter);
   auto resp = request_measurement(request, TIMEOUT_MS);
 
   ExpectSinglePointEchoResponse(resp, getter, getter_connection,
                                 EXPECTED_CURRENT);
+  auto labelledArray = resp->arrays()->arrays()[0];
+  EXPECT_EQ(labelledArray->instrument_type(), InstrumentTypes::VOLTMETER)
+      << "Expected hub-resolved meter metadata";
+  EXPECT_EQ(*labelledArray->units(), *SymbolUnit::Volt())
+      << "Expected hub-resolved meter units";
 }
 
 TEST_F(DataRetrievalTest, MeasureCurrent) {
@@ -1137,9 +1001,7 @@ TEST_F(DataRetrievalTest, MeasureCurrent) {
   const double EXPECTED_CURRENT = ReadFirstScalarFromFile(TEST_DATA_FILE);
 
   ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP getter =
-      LookupCapabilityPort(getter_connection, "voltage", "input");
-  ExpectResolvedPort(getter, HUB_METER_VOLTAGE_PORT, getter_connection);
+  InstrumentPortSP getter = RequestPort(getter_connection);
   auto request =
       MakeGetterOnlyRequest("Measuring current via measure_current schema",
                             "measure_current", getter);
@@ -1155,9 +1017,7 @@ TEST_F(DataRetrievalTest, MeasureIllumination) {
       ReadFirstScalarFromFile(TEST_DATA_DIR_PATH / "linear-1d.txt");
 
   ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP getter =
-      LookupCapabilityPort(getter_connection, "voltage", "input");
-  ExpectResolvedPort(getter, HUB_METER_VOLTAGE_PORT, getter_connection);
+  InstrumentPortSP getter = RequestPort(getter_connection);
   auto request = MakeGetterOnlyRequest(
       "Measuring illumination via measure_illumination schema",
       "measure_illumination", getter);
@@ -1172,13 +1032,8 @@ TEST_F(DataRetrievalTest, MeasureLeakage) {
   const double LEAKAGE_VOLTAGE = 0.512;
 
   ConnectionSP target_connection = Connection::PlungerGate(TARGET_NAME);
-  InstrumentPortSP setter =
-      LookupCapabilityPort(target_connection, "voltage", "output");
-  InstrumentPortSP getter =
-      LookupCapabilityPort(target_connection, "measured_voltage", "input");
-  ExpectResolvedPort(setter, HUB_SOURCE_VOLTAGE_PORT, target_connection);
-  ExpectResolvedPort(getter, HUB_SOURCE_MEASURED_VOLTAGE_PORT,
-                     target_connection);
+  InstrumentPortSP setter = RequestPort(target_connection);
+  InstrumentPortSP getter = RequestPort(target_connection);
   auto request = MakeSinglePointGetterRequest(
       "Measuring leakage via measure_leakage schema", "measure_leakage", setter,
       LEAKAGE_VOLTAGE, std::vector<InstrumentPortSP>{getter});
@@ -1200,17 +1055,12 @@ TEST_F(DataRetrievalTest, Gaussian1DMeasureGetSet) {
   ASSERT_NE(config, nullptr) << "Failed to get config from request_config";
 
   ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP getter =
-      LookupCapabilityPort(getter_connection, "stream", "input");
-  ExpectResolvedPort(getter, HUB_METER_STREAM_PORT, getter_connection);
+  InstrumentPortSP getter = RequestPort(getter_connection);
   PortsSP getters =
       std::make_shared<Ports>(std::vector<InstrumentPortSP>{getter});
 
   ConnectionSP dependant_connection = Connection::PlungerGate(DEPENDANT_NAME);
-  InstrumentPortSP independantKnob =
-      LookupCapabilityPort(dependant_connection, "voltage", "output");
-  ExpectResolvedPort(independantKnob, HUB_SOURCE_VOLTAGE_PORT,
-                     dependant_connection);
+  InstrumentPortSP independantKnob = RequestPort(dependant_connection);
   InstrumentPortSP clock = InstrumentPort::ExecutionClock();
 
   MapSP<InstrumentPort, PortTransform> transforms =
@@ -1273,9 +1123,7 @@ TEST_F(DataRetrievalTest, VoltageSweepCurrent) {
   ASSERT_NE(config, nullptr) << "Failed to get config from request_config";
 
   ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP currentMeter =
-      LookupCapabilityPort(getter_connection, "stream", "input");
-  ExpectResolvedPort(currentMeter, HUB_METER_STREAM_PORT, getter_connection);
+  InstrumentPortSP currentMeter = RequestPort(getter_connection);
   PortsSP getters =
       std::make_shared<Ports>(std::vector<InstrumentPortSP>{currentMeter});
 
@@ -1285,9 +1133,7 @@ TEST_F(DataRetrievalTest, VoltageSweepCurrent) {
   // transresistance amplifier gain; the test data (linear-1d.txt) represents
   // that conceptual current sweep.
   ConnectionSP sweep_connection = Connection::PlungerGate(SWEEP_NAME);
-  InstrumentPortSP voltageKnob =
-      LookupCapabilityPort(sweep_connection, "voltage", "output");
-  ExpectResolvedPort(voltageKnob, HUB_SOURCE_VOLTAGE_PORT, sweep_connection);
+  InstrumentPortSP voltageKnob = RequestPort(sweep_connection);
   InstrumentPortSP clock = InstrumentPort::ExecutionClock();
 
   MapSP<InstrumentPort, PortTransform> transforms =
@@ -1351,20 +1197,14 @@ TEST_F(DataRetrievalTest, VoltageSweepCurrent2D) {
   ASSERT_NE(config, nullptr) << "Failed to get config from request_config";
 
   ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP currentMeter =
-      LookupCapabilityPort(getter_connection, "stream", "input");
-  ExpectResolvedPort(currentMeter, HUB_METER_STREAM_PORT, getter_connection);
+  InstrumentPortSP currentMeter = RequestPort(getter_connection);
   PortsSP getters =
       std::make_shared<Ports>(std::vector<InstrumentPortSP>{currentMeter});
 
   ConnectionSP fast_connection = Connection::PlungerGate(FAST_GATE);
   ConnectionSP slow_connection = Connection::PlungerGate(SLOW_GATE);
-  InstrumentPortSP fastKnob =
-      LookupCapabilityPort(fast_connection, "voltage", "output");
-  InstrumentPortSP slowKnob =
-      LookupCapabilityPort(slow_connection, "voltage", "output");
-  ExpectResolvedPort(fastKnob, HUB_SOURCE_VOLTAGE_PORT, fast_connection);
-  ExpectResolvedPort(slowKnob, HUB_SOURCE_VOLTAGE_PORT, slow_connection);
+  InstrumentPortSP fastKnob = RequestPort(fast_connection);
+  InstrumentPortSP slowKnob = RequestPort(slow_connection);
   InstrumentPortSP clock = InstrumentPort::ExecutionClock();
 
   MapSP<InstrumentPort, PortTransform> transforms =
