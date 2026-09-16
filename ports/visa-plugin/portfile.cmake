@@ -2,7 +2,7 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO falcon-autotuning/visa-plugin
     REF v${VERSION}
-    SHA512 16d5bfa4a1dbba12ca1e5fd9d8fe08a461edca126f3b15704c57be0eb686e283d43eca4fde3af6cfb14bd5a2cdb10ed3595f68ac9d4061e00b5192d1926d456e
+    SHA512 4b542f7578b329b1da006f9195c1f831b82e8d47db6ab5229b50d17a309087a8c09100288ac77d05a31e6c28a90886d9d7d611a00aec2bd52616c5d0851d3daf
 )
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
