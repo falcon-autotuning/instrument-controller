@@ -1,12 +1,10 @@
-
-message(STATUS "teal-api-gen: using GitHub source v${VERSION}")
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO falcon-autotuning/teal-api-gen
     REF v${VERSION}
-    SHA512 0189559a1155fcae0233f14297607992bcd41f4493a26893d5faf03e4191b9775114890d8f517dbddf3533ec953df1b72530d66c2fe68ba4544c91df163f3c35
+    SHA512 6cb91ae18d145240966d6473895b6a7a82e413fec1120007266481bfb1eb73cf3d676be43433b9f961829c152144aace8f4e0e180e1865eab7b743bb4b869b35
 )
-    
+
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
