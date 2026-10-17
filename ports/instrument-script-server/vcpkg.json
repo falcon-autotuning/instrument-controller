@@ -1,6 +1,6 @@
 {
   "name": "instrument-script-server",
-  "version-string": "2.0.24",
+  "version-string": "2.0.25",
   "description": "a modular, process-isolated system for controlling scientific instruments for FAlCon use",
   "dependencies": [
     "vcpkg-cmake",
@@ -37,6 +37,20 @@
     {
       "name": "instrument-call-stack",
       "version>=": "1.0.6",
+      "features": [
+        "lua"
+      ]
+    },
+    {
+      "name": "instrument-domain",
+      "version>=": "1.0.0",
+      "features": [
+        "lua"
+      ]
+    },
+    {
+      "name": "instrument-target",
+      "version>=": "1.0.0",
       "features": [
         "lua"
       ]
