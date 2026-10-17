@@ -85,6 +85,23 @@ vcpkg_execute_required_process(
     LOGNAME build-go
 )
 
+# Generate latest schema
+vcpkg_execute_required_process(
+    COMMAND "${CMAKE_COMMAND}" -E env
+        "CC=${CMAKE_C_COMPILER}"
+        "GOTMPDIR=${GOLANG_TMP_DIR}"
+        "CGO_ENABLED=1"
+        "PKG_CONFIG_PATH=${CURRENT_INSTALLED_DIR}/lib/pkgconfig"
+        "CGO_LDFLAGS=${FALCON_GO_CGO_LDFLAGS}"
+        go run ./cmd/schema-gen
+    WORKING_DIRECTORY "${SOURCE_PATH}/runtime"
+    LOGNAME generate-schema
+)
+
+vcpkg_cmake_configure(
+    SOURCE_PATH "${SOURCE_PATH}"
+)
+
 # ------------------------------------------------------------------------------
 # License install
 # ------------------------------------------------------------------------------
