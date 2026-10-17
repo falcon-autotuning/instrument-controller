@@ -1,6 +1,7 @@
 find_package(instrument-script-server CONFIG REQUIRED)
 find_package(GTest                    CONFIG REQUIRED)
 find_package(falcon-routine           CONFIG REQUIRED)
+find_package(Boost REQUIRED COMPONENTS process)
 include(GoogleTest)
 
 add_library(plugin-helpers INTERFACE)
@@ -34,6 +35,7 @@ target_link_libraries(integration_tests
     instrument-script-server::instrument-script-server-core
     falcon::falcon-routine
     falcon-core::falcon-core
+    Boost::process
 )
 target_compile_definitions(integration_tests
   PRIVATE

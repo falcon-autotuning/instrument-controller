@@ -3,7 +3,7 @@ vcpkg_from_github(
         OUT_SOURCE_PATH SOURCE_PATH
         REPO falcon-autotuning/falcon-instrument-hub
         REF v${VERSION}
-        SHA512 fc3fa287ed7124f2c3fd38ece4248771153ca30d1a6e47a122db3589c4f06568c2e2acbca077eef5e38787d64d131aa2221e8ce2fb5fff40fe0d860bd66d6e49
+        SHA512 912a98ac9eb58e2a2b0812434c69c3496740d20b44b04afe952960b0d53c3694e609a886a7155f3dcf84aaa2c83b78fb4b75c7c8a0774088cfafc064d6e4a4f1
 )
 
 # ------------------------------------------------------------------------------
@@ -85,23 +85,11 @@ vcpkg_execute_required_process(
     LOGNAME build-go
 )
 
-# Generate latest schema
-vcpkg_execute_required_process(
-    COMMAND "${CMAKE_COMMAND}" -E env
-        "CC=${CMAKE_C_COMPILER}"
-        "GOTMPDIR=${GOLANG_TMP_DIR}"
-        "CGO_ENABLED=1"
-        "PKG_CONFIG_PATH=${CURRENT_INSTALLED_DIR}/lib/pkgconfig"
-        "CGO_LDFLAGS=${FALCON_GO_CGO_LDFLAGS}"
-        go run ./cmd/schema-gen
-    WORKING_DIRECTORY "${SOURCE_PATH}/runtime"
-    LOGNAME generate-schema
-)
-
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
 )
 
+vcpkg_cmake_install()
 # ------------------------------------------------------------------------------
 # License install
 # ------------------------------------------------------------------------------

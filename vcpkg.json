@@ -21,6 +21,7 @@
     "gtest",
     "teal-api-gen",
     "cjson",
+    "boost-process",
     {
       "name": "instrument-plugin-api",
       "version>=": "2.0.4"
