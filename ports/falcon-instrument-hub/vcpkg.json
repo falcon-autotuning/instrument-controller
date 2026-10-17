@@ -1,7 +1,6 @@
 {
   "name": "falcon-instrument-hub",
-  "version": "2.0.12",
-  "port-version": 67,
+  "version": "3.0.0",
   "description": "Falcon Instrument Hub Go binary",
   "license": "BSD-3-Clause",
   "dependencies": [
@@ -16,9 +15,22 @@
     },
     "vcpkg-cmake",
     "vcpkg-cmake-config",
-    "yaml-cpp"
+    "instrument-script-server",
+    "yaml-cpp",
+    {
+      "name": "instrument-domain",
+      "version>=": "1.0.0"
+    },
+    {
+      "name": "instrument-target",
+      "version>=": "1.0.0"
+    }
   ],
   "overrides": [
+    {
+      "name": "libpqxx",
+      "version": "7.10.5"
+    },
     {
       "name": "xtensor",
       "version": "0.25.0"

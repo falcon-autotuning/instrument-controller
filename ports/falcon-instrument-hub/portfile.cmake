@@ -3,8 +3,8 @@ vcpkg_from_github(
         OUT_SOURCE_PATH SOURCE_PATH
         REPO falcon-autotuning/falcon-instrument-hub
         REF v${VERSION}
-        SHA512  6f03630a19a332a99393b1abec3c6c1ef65c4857b7895e2620c73e3d17e05f6526f91bdf04bf1193518cadda634bcc58ba68fc47be7594cb13cf9dc48430a48a
-    )
+        SHA512 fc3fa287ed7124f2c3fd38ece4248771153ca30d1a6e47a122db3589c4f06568c2e2acbca077eef5e38787d64d131aa2221e8ce2fb5fff40fe0d860bd66d6e49
+)
 
 # ------------------------------------------------------------------------------
 # Go build outputs
@@ -76,11 +76,11 @@ endif()
 vcpkg_execute_required_process(
     COMMAND "${CMAKE_COMMAND}" -E env
         "CC=${CMAKE_C_COMPILER}"
-        "GOTMPDIR=${GOLAND_TMP_DIR}"
+        "GOTMPDIR=${GOLANG_TMP_DIR}"
         "CGO_ENABLED=1"
         "PKG_CONFIG_PATH=${CURRENT_INSTALLED_DIR}/lib/pkgconfig"
         "CGO_LDFLAGS=${FALCON_GO_CGO_LDFLAGS}"
-        go build -tags cgo,falcon_core -o "${GO_OUTPUT}" ./cmd/main.go
+        go build -tags cgo,falcon_core -o "${GO_OUTPUT}" ./cmd
     WORKING_DIRECTORY "${SOURCE_PATH}/runtime"
     LOGNAME build-go
 )
