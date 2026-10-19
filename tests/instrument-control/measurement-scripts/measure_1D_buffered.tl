@@ -1,83 +1,42 @@
--- measure_1D_buffered
--- Schema-aligned buffered 1D sweep script for DataBuffer-backed measurements.
--- The sweep setter domain comes from setVoltageDomains, while numSteps controls
--- the buffered stream length returned by MEASURE_STREAM.
--- @falcon.metadata
--- schema_version: 1
--- measurement: measure_1D_buffered
--- targets:
---   setter:
---     capability: voltage
---     role: output
---   getter:
---     capability: stream
---     role: input
--- @falcon.end
-
-local record RuntimeContext
-  log: function(self: RuntimeContext, msg: string)
-  error: function(self: RuntimeContext, msg: string)
-  parallel: function(self: RuntimeContext, fn: function())
-  call: function(self: RuntimeContext, method: string, ...: any)
-end
-
 local record InstrumentTarget
-  id: string
-  channel: number
+  get_instrument_name: function(self: InstrumentTarget): string
+  get_channel_group: function(self: InstrumentTarget): string
+  get_channel: function(self: InstrumentTarget): integer
 end
 
-local record Domain
-  min: number
-  max: number
+local record InstrumentDomain
+  get_min: function(self: InstrumentDomain): number
+  get_max: function(self: InstrumentDomain): number
 end
 
-local function resolveEndVoltage(
-  setVoltageDomains: {string: Domain},
-  target: InstrumentTarget
-): number
-  local domain = setVoltageDomains[target.id]
-  if domain == nil then
-    return 0.0
+-- Scalar fallback for a 1D sweep: one recorded GET_DATAPOINT per step/getter.
+-- Domain arrays are positional, in setter order, and contain native domains.
+local source = require("source")
+local multimeter = require("multimeter")
+local sweepMath = require("sweep_math")
+
+local function applyVector(setters: {InstrumentTarget}, voltages: {number})
+  assert(#setters == #voltages, "one voltage is required per setter")
+  for i, setter in ipairs(setters) do
+    source:setVoltage(setter:get_instrument_name(), setter:get_channel_group(),
+                      setter:get_channel(), voltages[i])
   end
-  return domain.max
 end
 
-local function Measure1DBuffered(
-  ctx: RuntimeContext,
-  sampleRate: number,
-  setters: {InstrumentTarget},
-  setVoltageDomains: {string: Domain},
-  bufferedGetters: {InstrumentTarget},
-  numPoints: number,
-  numSteps: number,
-  bufferedSetters: {InstrumentTarget}
-): string
-  local bins = math.max(numPoints, numSteps)
+local function readGetters(getters: {InstrumentTarget})
+  for _, getter in ipairs(getters) do
+    multimeter:getDatapoint(getter:get_instrument_name(), getter:get_channel_group(),
+                            getter:get_channel())
+  end
+end
 
-  for _, setter in ipairs(setters) do
-    Mock1Source1:setVoltage(
-      setter.id,
-      setter.channel,
-      resolveEndVoltage(setVoltageDomains, setter)
-    )
+local function Measure1DBuffered(ctx: any, setVoltageDomains: {InstrumentDomain}, getters: {InstrumentTarget}, numSteps: integer, setters: {InstrumentTarget})
+  assert(#setVoltageDomains == #setters, "one domain is required per setter")
+  local sweep = sweepMath.build1DSweep(sweepMath.limitsFromDomains(setVoltageDomains), numSteps)
+  for _, voltages in ipairs(sweep) do
+    applyVector(setters, voltages)
+    readGetters(getters)
   end
-  for _, setter in ipairs(bufferedSetters) do
-    Mock1Source1:setVoltage(
-      setter.id,
-      setter.channel,
-      resolveEndVoltage(setVoltageDomains, setter)
-    )
-  end
-  for _, getter in ipairs(bufferedGetters) do
-    Mock5Meter1:setSampleRate(getter.id, getter.channel, sampleRate)
-    Mock5Meter1:setBins(getter.id, getter.channel, bins)
-  end
-
-  for _, getter in ipairs(bufferedGetters) do
-    Mock5Meter1:measureStream(getter.id, getter.channel)
-  end
-
-  return ""
 end
 
 return { main = Measure1DBuffered }

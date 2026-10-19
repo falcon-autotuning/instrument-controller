@@ -1,91 +1,48 @@
--- measure_2D_buffered
--- Schema-aligned buffered 2D sweep script for DataBuffer-backed measurements.
--- Each Y step sets the slow-axis voltage, then acquires a full X-axis stream.
--- @falcon.metadata
--- schema_version: 1
--- measurement: measure_2D_buffered
--- targets:
---   setter:
---     capability: voltage
---     role: output
---   getter:
---     capability: stream
---     role: input
--- @falcon.end
-
-local record RuntimeContext
-  log: function(self: RuntimeContext, msg: string)
-  error: function(self: RuntimeContext, msg: string)
-  parallel: function(self: RuntimeContext, fn: function())
-  call: function(self: RuntimeContext, method: string, ...: any)
-end
-
 local record InstrumentTarget
-  id: string
-  channel: number
+  get_instrument_name: function(self: InstrumentTarget): string
+  get_channel_group: function(self: InstrumentTarget): string
+  get_channel: function(self: InstrumentTarget): integer
 end
 
-local record Domain
-  min: number
-  max: number
+local record InstrumentDomain
+  get_min: function(self: InstrumentDomain): number
+  get_max: function(self: InstrumentDomain): number
 end
 
-local function resolveEndVoltage(
-  domains: {string: Domain},
-  target: InstrumentTarget
-): number
-  local domain = domains[target.id]
-  if domain == nil then
-    return 0.0
+-- Scalar raster fallback: sweep X (fast) inside each Y (slow) step.
+-- Parameter names and order match the hub's encode2DBuffered manifest.
+local source = require("source")
+local multimeter = require("multimeter")
+local sweepMath = require("sweep_math")
+
+local function applyVector(setters: {InstrumentTarget}, voltages: {number})
+  assert(#setters == #voltages, "one voltage is required per setter")
+  for i, setter in ipairs(setters) do
+    source:setVoltage(setter:get_instrument_name(), setter:get_channel_group(),
+                      setter:get_channel(), voltages[i])
   end
-  return domain.max
 end
 
-local function Measure2DBuffered(
-  ctx: RuntimeContext,
-  bufferedXSetters: {InstrumentTarget},
-  sampleRate: number,
-  bufferedGetters: {InstrumentTarget},
-  bufferedYSetters: {InstrumentTarget},
-  numXSteps: number,
-  setYVoltageDomains: {string: Domain},
-  setXVoltageDomains: {string: Domain},
-  numPoints: number,
-  numYSteps: number,
-  setters: {InstrumentTarget}
-): string
-  local bins = math.max(numPoints, numXSteps)
-
-  for _, setter in ipairs(setters) do
-    Mock1Source1:setVoltage(setter.id, setter.channel, 0.0)
+local function readGetters(getters: {InstrumentTarget})
+  for _, getter in ipairs(getters) do
+    multimeter:getDatapoint(getter:get_instrument_name(), getter:get_channel_group(),
+                            getter:get_channel())
   end
+end
 
-  for _ = 1, numYSteps do
-    for _, setter in ipairs(bufferedYSetters) do
-      Mock1Source1:setVoltage(
-        setter.id,
-        setter.channel,
-        resolveEndVoltage(setYVoltageDomains, setter)
-      )
-    end
-    for _, setter in ipairs(bufferedXSetters) do
-      Mock1Source1:setVoltage(
-        setter.id,
-        setter.channel,
-        resolveEndVoltage(setXVoltageDomains, setter)
-      )
-    end
-    for _, getter in ipairs(bufferedGetters) do
-      Mock5Meter1:setSampleRate(getter.id, getter.channel, sampleRate)
-      Mock5Meter1:setBins(getter.id, getter.channel, bins)
-    end
-
-    for _, getter in ipairs(bufferedGetters) do
-      Mock5Meter1:measureStream(getter.id, getter.channel)
+local function Measure2DSweep(ctx: any, bufferedXSetters: {InstrumentTarget}, bufferedGetters: {InstrumentTarget}, bufferedYSetters: {InstrumentTarget},
+                             numXSteps: integer, setYVoltageDomains: {InstrumentDomain}, setXVoltageDomains: {InstrumentDomain}, numYSteps: integer)
+  assert(#setXVoltageDomains == #bufferedXSetters, "one X domain is required per setter")
+  assert(#setYVoltageDomains == #bufferedYSetters, "one Y domain is required per setter")
+  local xSweep, ySweep = sweepMath.buildRasterSweep(setXVoltageDomains, numXSteps,
+                                                   setYVoltageDomains, numYSteps)
+  for _, yVoltages in ipairs(ySweep) do
+    applyVector(bufferedYSetters, yVoltages)
+    for _, xVoltages in ipairs(xSweep) do
+      applyVector(bufferedXSetters, xVoltages)
+      readGetters(bufferedGetters)
     end
   end
-
-  return ""
 end
 
-return { main = Measure2DBuffered }
+return { main = Measure2DSweep }

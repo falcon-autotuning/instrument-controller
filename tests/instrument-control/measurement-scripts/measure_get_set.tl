@@ -1,51 +1,25 @@
--- Measure_Get_Set
--- Provides a context for scripts that perform DC get/set operations. It allows setting voltages on specified instruments and reading values from others, supporting batch operations, parallel execution, and logging. This context is typically used for scripts that need to set outputs and acquire data points from instruments in a coordinated way.
--- @falcon.metadata
--- schema_version: 1
--- measurement: measure_get_set
--- targets:
---   setter:
---     capability: voltage
---     role: output
---   getter:
---     capability: stream
---     role: input
--- @falcon.end
-
-local record RuntimeContext
-  log: function(self: RuntimeContext, msg: string)
-  error: function(self: RuntimeContext, msg: string)
-  parallel: function(self: RuntimeContext, fn: function())
-  call: function(self: RuntimeContext, method: string, ...: any)
-end 
-
-local function Measure_Get_Set(
-  ctx: RuntimeContext,
-  getters: {InstrumentTarget},
-  numPoints: number,
-  sampleRate: number,
-  setVoltages: {string: number},
-  setters: {InstrumentTarget}
-): string
-  for _, setter in ipairs(setters) do
-    local voltage = setVoltages[setter.id]
-    if voltage == nil then
-      ctx:error("No voltage specified for setter id: " .. setter.id)
-      return nil
-    end
-    if setter.id ~= "Source1" then
-      ctx:error("Invalid setter id: " .. setter.id)
-      return nil
-    end
-    Mock1Source1:setVoltage(setter.id, setter.channel, voltage)
-  end
-  for _, getter in ipairs(getters) do
-    Mock5Meter1:setSampleRate(getter.id, getter.channel, sampleRate)
-    Mock5Meter1:setBins(getter.id, getter.channel, numPoints)
-  end
-  for _, getter in ipairs(getters) do
-    Mock5Meter1:measureStream(getter.id, getter.channel)
-  end
-  return ""
+local record InstrumentTarget
+  get_instrument_name: function(self: InstrumentTarget): string
+  get_channel_group: function(self: InstrumentTarget): string
+  get_channel: function(self: InstrumentTarget): integer
 end
+
+-- Set each source voltage, then read one scalar value from each meter.
+-- Argument order matches the hub's encodeGetSet manifest. Voltages are in V.
+local source = require("source")
+local multimeter = require("multimeter")
+
+local function Measure_Get_Set(ctx: any, setVoltages: {number}, getters: {InstrumentTarget}, setters: {InstrumentTarget})
+  assert(#setVoltages == #setters, "one voltage is required per setter")
+  for i, setter in ipairs(setters) do
+    source:setVoltage(setter:get_instrument_name(), setter:get_channel_group(),
+                      setter:get_channel(), setVoltages[i])
+  end
+  for _, getter in ipairs(getters) do
+    -- GET_DATAPOINT returns a scalar. ISS records the context:call result.
+    multimeter:getDatapoint(getter:get_instrument_name(), getter:get_channel_group(),
+                            getter:get_channel())
+  end
+end
+
 return { main = Measure_Get_Set }

@@ -1,27 +1,17 @@
--- Get_Many_Voltages
--- Reads a set of source channels and returns their voltages.
--- @falcon.metadata
--- schema_version: 1
--- measurement: get_many_voltages
--- targets:
---   getter:
---     capability: measured_voltage
---     role: input
--- @falcon.end
-
-local record RuntimeContext
-  log: function(self: RuntimeContext, msg: string)
-  error: function(self: RuntimeContext, msg: string)
+local record InstrumentTarget
+  get_instrument_name: function(self: InstrumentTarget): string
+  get_channel_group: function(self: InstrumentTarget): string
+  get_channel: function(self: InstrumentTarget): integer
 end
 
-local function Get_Many_Voltages(
-  ctx: RuntimeContext,
-  getters: {InstrumentTarget}
-): string
+-- Use native InstrumentTarget accessors and the source test ISA.
+local source = require("source")
+
+local function Get_Many_Voltages(ctx: any, getters: {InstrumentTarget})
   for _, getter in ipairs(getters) do
-    Mock1Source1:getVoltage(getter.id, getter.channel)
+    source:getVoltage(getter:get_instrument_name(), getter:get_channel_group(),
+                      getter:get_channel())
   end
-  return ""
 end
 
 return { main = Get_Many_Voltages }

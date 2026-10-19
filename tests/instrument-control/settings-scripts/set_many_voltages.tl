@@ -1,38 +1,17 @@
--- Set_Many_Voltages
--- Sets many voltages applied to targets
--- @falcon.metadata
--- schema_version: 1
--- measurement: set_many_voltages
--- targets:
---   setter:
---     capability: voltage
---     role: output
--- @falcon.end
-
-local record RuntimeContext
-  log: function(self: RuntimeContext, msg: string)
-  error: function(self: RuntimeContext, msg: string)
-  parallel: function(self: RuntimeContext, fn: function())
-  call: function(self: RuntimeContext, method: string, ...: any)
+local record InstrumentTarget
+  get_instrument_name: function(self: InstrumentTarget): string
+  get_channel_group: function(self: InstrumentTarget): string
+  get_channel: function(self: InstrumentTarget): integer
 end
 
-local function target_key(target: InstrumentTarget): string
-  return target.id .. ":" .. tostring(target.channel)
-end
+-- Use native InstrumentTarget accessors and the source test ISA.
+local source = require("source")
 
-local function Set_Many_Voltages(
-  ctx: RuntimeContext,
-  setters: {InstrumentTarget},
-  setVoltages: {string: number}
-): string
-  for _, setter in ipairs(setters) do
-    local key = target_key(setter)
-    local setVoltage = setVoltages[key]
-    if setVoltage == nil then
-      ctx:error("Missing set voltage for target " .. key)
-      return nil
-    end
-    Mock1Source1:setVoltage(setter.id, setter.channel, setVoltage)
+local function Set_Many_Voltages(ctx: any, setters: {InstrumentTarget}, setVoltages: {number})
+  assert(#setVoltages == #setters, "one voltage is required per setter")
+  for i, setter in ipairs(setters) do
+    source:setVoltage(setter:get_instrument_name(), setter:get_channel_group(),
+                      setter:get_channel(), setVoltages[i])
   end
 end
 
