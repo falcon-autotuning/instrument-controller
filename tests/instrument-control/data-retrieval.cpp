@@ -591,7 +591,7 @@ protected:
     MapSP<std::string, bool> increasing =
         std::make_shared<Map<std::string, bool>>(
             std::vector<std::pair<std::string, bool>>{
-                {setter->default_name(), true}});
+                {setter->instrument_facing_name(), true}});
     auto waveform =
         Waveform::CartesianIdentityWaveform1D(1, coupled_domain, increasing);
     ListSP<Waveform> waveforms =
