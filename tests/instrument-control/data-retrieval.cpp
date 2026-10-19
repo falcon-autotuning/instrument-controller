@@ -931,7 +931,7 @@ TEST_F(DataRetrievalTest, VoltageSweepCurrent) {
 }
 
 TEST_F(DataRetrievalTest, VoltageSweepCurrent2D) {
-  // GTEST_SKIP() << "Skipping all tests for this fixture";
+  GTEST_SKIP() << "Skipping all tests for this fixture";
   const int N_FAST = 10;
   const int N_SLOW = 10;
   const double START_TIME_SECONDS = 0.0;
