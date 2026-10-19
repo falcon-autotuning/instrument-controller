@@ -1,8 +1,8 @@
 api_version: 1.0.0
 instrument:
   vendor: Mock
-  model: 5
-  identifier: Meter1
+  model: 5.0.1
+  identifier: METER1
   description: Mock Voltage Meter
 protocol:
   type: Custom
@@ -18,7 +18,8 @@ channel_groups:
       description: Voltage meter channel number (1-8)
     io_types:
       - name: stream
-        type: array
+        type: buffer
+        element_type: float
         role: input
         description: Voltage to set
         suffix: stream
@@ -53,10 +54,11 @@ channel_groups:
         suffix: trigger_level
 io:
   - name: analog1_stream
-    type: array
+    type: buffer
     role: input
     description: Voltage to set
     unit: V
+    element_type: float
   - name: analog1_voltage
     type: float
     role: input
@@ -81,10 +83,11 @@ io:
     description: Trigger level
     unit: V
   - name: analog2_stream
-    type: array
+    type: buffer
     role: input
     description: Voltage to set
     unit: V
+    element_type: float
   - name: analog2_voltage
     type: float
     role: input
@@ -109,10 +112,11 @@ io:
     description: Trigger level
     unit: V
   - name: analog3_stream
-    type: array
+    type: buffer
     role: input
     description: Voltage to set
     unit: V
+    element_type: float
   - name: analog3_voltage
     type: float
     role: input
@@ -137,10 +141,11 @@ io:
     description: Trigger level
     unit: V
   - name: analog4_stream
-    type: array
+    type: buffer
     role: input
     description: Voltage to set
     unit: V
+    element_type: float
   - name: analog4_voltage
     type: float
     role: input
@@ -165,10 +170,11 @@ io:
     description: Trigger level
     unit: V
   - name: analog5_stream
-    type: array
+    type: buffer
     role: input
     description: Voltage to set
     unit: V
+    element_type: float
   - name: analog5_voltage
     type: float
     role: input
@@ -193,10 +199,11 @@ io:
     description: Trigger level
     unit: V
   - name: analog6_stream
-    type: array
+    type: buffer
     role: input
     description: Voltage to set
     unit: V
+    element_type: float
   - name: analog6_voltage
     type: float
     role: input
@@ -221,10 +228,11 @@ io:
     description: Trigger level
     unit: V
   - name: analog7_stream
-    type: array
+    type: buffer
     role: input
     description: Voltage to set
     unit: V
+    element_type: float
   - name: analog7_voltage
     type: float
     role: input
@@ -249,10 +257,11 @@ io:
     description: Trigger level
     unit: V
   - name: analog8_stream
-    type: array
+    type: buffer
     role: input
     description: Voltage to set
     unit: V
+    element_type: float
   - name: analog8_voltage
     type: float
     role: input
@@ -278,61 +287,39 @@ io:
     unit: V
 commands:
   SET_SAMPLE_RATE:
-    template: SOUR:SAMPle:{analog}:{sample_rate}
     description: Set the sample rate
     channel_group: analog
     parameters:
       - io: sample_rate
     outputs: []
+  GET_SAMPLE_RATE:
+    description: Get the sample rate
+    channel_group: analog
+    parameters:
+      - io: sample_rate
+    outputs: [sample_rate]
   SET_BINS:
-    template: SOUR:BINS:{analog}:{bins}
     description: Set the number of bins to average for each data point
     channel_group: analog
     parameters:
       - io: bins
     outputs: []
-  SET_SLOPE:
-    template: SOUR:SLOPE:{analog}:{slope}
-    description: Set the slope to adjust output reading sensitivity to input
-    channel_group: analog
-    parameters:
-      - io: slope
-    outputs: []
-  GET_SLOPE:
-    template: SOUR:SLOPE? {analog}
-    description: Query slope for channel
+  GET_BINS:
+    description: Gets the number of bins to average
     channel_group: analog
     parameters: []
-    outputs: [slope]
-    query: true
-  SET_TRIGGER_LEVEL:
-    template: TRIG:LEV:{analog}:{trigger_level}
-    description: Set trigger level for channel
-    channel_group: analog
-    parameters:
-      - io: trigger_level
-    outputs: []
+    outputs: [bins]
   MEASURE_STREAM:
-    template: MEAS:VOLT:{analog}
     description: Set output voltage
     channel_group: analog
     parameters: []
     outputs: [stream]
   GET_DATAPOINT:
-    template: MEAS:POINt:{analog}
     description: Measure a single data point
     channel_group: analog
     parameters: []
     outputs: [voltage]
-  GET_TRIGGER_LEVEL:
-    template: TRIG:LEV? {analog}
-    description: Query trigger level for channel
-    parameters: []
-    channel_group: analog
-    outputs: [trigger_level]
-    query: true
   RESET:
-    template: RESET
     description: resets the mock instrument
     parameters: []
     outputs: []

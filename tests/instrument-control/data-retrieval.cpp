@@ -360,16 +360,30 @@ protected:
     ofs << "      plugin: "
         << (fs::path(PLUGIN_OUTPUT_DIR) / "mock_voltage_source.so").string()
         << "\n";
-    ofs << "      type: voltage_source\n"; // TODO: finish
-    ofs << "      characteristics: []\n";
+    ofs << "      type: dc_voltage_source\n";
+    ofs << "      characteristics:\n";
+    ofs << "        - identifier: source_voltage\n";
+    ofs << "          readCommand:\n";
+    ofs << "            command:GET_VOLTAGE\n";
+    ofs << "          writeCommand:\n";
+    ofs << "            command:SET_VOLTAGE\n";
 
     ofs << "    - config: " << (DATA_1D_DIR / "multimeter-config.yml").string()
         << "\n";
     ofs << "      plugin: "
         << (fs::path(PLUGIN_OUTPUT_DIR) / "mock_multimeter.so").string()
         << "\n";
-    ofs << "      type: voltmeter\n"; // TODO: finish
-    ofs << "      characteristics: []\n";
+    ofs << "      type: voltmeter\n";
+    ofs << "      characteristics:\n";
+    ofs << "        - identifier: sample_rate\n";
+    ofs << "          readCommand:\n";
+    ofs << "          writeCommand:\n";
+    ofs << "            command:SET_SAMPLE_RATE\n";
+    ofs << "        - identifier: number_of_samples\n";
+    ofs << "          readCommand:\n";
+    ofs << "            command:GET_BINS\n";
+    ofs << "          writeCommand:\n";
+    ofs << "            command:SET_BINS\n";
 
     ofs.close();
   }
@@ -691,9 +705,8 @@ TEST_F(DataRetrievalTest, SinglePointEcho) {
   ConnectionSP dependant_connection = Connection::PlungerGate(DEPENDANT_NAME);
   InstrumentPortSP independantKnob = PublishedKnob(dependant_connection);
 
-  MeasurementRequestSP request =
-      MakeSinglePointRequest("Taking a single-point measurement", independantKnob,
-                             TARGET_VALUE);
+  MeasurementRequestSP request = MakeSinglePointRequest(
+      "Taking a single-point measurement", independantKnob, TARGET_VALUE);
   auto resp = request_measurement(request, TIMEOUT_MS);
 
   ExpectSinglePointEchoResponse(resp, independantKnob, dependant_connection,
