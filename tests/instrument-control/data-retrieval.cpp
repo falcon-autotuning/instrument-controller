@@ -127,9 +127,11 @@ protected:
     BuildTestData(TEST_DATA_DIR_PATH / "gen_data.cpp",
                   TEST_DATA_DIR_PATH / "gen_data");
     RunTestDataGenerator(TEST_DATA_DIR_PATH / "gen_data");
-    if (std::string(::testing::UnitTest::GetInstance()->current_test_info()->name()) ==
+    if (std::string(
+            ::testing::UnitTest::GetInstance()->current_test_info()->name()) ==
         "measure_set_get") {
-      // Enable only the scalar primitive, avoiding sweep/sample-count prerequisites.
+      // Enable only the scalar primitive, avoiding sweep/sample-count
+      // prerequisites.
       current_scripts_dir_ = current_run_dir_ / "scripts";
       fs::create_directories(current_scripts_dir_);
       fs::copy_file(MEASUREMENT_SCRIPTS_DIR / "measure_get_set.lua",
@@ -470,9 +472,9 @@ protected:
       throw std::runtime_error("Hub PORT_PAYLOAD did not contain Ports");
     }
   }
-  InstrumentPortSP PublishedPort(const ConnectionSP &connection,
-                                 const PortsSP &ports,
-                                 const PortType kind) const {
+  static InstrumentPortSP PublishedPort(const ConnectionSP &connection,
+                                        const PortsSP &ports,
+                                        const PortType kind) {
     if (!connection) {
       throw std::runtime_error("PublishedPort requires a connection");
     }
@@ -511,14 +513,15 @@ protected:
     throw std::runtime_error("No hub-published setting for connection " +
                              connection->name());
   }
-  MeasurementRequestSP MakeSinglePointRequest(const std::string &message,
-                                              const InstrumentPortSP &target,
-                                              double target_value) {
+  static MeasurementRequestSP
+  MakeSinglePointRequest(const std::string &message,
+                         const InstrumentPortSP &target, double target_value) {
     InstrumentPortSP clock = InstrumentPort::ExecutionClock();
     MapSP<InstrumentPort, PortTransform> transforms =
         std::make_shared<Map<InstrumentPort, PortTransform>>(
             std::vector<std::pair<InstrumentPortSP, PortTransformSP>>{
-                {target, PortTransform::IdentityTransform(target)}});
+                {target, PortTransform::IdentityTransform(target)},
+            });
     LabelledDomainSP time_domain =
         LabelledDomain::from_port(std::pair<double, double>{0.0, 0.0}, clock);
     LabelledDomainSP target_domain = LabelledDomain::from_port(
@@ -542,12 +545,20 @@ protected:
                                              const InstrumentPortSP &target) {
     return MakeSinglePointRequest(message, target, 1.0);
   }
-  MeasurementRequestSP MakeGetterOnlyRequest(const std::string &message,
-                                             const InstrumentPortSP &target) {
+  static MeasurementRequestSP
+  MakeGetterOnlyRequest(const std::string &message,
+                        const InstrumentPortSP &target) {
     return MakeGetterOnlyRequest(message,
                                  std::vector<InstrumentPortSP>{target});
   }
-  MeasurementRequestSP
+  static SettingRequestSP MakeSettingRequest(
+      const std::string &message,
+      const instrument_interfaces::names::PortsSP &getters,
+      const generic::MapSP<instrument_interfaces::names::InstrumentPort,
+                           math::Quantity> &setters) {
+    return std::make_shared<SettingRequest>(message, getters, setters);
+  }
+  static MeasurementRequestSP
   MakeGetterOnlyRequest(const std::string &message,
                         const std::vector<InstrumentPortSP> &targets) {
     InstrumentPortSP clock = InstrumentPort::ExecutionClock();
@@ -562,7 +573,7 @@ protected:
     return std::make_shared<MeasurementRequest>(message, waveforms, getters,
                                                 transforms, time_domain);
   }
-  MeasurementRequestSP MakeSinglePointGetterRequest(
+  static MeasurementRequestSP MakeSinglePointGetterRequest(
       const std::string &message, const InstrumentPortSP &setter,
       double setter_value, const std::vector<InstrumentPortSP> &getters) {
     InstrumentPortSP clock = InstrumentPort::ExecutionClock();
@@ -716,14 +727,13 @@ protected:
       }
     }
 
-    nm.subscribe("STATUS.instrument-server",
-                 [prom](const std::string &) {
-                   try {
-                     prom->set_value(true);
-                   } catch (const std::future_error &) {
-                     // A periodic status message already satisfied the promise.
-                   }
-                 });
+    nm.subscribe("STATUS.instrument-server", [prom](const std::string &) {
+      try {
+        prom->set_value(true);
+      } catch (const std::future_error &) {
+        // A periodic status message already satisfied the promise.
+      }
+    });
 
     auto status = fut.wait_for(std::chrono::milliseconds(timeout_ms));
     nm.unsubscribe("STATUS.instrument-server");
@@ -739,6 +749,85 @@ protected:
   pid_t hub_pid_ = -1;
 #endif
 };
+
+TEST_F(DataRetrievalTest, set_then_get_then_set_and_get) {
+  const auto setter =
+      PublishedSetting(Connection::ScreeningGate("S1"),
+                       InstrumentCharacteristic::Source_Voltage);
+  ASSERT_NE(setter, nullptr);
+
+  const auto getter =
+      PublishedSetting(Connection::ScreeningGate("S1"),
+                       InstrumentCharacteristic::Source_Voltage);
+  ASSERT_NE(getter, nullptr);
+
+  auto performGet = [&](double expectedValue) {
+    auto getters = std::make_shared<Ports>();
+    getters->push_back(getter);
+
+    auto request = MakeSettingRequest("get source voltage", getters, nullptr);
+
+    auto response = request_setting(request, TIMEOUT_MS);
+
+    ASSERT_NE(response, nullptr);
+    ASSERT_NE(response->getters(), nullptr);
+
+    ASSERT_TRUE(response->getters()->contains(getter));
+
+    const auto quantity = response->getters()->at(getter);
+
+    ASSERT_NE(quantity, nullptr);
+
+    EXPECT_EQ(*quantity->unit(), *SymbolUnit::Volt());
+    EXPECT_DOUBLE_EQ(quantity->value(), expectedValue);
+  };
+
+  //
+  // Set 0.123
+  //
+  {
+    auto setters =
+        std::make_shared<Map<InstrumentPort, falcon_core::math::Quantity>>();
+
+    setters->insert(setter, std::make_shared<falcon_core::math::Quantity>(
+                                0.123, SymbolUnit::Volt()));
+
+    auto request =
+        MakeSettingRequest("set voltage", std::make_shared<Ports>(), setters);
+
+    auto response = request_setting(request, TIMEOUT_MS);
+
+    ASSERT_NE(response, nullptr);
+  }
+
+  //
+  // Get only
+  //
+  performGet(0.123);
+
+  //
+  // Set 0.456
+  //
+  {
+    auto setters =
+        std::make_shared<Map<InstrumentPort, falcon_core::math::Quantity>>();
+
+    setters->insert(setter, std::make_shared<falcon_core::math::Quantity>(
+                                0.456, SymbolUnit::Volt()));
+
+    auto request =
+        MakeSettingRequest("set voltage", std::make_shared<Ports>(), setters);
+
+    auto response = request_setting(request, TIMEOUT_MS);
+
+    ASSERT_NE(response, nullptr);
+  }
+
+  //
+  // Get again
+  //
+  performGet(0.456);
+}
 
 TEST_F(DataRetrievalTest, measure_set_get) {
   const auto setter = PublishedKnob(Connection::ScreeningGate("S1"));
