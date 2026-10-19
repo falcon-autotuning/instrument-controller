@@ -364,9 +364,9 @@ protected:
     ofs << "      characteristics:\n";
     ofs << "        - identifier: source_voltage\n";
     ofs << "          readCommand:\n";
-    ofs << "            command:GET_VOLTAGE\n";
+    ofs << "            command: GET_VOLTAGE\n";
     ofs << "          writeCommand:\n";
-    ofs << "            command:SET_VOLTAGE\n";
+    ofs << "            command: SET_VOLTAGE\n";
 
     ofs << "    - config: " << (DATA_1D_DIR / "multimeter-config.yml").string()
         << "\n";
@@ -376,14 +376,14 @@ protected:
     ofs << "      type: voltmeter\n";
     ofs << "      characteristics:\n";
     ofs << "        - identifier: sample_rate\n";
-    ofs << "          readCommand:\n";
+    ofs << "          readCommand: {}\n";
     ofs << "          writeCommand:\n";
-    ofs << "            command:SET_SAMPLE_RATE\n";
+    ofs << "            command: SET_SAMPLE_RATE\n";
     ofs << "        - identifier: number_of_samples\n";
     ofs << "          readCommand:\n";
-    ofs << "            command:GET_BINS\n";
+    ofs << "            command: GET_BINS\n";
     ofs << "          writeCommand:\n";
-    ofs << "            command:SET_BINS\n";
+    ofs << "            command: SET_BINS\n";
 
     ofs.close();
   }
