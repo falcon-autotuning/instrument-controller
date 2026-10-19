@@ -90,6 +90,7 @@ protected:
   bool had_temp_ = false;
   PortsSP published_knobs_;
   PortsSP published_meters_;
+  PortsSP published_settings_;
 
   void SetUp() override {
     // Initialize paths from environment variables here, not at global scope
@@ -448,12 +449,14 @@ protected:
     const auto payload = comms.subscribe_port_payload(TIMEOUT_MS, 0);
     published_knobs_ = Ports::from_json_string<Ports>(payload.knobs);
     published_meters_ = Ports::from_json_string<Ports>(payload.meters);
+    published_settings_ = Ports::from_json_string<Ports>(payload.settings);
     if (!published_knobs_ || !published_meters_) {
       throw std::runtime_error("Hub PORT_PAYLOAD did not contain Ports");
     }
   }
   InstrumentPortSP PublishedPort(const ConnectionSP &connection,
-                                 const PortsSP &ports, const char *kind) const {
+                                 const PortsSP &ports,
+                                 const PortType kind) const {
     if (!connection) {
       throw std::runtime_error("PublishedPort requires a connection");
     }
@@ -464,16 +467,33 @@ protected:
         }
       }
     }
-    throw std::runtime_error("No hub-published " + std::string(kind) +
+    throw std::runtime_error("No hub-published " + std::string(ToString(kind)) +
                              " for connection " + connection->name());
   }
   [[nodiscard]] InstrumentPortSP
   PublishedKnob(const ConnectionSP &connection) const {
-    return PublishedPort(connection, published_knobs_, "knob");
+    return PublishedPort(connection, published_knobs_, PortType::Knob);
   }
   [[nodiscard]] InstrumentPortSP
   PublishedMeter(const ConnectionSP &connection) const {
-    return PublishedPort(connection, published_meters_, "meter");
+    return PublishedPort(connection, published_meters_, PortType::Meter);
+  }
+  [[nodiscard]] InstrumentPortSP
+  PublishedSetting(const ConnectionSP &connection,
+                   const InstrumentCharacteristic category) const {
+    if (!connection) {
+      throw std::runtime_error("PublishedPort requires a connection");
+    }
+    if (published_settings_) {
+      for (const auto &port : published_settings_->items()) {
+        if (*port->pseudo_name() == *connection &&
+            port->characteristic() == category) {
+          return port;
+        }
+      }
+    }
+    throw std::runtime_error("No hub-published setting for connection " +
+                             connection->name());
   }
   MeasurementRequestSP MakeSinglePointRequest(const std::string &message,
                                               const InstrumentPortSP &target,
