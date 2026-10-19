@@ -5,8 +5,8 @@ pipelines, each returning its own Falcon response type. Reuse process helpers
 and mock assets, but give each fixture its own config, scripts, and runtime state.
 
 Naming: keep the measurement script `measure_get_set.lua`; name its test
-`measure_set_get`. The existing `MeasurementScriptTest.measure_set_get` exercises
-ISS directly and can remain a smoke test, but does not cover the hub pipeline.
+`measure_set_get`. The current `DataRetrievalTest.measure_set_get` lives in `data-retrieval.cpp`
+and exercises the hub pipeline using the existing fixture.
 
 ## 1. Agree on the Lua contracts
 
