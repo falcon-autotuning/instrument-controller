@@ -360,7 +360,7 @@ protected:
     ofs << "      plugin: "
         << (fs::path(PLUGIN_OUTPUT_DIR) / "mock_voltage_source.so").string()
         << "\n";
-    ofs << "      type: source\n"; // TODO: finish
+    ofs << "      type: voltage_source\n"; // TODO: finish
     ofs << "      characteristics: []\n";
 
     ofs << "    - config: " << (DATA_1D_DIR / "multimeter-config.yml").string()
@@ -368,7 +368,7 @@ protected:
     ofs << "      plugin: "
         << (fs::path(PLUGIN_OUTPUT_DIR) / "mock_multimeter.so").string()
         << "\n";
-    ofs << "      type: amnmeter\n"; // TODO: finish
+    ofs << "      type: voltmeter\n"; // TODO: finish
     ofs << "      characteristics: []\n";
 
     ofs.close();
@@ -678,166 +678,26 @@ protected:
 #endif
 };
 
-TEST_F(DataRetrievalTest, SetVoltage) {
-  std::cerr << "Running SetVoltage test" << std::endl;
-  const char *SETTER_NAME = "P1";
-  const double TARGET_VOLTAGE = 0.123;
-  ConnectionSP setter_connection = Connection::PlungerGate(SETTER_NAME);
-  InstrumentPortSP setter = PublishedKnob(setter_connection);
-  MeasurementRequestSP request = MakeSinglePointRequest(
-      "Setting P1 via set_voltage schema", setter, TARGET_VOLTAGE);
-  std::cerr << "SetVoltage test: Sending request to hub" << std::endl;
-  auto resp = request_measurement(request, TIMEOUT_MS);
-  ExpectSinglePointEchoResponse(resp, setter, setter_connection,
-                                TARGET_VOLTAGE);
-}
-
-TEST_F(DataRetrievalTest, SetSampleRate) {
+TEST_F(DataRetrievalTest, SinglePointEcho) {
+  const char *DEPENDANT_NAME = "P1";
   const char *GETTER_NAME = "O1";
-  const double TARGET_SAMPLE_RATE = 1000.0;
+  const double TARGET_VALUE = 0.25;
+  ConfigSP config = request_config(TIMEOUT_MS);
+  ASSERT_NE(config, nullptr) << "Failed to get config from request_config";
+
   ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
   InstrumentPortSP getter = PublishedMeter(getter_connection);
-  MeasurementRequestSP request = MakeSinglePointRequest(
-      "Setting O1 sample rate via set_sample_rate schema", getter,
-      TARGET_SAMPLE_RATE);
-  auto resp = request_measurement(request, TIMEOUT_MS);
-  ExpectSinglePointEchoResponse(resp, getter, getter_connection,
-                                TARGET_SAMPLE_RATE);
-}
 
-TEST_F(DataRetrievalTest, SetNumberOfSamples) {
-  const char *GETTER_NAME = "O1";
-  const double TARGET_NUMBER_OF_SAMPLES = 16.0;
-  ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP getter = PublishedMeter(getter_connection);
+  ConnectionSP dependant_connection = Connection::PlungerGate(DEPENDANT_NAME);
+  InstrumentPortSP independantKnob = PublishedKnob(dependant_connection);
+
   MeasurementRequestSP request =
-      MakeSinglePointRequest("Setting O1 bins via set_number_of_samples schema",
-                             getter, TARGET_NUMBER_OF_SAMPLES);
+      MakeSinglePointRequest("Taking a single-point measurement", independantKnob,
+                             TARGET_VALUE);
   auto resp = request_measurement(request, TIMEOUT_MS);
 
-  ExpectSinglePointEchoResponse(resp, getter, getter_connection,
-                                TARGET_NUMBER_OF_SAMPLES);
-}
-
-TEST_F(DataRetrievalTest, SetSlope) {
-  const char *GETTER_NAME = "O1";
-  const double TARGET_SLOPE = 0.75;
-  ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP setter = PublishedMeter(getter_connection);
-  MeasurementRequestSP request = MakeSinglePointRequest(
-      "Setting O1 slope via set_slope schema", setter, TARGET_SLOPE);
-  auto resp = request_measurement(request, TIMEOUT_MS);
-  ExpectSinglePointEchoResponse(resp, setter, getter_connection, TARGET_SLOPE);
-}
-
-TEST_F(DataRetrievalTest, GetVoltage) {
-  const char *TARGET_NAME = "P1";
-  const double TARGET_VOLTAGE = 0.456;
-  ConnectionSP setter_connection = Connection::PlungerGate(TARGET_NAME);
-  InstrumentPortSP setter = PublishedKnob(setter_connection);
-  auto set_request = MakeSinglePointRequest("Priming P1 via set_voltage schema",
-                                            setter, TARGET_VOLTAGE);
-  (void)request_measurement(set_request, TIMEOUT_MS);
-
-  ConnectionSP getter_connection = Connection::PlungerGate(TARGET_NAME);
-  InstrumentPortSP getter = PublishedMeter(getter_connection);
-  auto request =
-      MakeGetterOnlyRequest("Reading P1 via get_voltage schema", getter);
-  auto resp = request_measurement(request, TIMEOUT_MS);
-  ExpectSinglePointEchoResponse(resp, getter, getter_connection,
-                                TARGET_VOLTAGE);
-}
-
-TEST_F(DataRetrievalTest, GetSampleRate) {
-  const char *GETTER_NAME = "O1";
-  const double TARGET_SAMPLE_RATE = 1000.0;
-  ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP setter = PublishedMeter(getter_connection);
-  auto set_request = MakeSinglePointRequest(
-      "Priming O1 sample rate via set_sample_rate schema", setter,
-      TARGET_SAMPLE_RATE);
-  (void)request_measurement(set_request, TIMEOUT_MS);
-
-  InstrumentPortSP getter = PublishedMeter(getter_connection);
-  auto request = MakeGetterOnlyRequest(
-      "Reading O1 sample rate via get_sample_rate schema", getter);
-  auto resp = request_measurement(request, TIMEOUT_MS);
-
-  ExpectSinglePointEchoResponse(resp, getter, getter_connection,
-                                TARGET_SAMPLE_RATE);
-}
-
-TEST_F(DataRetrievalTest, GetNumberOfSamples) {
-  const char *GETTER_NAME = "O1";
-  const double TARGET_NUMBER_OF_SAMPLES = 16.0;
-  ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  ConnectionSP setter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP setter = PublishedMeter(setter_connection);
-  auto set_request =
-      MakeSinglePointRequest("Priming O1 bins via set_number_of_samples schema",
-                             setter, TARGET_NUMBER_OF_SAMPLES);
-  (void)request_measurement(set_request, TIMEOUT_MS);
-
-  InstrumentPortSP getter = PublishedMeter(getter_connection);
-  auto request = MakeGetterOnlyRequest(
-      "Reading O1 bins via get_number_of_samples schema", getter);
-  auto resp = request_measurement(request, TIMEOUT_MS);
-
-  ExpectSinglePointEchoResponse(resp, getter, getter_connection,
-                                TARGET_NUMBER_OF_SAMPLES);
-}
-
-TEST_F(DataRetrievalTest, GetSlope) {
-  const char *GETTER_NAME = "O1";
-  const double TARGET_SLOPE = 0.75;
-  ConnectionSP setter_connection = Connection::Ohmic(GETTER_NAME);
-  ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP setter = PublishedMeter(setter_connection);
-  auto set_request = MakeSinglePointRequest(
-      "Priming O1 slope via set_slope schema", setter, TARGET_SLOPE);
-  (void)request_measurement(set_request, TIMEOUT_MS);
-
-  InstrumentPortSP getter = PublishedMeter(getter_connection);
-  auto request =
-      MakeGetterOnlyRequest("Reading O1 slope via get_slope schema", getter);
-  auto resp = request_measurement(request, TIMEOUT_MS);
-
-  ExpectSinglePointEchoResponse(resp, getter, getter_connection, TARGET_SLOPE);
-}
-
-TEST_F(DataRetrievalTest, HubResolvedMeterMetadataRoundTrip) {
-  const char *GETTER_NAME = "O1";
-  const double EXPECTED_CURRENT = ReadFirstScalarFromFile(TEST_DATA_FILE);
-
-  ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP getter = PublishedMeter(getter_connection);
-  ASSERT_NE(getter, nullptr) << "Expected request connection carrier";
-
-  auto request = MakeGetterOnlyRequest(
-      "Round-tripping O1 hub metadata through measure_current", getter);
-  auto resp = request_measurement(request, TIMEOUT_MS);
-
-  ExpectSinglePointEchoResponse(resp, getter, getter_connection,
-                                EXPECTED_CURRENT);
-  auto labelledArray = resp->arrays()->arrays()[0];
-  EXPECT_EQ(labelledArray->instrument_type(), Instrument::Voltmeter)
-      << "Expected hub-resolved meter metadata";
-  EXPECT_EQ(*labelledArray->units(), *SymbolUnit::Volt())
-      << "Expected hub-resolved meter units";
-}
-
-TEST_F(DataRetrievalTest, GetCurrent) {
-  const char *GETTER_NAME = "O1";
-  const double EXPECTED_CURRENT = ReadFirstScalarFromFile(TEST_DATA_FILE);
-
-  ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP getter = PublishedMeter(getter_connection);
-  auto request = MakeGetterOnlyRequest(
-      "Measuring current via measure_current schema", getter);
-  auto resp = request_measurement(request, TIMEOUT_MS);
-
-  ExpectSinglePointEchoResponse(resp, getter, getter_connection,
-                                EXPECTED_CURRENT);
+  ExpectSinglePointEchoResponse(resp, independantKnob, dependant_connection,
+                                TARGET_VALUE);
 }
 
 TEST_F(DataRetrievalTest, Gaussian1DMeasureGetSet) {

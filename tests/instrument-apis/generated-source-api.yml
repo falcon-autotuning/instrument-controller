@@ -369,4 +369,3 @@ commands:
     description: resets the mock instrument
     parameters: []
     outputs: []
-

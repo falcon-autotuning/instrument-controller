@@ -80,7 +80,10 @@ test: build
 		echo "ERROR: $(CMAKE_BUILD_DIR)/env.sh not found."; \
 		exit 1; \
 	fi
-	. $(CMAKE_BUILD_DIR)/env.sh && LD_LIBRARY_PATH=$$VCPKG_INSTALLED_DIR/$$VCPKG_TRIPLET/lib:$$LD_LIBRARY_PATH ctest --preset $(PRESET) -V
+	. $(CMAKE_BUILD_DIR)/env.sh && \
+		PATH="$$VCPKG_INSTALLED_DIR/$$VCPKG_TRIPLET/bin:$$PATH" \
+		LD_LIBRARY_PATH="$$VCPKG_INSTALLED_DIR/$$VCPKG_TRIPLET/lib$${LD_LIBRARY_PATH:+:$$LD_LIBRARY_PATH}" \
+		ctest --preset $(PRESET) -V
 
 install: build
 	@echo "Installing $(PRESET) to $(INSTALL_PREFIX)..."
