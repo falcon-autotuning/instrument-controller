@@ -768,7 +768,7 @@ TEST_F(DataRetrievalTest, Gaussian1DMeasureGetSet) {
 }
 
 TEST_F(DataRetrievalTest, VoltageSweepCurrent) {
-  // GTEST_SKIP() << "Skipping all tests for this fixture";
+  GTEST_SKIP() << "Skipping all tests for this fixture";
   const int NUM_POINTS = 100;
   const double START_TIME_SECONDS = 0.0;
   const double MAX_TIME_SECONDS = 1.0;

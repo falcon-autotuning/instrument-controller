@@ -1,21 +1,29 @@
 -- Scalar fallback for a 1D sweep: one recorded GET_DATAPOINT per step/getter.
 -- Domain arrays are positional, in setter order, and contain native domains.
-local source = require("source")
-local multimeter = require("multimeter")
 local sweepMath = require("sweep_math")
 
-local function applyVector(setters, voltages)
+local function applyVector(ctx, setters, voltages)
   assert(#setters == #voltages, "one voltage is required per setter")
   for i, setter in ipairs(setters) do
-    source:setVoltage(setter:get_instrument_name(), setter:get_channel_group(),
-                      setter:get_channel(), voltages[i])
+    local command = instrument_call_stack.new({
+      instrument = setter:get_instrument_name(),
+      group = setter:get_channel_group(),
+      channel = setter:get_channel(),
+      command = "SET_VOLTAGE",
+    })
+    ctx:call(command, voltages[i])
   end
 end
 
-local function readGetters(getters)
+local function readGetters(ctx, getters)
   for _, getter in ipairs(getters) do
-    multimeter:getDatapoint(getter:get_instrument_name(), getter:get_channel_group(),
-                            getter:get_channel())
+    local command = instrument_call_stack.new({
+      instrument = getter:get_instrument_name(),
+      group = getter:get_channel_group(),
+      channel = getter:get_channel(),
+      command = "GET_DATAPOINT",
+    })
+    ctx:call(command)
   end
 end
 
@@ -23,8 +31,8 @@ local function Measure1DBuffered(ctx, setVoltageDomains, getters, numSteps, sett
   assert(#setVoltageDomains == #setters, "one domain is required per setter")
   local sweep = sweepMath.build1DSweep(sweepMath.limitsFromDomains(setVoltageDomains), numSteps)
   for _, voltages in ipairs(sweep) do
-    applyVector(setters, voltages)
-    readGetters(getters)
+    applyVector(ctx, setters, voltages)
+    readGetters(ctx, getters)
   end
 end
 

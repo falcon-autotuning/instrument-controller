@@ -1,21 +1,29 @@
 -- Scalar raster fallback: sweep X (fast) inside each Y (slow) step.
 -- Parameter names and order match the hub's encode2DBuffered manifest.
-local source = require("source")
-local multimeter = require("multimeter")
 local sweepMath = require("sweep_math")
 
-local function applyVector(setters, voltages)
+local function applyVector(ctx, setters, voltages)
   assert(#setters == #voltages, "one voltage is required per setter")
   for i, setter in ipairs(setters) do
-    source:setVoltage(setter:get_instrument_name(), setter:get_channel_group(),
-                      setter:get_channel(), voltages[i])
+    local command = instrument_call_stack.new({
+      instrument = setter:get_instrument_name(),
+      group = setter:get_channel_group(),
+      channel = setter:get_channel(),
+      command = "SET_VOLTAGE",
+    })
+    ctx:call(command, voltages[i])
   end
 end
 
-local function readGetters(getters)
+local function readGetters(ctx, getters)
   for _, getter in ipairs(getters) do
-    multimeter:getDatapoint(getter:get_instrument_name(), getter:get_channel_group(),
-                            getter:get_channel())
+    local command = instrument_call_stack.new({
+      instrument = getter:get_instrument_name(),
+      group = getter:get_channel_group(),
+      channel = getter:get_channel(),
+      command = "GET_DATAPOINT",
+    })
+    ctx:call(command)
   end
 end
 
@@ -26,10 +34,10 @@ local function Measure2DSweep(ctx, bufferedXSetters, bufferedGetters, bufferedYS
   local xSweep, ySweep = sweepMath.buildRasterSweep(setXVoltageDomains, numXSteps,
                                                    setYVoltageDomains, numYSteps)
   for _, yVoltages in ipairs(ySweep) do
-    applyVector(bufferedYSetters, yVoltages)
+    applyVector(ctx, bufferedYSetters, yVoltages)
     for _, xVoltages in ipairs(xSweep) do
-      applyVector(bufferedXSetters, xVoltages)
-      readGetters(bufferedGetters)
+      applyVector(ctx, bufferedXSetters, xVoltages)
+      readGetters(ctx, bufferedGetters)
     end
   end
 end
