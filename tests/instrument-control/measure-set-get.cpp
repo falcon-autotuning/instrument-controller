@@ -119,9 +119,8 @@ protected:
     const char *old_path = std::getenv("PATH");
     UseEnvironment("PATH", bin.string() + separator +
                                (old_path != nullptr ? old_path : ""));
-    UseEnvironment("INSTRUMENT_SCRIPT_SERVER_OPT_LUA_LIB",
-                   (scripts_ / "instrument-libs").string() + ";" +
-                       (scripts_ / "lua-utils").string());
+    // The scalar measurement and voltage readback use direct ISS calls.
+    UseEnvironment("INSTRUMENT_SCRIPT_SERVER_OPT_LUA_LIB", "");
     // The mock meter reads a fixture file; it is not electrically coupled to
     // the source. Source readback below independently verifies the write.
     WriteFile(run_dir_ / "meter.txt", "0.375\n0.625\n");
@@ -252,9 +251,9 @@ TEST_F(MeasurementScriptTest, measure_set_get) {
 
   v1::MeasureJobRequest readback;
   readback.set_script_path((scripts_ / "settings-scripts" /
-                            "get_many_voltages.lua").string());
-  Argument(readback, "getters", v1::LUA_TYPES_TARGET_ARRAY)
-      .mutable_t_array()->add_values("Source1|analog|1");
+                            "get_voltage.lua").string());
+  Argument(readback, "getter", v1::LUA_TYPES_TARGET)
+      .set_s("Source1|analog|1");
   const auto echo = RunScript(readback);
   ASSERT_TRUE(echo.standard_response().ok())
       << echo.standard_response().DebugString();
