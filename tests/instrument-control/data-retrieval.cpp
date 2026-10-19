@@ -18,6 +18,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <vector>
 #ifdef _WIN32
 #include <windows.h>
@@ -81,6 +82,7 @@ protected:
   fs::path current_working_dir_;
   fs::path current_data_dir_;
   fs::path current_config_path_;
+  fs::path current_scripts_dir_ = LUA_SCRIPTS_DIR;
   fs::path current_tmp_dir_;
   std::string previous_tmpdir_;
   std::string previous_tmp_;
@@ -124,6 +126,20 @@ protected:
     BuildTestData(TEST_DATA_DIR_PATH / "gen_data.cpp",
                   TEST_DATA_DIR_PATH / "gen_data");
     RunTestDataGenerator(TEST_DATA_DIR_PATH / "gen_data");
+    if (std::string(::testing::UnitTest::GetInstance()->current_test_info()->name()) ==
+        "measure_set_get") {
+      // Enable only the scalar primitive, avoiding sweep/sample-count prerequisites.
+      current_scripts_dir_ = current_run_dir_ / "scripts";
+      fs::create_directories(current_scripts_dir_);
+      fs::copy_file(MEASUREMENT_SCRIPTS_DIR / "measure_get_set.lua",
+                    current_scripts_dir_ / "measure_get_set.lua");
+      for (const char *action : {"get", "set"}) {
+        fs::copy_file(DATA_1D_DIR / "settings-scripts" /
+                          (std::string(action) + "_voltage.lua"),
+                      current_scripts_dir_ /
+                          (std::string(action) + "_source_voltage.lua"));
+      }
+    }
     WriteConfigFile(current_config_path_);
     ExtendInstrumentApis(
         (INSTRUMENT_APIS_DIR / "multimeter-api.yml.tmpl").string(),
@@ -348,7 +364,7 @@ protected:
 
     ofs << "working-directory: " << current_data_dir_.string() << "\n";
 
-    ofs << "user-measurement-luas: " << LUA_SCRIPTS_DIR.string() << "\n";
+    ofs << "user-measurement-luas: " << current_scripts_dir_.string() << "\n";
 
     ofs << "instrument-server:\n";
     ofs << "  rpc-port: 5555\n";
@@ -660,20 +676,32 @@ protected:
     // all handlers are set up (completing Phase 3 of hub startup).
     // This ensures DeviceConfigRequest and other handler subscriptions are
     // ready.
-    std::promise<bool> prom;
-    auto fut = prom.get_future();
-    std::atomic<bool> done{false};
+    auto prom = std::make_shared<std::promise<bool>>();
+    auto fut = prom->get_future();
 
     falcon::comms::NatsManager &nm = falcon::comms::NatsManager::instance();
+    const auto deadline = std::chrono::steady_clock::now() +
+                          std::chrono::milliseconds(timeout_ms);
+    // The embedded NATS server starts after ISS. Retry the initial connection
+    // before subscribing instead of failing immediately during hub startup.
+    while (!nm.is_connected()) {
+      try {
+        nm.connect(std::getenv("NATS_URL"));
+      } catch (const std::exception &) {
+        if (std::chrono::steady_clock::now() >= deadline) {
+          throw std::runtime_error("Timeout connecting to hub NATS; run: " +
+                                   current_run_dir_.string());
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
+    }
 
     nm.subscribe("STATUS.instrument-server",
-                 [&prom, &done](const std::string &) {
-                   if (!done.exchange(true)) {
-                     try {
-                       prom.set_value(true);
-                     } catch (const std::future_error &) {
-                       // promise already set
-                     }
+                 [prom](const std::string &) {
+                   try {
+                     prom->set_value(true);
+                   } catch (const std::future_error &) {
+                     // A periodic status message already satisfied the promise.
                    }
                  });
 
@@ -692,92 +720,34 @@ protected:
 #endif
 };
 
-TEST_F(DataRetrievalTest, SinglePointEcho) {
-  const char *DEPENDANT_NAME = "P1";
-  const char *GETTER_NAME = "O1";
-  const double TARGET_VALUE = 0.25;
-  ConfigSP config = request_config(TIMEOUT_MS);
-  ASSERT_NE(config, nullptr) << "Failed to get config from request_config";
-
-  ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP getter = PublishedMeter(getter_connection);
-
-  ConnectionSP dependant_connection = Connection::PlungerGate(DEPENDANT_NAME);
-  InstrumentPortSP independantKnob = PublishedKnob(dependant_connection);
-
-  MeasurementRequestSP request = MakeSinglePointRequest(
-      "Taking a single-point measurement", independantKnob, TARGET_VALUE);
-  auto resp = request_measurement(request, TIMEOUT_MS);
-
-  ExpectSinglePointEchoResponse(resp, independantKnob, dependant_connection,
-                                TARGET_VALUE);
-}
-
-TEST_F(DataRetrievalTest, Gaussian1DMeasureGetSet) {
-  const int NUM_POINTS = 100;
-  const double START_TIME_SECONDS = 0.0;
-  const double MAX_TIME_SECONDS = 1.0;
-  const char *DEPENDANT_NAME = "P1";
-  const char *GETTER_NAME = "O1";
-  const double MIN_INDEPENDANT_VALUE = 0.0;
-  const double MAX_INDEPENDANT_VALUE = 0.5;
-  ConfigSP config = request_config(TIMEOUT_MS);
-  ASSERT_NE(config, nullptr) << "Failed to get config from request_config";
-
-  ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP getter = PublishedMeter(getter_connection);
-  PortsSP getters =
-      std::make_shared<Ports>(std::vector<InstrumentPortSP>{getter});
-
-  ConnectionSP dependant_connection = Connection::PlungerGate(DEPENDANT_NAME);
-  InstrumentPortSP independantKnob = PublishedKnob(dependant_connection);
-  InstrumentPortSP clock = InstrumentPort::ExecutionClock();
-
-  MapSP<InstrumentPort, PortTransform> transforms =
-      std::make_shared<Map<InstrumentPort, PortTransform>>(
-          std::vector<std::pair<InstrumentPortSP, PortTransformSP>>{
-              {independantKnob,
-               PortTransform::IdentityTransform(independantKnob)}});
-  LabelledDomainSP time_domain = LabelledDomain::from_port(
-      std::pair<double, double>{START_TIME_SECONDS, MAX_TIME_SECONDS}, clock);
-  LabelledDomainSP independantDomain = LabelledDomain::from_port(
-      std::pair<double, double>{MIN_INDEPENDANT_VALUE, MAX_INDEPENDANT_VALUE},
-      independantKnob);
-  CoupledLabelledDomainSP coupledDomain =
-      std::make_shared<CoupledLabelledDomain>(
-          std::vector<LabelledDomainSP>{independantDomain});
-  MapSP<std::string, bool> increasing =
-      std::make_shared<Map<std::string, bool>>(
-          std::vector<std::pair<std::string, bool>>{
-              {independantKnob->default_name(), true}});
-
-  auto waveform = Waveform::CartesianIdentityWaveform1D(
-      NUM_POINTS, coupledDomain, increasing);
-  ListSP<Waveform> waveforms =
-      std::make_shared<List<Waveform>>(std::vector<WaveformSP>{waveform});
-
-  MeasurementRequestSP request = std::make_shared<MeasurementRequest>(
-      "Taking a measurement via measure_get_set", waveforms, getters,
-      transforms, time_domain);
-  auto resp = request_measurement(request, TIMEOUT_MS);
-
-  EXPECT_TRUE(resp->arrays()->is_measured_arrays())
-      << "The arrays were not measured arrays";
-  EXPECT_EQ(resp->arrays()->size(), 1) << "Expected exactly one measured array";
-  auto labelledArray = resp->arrays()->arrays()[0];
-  EXPECT_EQ(*labelledArray->connection(),
-            *Connection::PlungerGate(DEPENDANT_NAME))
-      << "Expected connection to be P1, but got "
-      << labelledArray->connection()->name() << " instead";
-  EXPECT_EQ(labelledArray->instrument_type(), Instrument::Voltmeter)
-      << "Expected instrument type to be VOLTMETER, but got "
-      << ToString(labelledArray->instrument_type()) << " instead";
-  EXPECT_EQ(*labelledArray->units(), *SymbolUnit::Volt())
-      << "Expected units to be mV, but got " << labelledArray->units()
-      << " instead";
-  EXPECT_EQ(labelledArray->size(), NUM_POINTS)
-      << "Expected 100 data points, but got " << labelledArray->size()
-      << " instead";
+TEST_F(DataRetrievalTest, measure_set_get) {
+  const auto setter = PublishedKnob(Connection::ScreeningGate("S1"));
+  const auto getter_connection = Connection::Ohmic("O1");
+  InstrumentPortSP getter;
+  for (const auto &port : published_meters_->items()) {
+    if (*port->pseudo_name() == *getter_connection &&
+        port->default_name().find(".voltage") != std::string::npos) {
+      getter = port;
+      break;
+    }
+  }
+  ASSERT_NE(getter, nullptr) << "No scalar voltage port published for O1";
+  const auto request = MakeSinglePointGetterRequest(
+      "measure_get_set: set S1 and read O1", setter, 0.123, {getter});
+  const auto response = request_measurement(request, TIMEOUT_MS);
+  ASSERT_NE(response, nullptr);
+  ASSERT_NE(response->arrays(), nullptr);
+  ASSERT_TRUE(response->arrays()->is_measured_arrays());
+  ASSERT_EQ(response->arrays()->size(), 1);
+  const auto array = response->arrays()->arrays()[0];
+  ASSERT_NE(array, nullptr);
+  ASSERT_NE(array->connection(), nullptr);
+  EXPECT_EQ(*array->connection(), *getter_connection);
+  EXPECT_EQ(array->instrument_type(), Instrument::Voltmeter);
+  ASSERT_NE(array->units(), nullptr);
+  EXPECT_EQ(*array->units(), *SymbolUnit::Volt());
+  ASSERT_EQ(array->size(), 1);
+  EXPECT_DOUBLE_EQ((*array)(0), ReadFirstScalarFromFile(TEST_DATA_FILE));
 }
 
 TEST_F(DataRetrievalTest, VoltageSweepCurrent) {

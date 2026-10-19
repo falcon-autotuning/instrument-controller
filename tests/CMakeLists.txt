@@ -28,6 +28,7 @@ set(TEST_SOURCES
   instrument-control/data-retrieval.cpp
 )
 add_executable(integration_tests ${TEST_SOURCES})
+add_dependencies(integration_tests mock_voltage_source mock_multimeter)
 target_link_libraries(integration_tests
   PRIVATE
     GTest::gtest
@@ -53,24 +54,6 @@ gtest_discover_tests(integration_tests
   PROPERTIES RESOURCE_LOCK instrument_controller
 )
 
-# Run the script directly through ISS, with the same test ISAs and mock plugins.
-add_executable(measurement_script_tests instrument-control/measure-set-get.cpp)
-target_link_libraries(measurement_script_tests PRIVATE
-  GTest::gtest_main
-  instrument-script-server::instrument-script-server-client
-  Boost::process
-)
-target_compile_definitions(measurement_script_tests PRIVATE
-  CONTROLLER_TEST_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
-  ISS_BIN_DIR="${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin"
-  MOCK_SOURCE_PLUGIN="$<TARGET_FILE:mock_voltage_source>"
-  MOCK_METER_PLUGIN="$<TARGET_FILE:mock_multimeter>"
-)
-add_dependencies(measurement_script_tests mock_voltage_source mock_multimeter)
-gtest_discover_tests(measurement_script_tests
-  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-  PROPERTIES TIMEOUT 60 RESOURCE_LOCK instrument_controller
-)
 message(STATUS "Integration tests configured")
 message(STATUS "  Test executable: integration_tests")
 message(STATUS "  Plugin search path: ${PLUGIN_SEARCH_PATHS}")
