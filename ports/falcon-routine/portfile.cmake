@@ -3,6 +3,8 @@ vcpkg_from_github(
     REPO falcon-autotuning/falcon-routine
     REF v${VERSION}
     SHA512 c68e49f8f1357b86d2627596ab80d75d82ee5f814a7a51f9cb7f34aedae94f534114423d151553b22de961e307eb505f85ca621d5fc12b9637b2f19873236fc1
+    PATCHES
+            fix-temp-database.patch
 )
 
 

@@ -1,6 +1,7 @@
 find_package(instrument-script-server CONFIG REQUIRED)
 find_package(GTest                    CONFIG REQUIRED)
 find_package(falcon-routine           CONFIG REQUIRED)
+find_package(falcon-database          CONFIG REQUIRED)
 find_package(Boost REQUIRED COMPONENTS process)
 include(GoogleTest)
 
@@ -35,6 +36,7 @@ target_link_libraries(integration_tests
     GTest::gtest_main
     instrument-script-server::instrument-script-server-core
     falcon::falcon-routine
+    falcon::falcon-database
     falcon-core::falcon-core
     Boost::process
 )

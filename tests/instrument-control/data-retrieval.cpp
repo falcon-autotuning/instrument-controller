@@ -10,6 +10,7 @@
 #include <falcon-core/instrument_interfaces/names/InstrumentPort.hpp>
 #include <falcon-core/math/Axes.hpp>
 #include <falcon-core/physics/device_structures/Connection.hpp>
+#include <falcon-database/DatabaseConnection.hpp>
 #include <falcon-routine/hub.hpp>
 #include <filesystem>
 #include <fstream>
@@ -194,44 +195,7 @@ protected:
     // Sets up the files for each measurement
     current_config_ = ConfigureScripts();
     StageConfiguredFiles(current_config_);
-    // const std::string test_name =
-    //     ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    // const bool only_1D = test_name == "measure_2D_buffered_with_only_1D";
-    // const bool many_1D = test_name == "measure_1D_many_knobs_and_meters";
-    // buffered_measurement_ = test_name == "measure_1D_buffered" ||
-    //                         test_name == "measure_2D_buffered" || only_1D ||
-    //                         many_1D;
-    // const bool settings_test = test_name == "set_then_get_then_set_and_get";
-    // if (test_name == "measure_set_get" || buffered_measurement_ ||
-    //     settings_test) {
-    //   current_scripts_dir_ = current_run_dir_ / "scripts";
-    //   fs::create_directories(current_scripts_dir_);
-    //   // Settings requests need only get/set scripts. Measurement tests stage
-    //   // just their selected primitive, preventing lower-dimensional
-    //   fallback. if (!settings_test) {
-    //     const std::string script =
-    //         (only_1D || many_1D)
-    //             ? "measure_1D_buffered.lua"
-    //             : (buffered_measurement_ ? test_name + ".lua"
-    //                                      : "measure_get_set.lua");
-    //     fs::copy_file(MEASUREMENT_SCRIPTS_DIR / script,
-    //                   current_scripts_dir_ / script);
-    //   }
-    //   for (const char *action : {"get", "set"}) {
-    //     fs::copy_file(DATA_1D_DIR / "settings-scripts" /
-    //                       (std::string(action) + "_source_voltage.lua"),
-    //                   current_scripts_dir_ /
-    //                       (std::string(action) + "_source_voltage.lua"));
-    //   }
-    //   if (buffered_measurement_) {
-    //     fs::copy_file(DATA_1D_DIR /
-    //                       "settings-scripts/get_number_of_samples.lua",
-    //                   current_scripts_dir_ / "get_number_of_samples.lua");
-    //     fs::create_directories(current_run_dir_ / "lua-utils");
-    //     fs::copy_file(DATA_1D_DIR / "lua-utils/sweep_math.lua",
-    //                   current_run_dir_ / "lua-utils/sweep_math.lua");
-    //   }
-    // }
+
     WriteConfigFile(current_config_path_);
     ExtendInstrumentApis(
         (INSTRUMENT_APIS_DIR / "multimeter-api.yml.tmpl").string(),
@@ -558,7 +522,7 @@ protected:
     ofs << "      plugin: "
         << (fs::path(PLUGIN_OUTPUT_DIR) / "mock_multimeter.so").string()
         << "\n";
-    ofs << "      type: voltmeter\n";
+    ofs << "      type: amnmeter\n";
     ofs << "      characteristics:\n";
     ofs << "        - identifier: sample_rate\n";
     ofs << "          readCommand: {}\n";
@@ -841,7 +805,7 @@ protected:
     ASSERT_NE(array, nullptr);
     ASSERT_NE(array->connection(), nullptr);
     EXPECT_EQ(*array->connection(), *getter_connection);
-    EXPECT_EQ(array->instrument_type(), Instrument::Voltmeter);
+    EXPECT_EQ(array->instrument_type(), Instrument::Amnmeter);
     ASSERT_NE(array->units(), nullptr);
     EXPECT_EQ(*array->units(), *SymbolUnit::Volt());
     ASSERT_EQ(array->size(), sample_count);
@@ -1204,7 +1168,7 @@ TEST_F(MeasureSetGetTest, measure_set_get) {
   ASSERT_NE(array, nullptr);
   ASSERT_NE(array->connection(), nullptr);
   EXPECT_EQ(*array->connection(), *getter_connection);
-  EXPECT_EQ(array->instrument_type(), Instrument::Voltmeter);
+  EXPECT_EQ(array->instrument_type(), Instrument::Amnmeter);
   ASSERT_NE(array->units(), nullptr);
   EXPECT_EQ(*array->units(), *SymbolUnit::Volt());
   ASSERT_EQ(array->size(), 2);
@@ -1416,7 +1380,7 @@ TEST_F(Buffered1DTest, measure_1D_many_knobs_and_meters) {
     std::ifstream expected_data(expected_file->second);
     ASSERT_TRUE(expected_data.is_open());
     expected_files.erase(expected_file);
-    EXPECT_EQ(array->instrument_type(), Instrument::Voltmeter);
+    EXPECT_EQ(array->instrument_type(), Instrument::Amnmeter);
 
     ASSERT_NE(array->units(), nullptr);
     EXPECT_EQ(*array->units(), *SymbolUnit::Volt());
@@ -1447,6 +1411,32 @@ TEST_F(Buffered1DTest, measure_2D_buffered_with_only_1D) {
   ExpectBufferedMeasurement(
       {Connection::ScreeningGate("S1"), Connection::ScreeningGate("S2")},
       {3, 2});
+}
+
+TEST_F(Buffered1DTest, ramp_updates_device_state) {
+  const auto before = request_device_state(TIMEOUT_MS);
+
+  ASSERT_NE(before, nullptr);
+
+  ExpectVoltageState(before, {
+                                 {"S1", 0.0},
+                             });
+
+  auto end_point = std::make_shared<falcon_core::math::Point>();
+
+  end_point->insert(
+      Connection::ScreeningGate("S1"),
+      std::make_shared<falcon_core::math::Quantity>(0.5, SymbolUnit::Volt()));
+
+  ASSERT_TRUE(ramp(end_point, 0.1, TIMEOUT_MS));
+
+  const auto after = request_device_state(TIMEOUT_MS);
+
+  ASSERT_NE(after, nullptr);
+
+  ExpectVoltageState(after, {
+                                {"S1", 0.5},
+                            });
 }
 
 class Buffered2DTest : public BufferedMeasurementTest {
