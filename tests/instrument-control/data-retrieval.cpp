@@ -79,6 +79,11 @@ const fs::path WORKING_DIR = TEST_ROOT_DIR / "hub";
 const fs::path TEST_RUNS_DIR = TEST_ROOT_DIR / "test-runs";
 const double ABS_ERROR = 1e-4;
 
+struct ScriptFixtureConfig {
+  std::vector<fs::path> staged_files;
+  bool stage_sweep_math = false;
+};
+
 class DataRetrievalTest : public ::testing::Test {
 protected:
   fs::path current_run_dir_;
@@ -99,7 +104,41 @@ protected:
   PortsSP published_knobs_;
   PortsSP published_meters_;
   PortsSP published_settings_;
-  bool buffered_measurement_ = false;
+  ScriptFixtureConfig current_config_;
+
+  void StageConfiguredFiles(const ScriptFixtureConfig &cfg) {
+    if (cfg.staged_files.empty()) {
+      return;
+    }
+
+    current_scripts_dir_ = current_run_dir_ / "scripts";
+    fs::create_directories(current_scripts_dir_);
+
+    for (const auto &file : cfg.staged_files) {
+      fs::path source;
+
+      if (file.string().find("measure_") == 0) {
+        source = MEASUREMENT_SCRIPTS_DIR / file;
+      } else if (file == "get_source_voltage.lua" ||
+                 file == "set_source_voltage.lua" ||
+                 file == "get_number_of_samples.lua" ||
+                 file == "set_number_of_samples.lua") {
+        source = DATA_1D_DIR / "settings-scripts" / file;
+      } else {
+        FAIL() << "Unknown staged file: " << file.string();
+      }
+
+      fs::copy_file(source, current_scripts_dir_ / file.filename(),
+                    fs::copy_options::overwrite_existing);
+    }
+
+    if (cfg.stage_sweep_math) {
+      fs::create_directories(current_run_dir_ / "lua-utils");
+
+      fs::copy_file(DATA_1D_DIR / "lua-utils/sweep_math.lua",
+                    current_run_dir_ / "lua-utils/sweep_math.lua");
+    }
+  }
 
   void SetUp() override {
     // Initialize paths from environment variables here, not at global scope
@@ -134,44 +173,47 @@ protected:
     BuildTestData(TEST_DATA_DIR_PATH / "gen_data.cpp",
                   TEST_DATA_DIR_PATH / "gen_data");
     RunTestDataGenerator(TEST_DATA_DIR_PATH / "gen_data");
-    const std::string test_name =
-        ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    const bool only_1D = test_name == "measure_2D_buffered_with_only_1D";
-    const bool many_1D = test_name == "measure_1D_many_knobs_and_meters";
-    buffered_measurement_ = test_name == "measure_1D_buffered" ||
-                            test_name == "measure_2D_buffered" || only_1D ||
-                            many_1D;
-    const bool settings_test = test_name == "set_then_get_then_set_and_get";
-    if (test_name == "measure_set_get" || buffered_measurement_ ||
-        settings_test) {
-      current_scripts_dir_ = current_run_dir_ / "scripts";
-      fs::create_directories(current_scripts_dir_);
-      // Settings requests need only get/set scripts. Measurement tests stage
-      // just their selected primitive, preventing lower-dimensional fallback.
-      if (!settings_test) {
-        const std::string script = (only_1D || many_1D)
-                                       ? "measure_1D_buffered.lua"
-                                       : (buffered_measurement_
-                                              ? test_name + ".lua"
-                                              : "measure_get_set.lua");
-        fs::copy_file(MEASUREMENT_SCRIPTS_DIR / script,
-                      current_scripts_dir_ / script);
-      }
-      for (const char *action : {"get", "set"}) {
-        fs::copy_file(DATA_1D_DIR / "settings-scripts" /
-                          (std::string(action) + "_source_voltage.lua"),
-                      current_scripts_dir_ /
-                          (std::string(action) + "_source_voltage.lua"));
-      }
-      if (buffered_measurement_) {
-        fs::copy_file(DATA_1D_DIR /
-                          "settings-scripts/get_number_of_samples.lua",
-                      current_scripts_dir_ / "get_number_of_samples.lua");
-        fs::create_directories(current_run_dir_ / "lua-utils");
-        fs::copy_file(DATA_1D_DIR / "lua-utils/sweep_math.lua",
-                      current_run_dir_ / "lua-utils/sweep_math.lua");
-      }
-    }
+    // Sets up the files for each measurement
+    current_config_ = ConfigureScripts();
+    StageConfiguredFiles(current_config_);
+    // const std::string test_name =
+    //     ::testing::UnitTest::GetInstance()->current_test_info()->name();
+    // const bool only_1D = test_name == "measure_2D_buffered_with_only_1D";
+    // const bool many_1D = test_name == "measure_1D_many_knobs_and_meters";
+    // buffered_measurement_ = test_name == "measure_1D_buffered" ||
+    //                         test_name == "measure_2D_buffered" || only_1D ||
+    //                         many_1D;
+    // const bool settings_test = test_name == "set_then_get_then_set_and_get";
+    // if (test_name == "measure_set_get" || buffered_measurement_ ||
+    //     settings_test) {
+    //   current_scripts_dir_ = current_run_dir_ / "scripts";
+    //   fs::create_directories(current_scripts_dir_);
+    //   // Settings requests need only get/set scripts. Measurement tests stage
+    //   // just their selected primitive, preventing lower-dimensional
+    //   fallback. if (!settings_test) {
+    //     const std::string script =
+    //         (only_1D || many_1D)
+    //             ? "measure_1D_buffered.lua"
+    //             : (buffered_measurement_ ? test_name + ".lua"
+    //                                      : "measure_get_set.lua");
+    //     fs::copy_file(MEASUREMENT_SCRIPTS_DIR / script,
+    //                   current_scripts_dir_ / script);
+    //   }
+    //   for (const char *action : {"get", "set"}) {
+    //     fs::copy_file(DATA_1D_DIR / "settings-scripts" /
+    //                       (std::string(action) + "_source_voltage.lua"),
+    //                   current_scripts_dir_ /
+    //                       (std::string(action) + "_source_voltage.lua"));
+    //   }
+    //   if (buffered_measurement_) {
+    //     fs::copy_file(DATA_1D_DIR /
+    //                       "settings-scripts/get_number_of_samples.lua",
+    //                   current_scripts_dir_ / "get_number_of_samples.lua");
+    //     fs::create_directories(current_run_dir_ / "lua-utils");
+    //     fs::copy_file(DATA_1D_DIR / "lua-utils/sweep_math.lua",
+    //                   current_run_dir_ / "lua-utils/sweep_math.lua");
+    //   }
+    // }
     WriteConfigFile(current_config_path_);
     ExtendInstrumentApis(
         (INSTRUMENT_APIS_DIR / "multimeter-api.yml.tmpl").string(),
@@ -258,6 +300,9 @@ protected:
     return TEST_RUNS_DIR /
            (slug + "_" + std::to_string(pid) + "_" + std::to_string(now));
   }
+  [[nodiscard]] virtual ScriptFixtureConfig ConfigureScripts() const {
+    return {};
+  }
   void ConfigurePerTestTempDir() {
     if (const char *value = std::getenv("TMPDIR")) {
       had_tmpdir_ = true;
@@ -332,7 +377,7 @@ protected:
 #else
     pid_t pid = fork();
     if (pid == 0) {
-      if (buffered_measurement_) {
+      if (current_config_.stage_sweep_math) {
         std::string helpers = (current_run_dir_ / "lua-utils").string();
         if (const char *existing =
                 std::getenv("INSTRUMENT_SCRIPT_SERVER_OPT_LUA_LIB")) {
@@ -782,6 +827,7 @@ protected:
       EXPECT_DOUBLE_EQ(array->raw_data()[i], expected) << "sample " << i;
     }
   }
+
   MeasurementRequestSP MakeMultiTargetPointRequest(
       const std::string &message, const std::string &measurement_name,
       const std::vector<std::pair<InstrumentPortSP, double>> &targets) {
@@ -931,7 +977,20 @@ protected:
 #endif
 };
 
-TEST_F(DataRetrievalTest, set_then_get_then_set_and_get) {
+class SettingVoltageTest : public DataRetrievalTest {
+protected:
+  [[nodiscard]] ScriptFixtureConfig ConfigureScripts() const override {
+    return {
+        .staged_files =
+            {
+                "get_source_voltage.lua",
+                "set_source_voltage.lua",
+            },
+    };
+  }
+};
+
+TEST_F(SettingVoltageTest, set_then_get_then_set_and_get) {
   const auto setter =
       PublishedSetting(Connection::ScreeningGate("S1"),
                        InstrumentCharacteristic::Source_Voltage);
@@ -1013,7 +1072,21 @@ TEST_F(DataRetrievalTest, set_then_get_then_set_and_get) {
   performGet(0.456);
 }
 
-TEST_F(DataRetrievalTest, measure_set_get) {
+class MeasureSetGetTest : public DataRetrievalTest {
+protected:
+  [[nodiscard]] ScriptFixtureConfig ConfigureScripts() const override {
+    return {
+        .staged_files =
+            {
+                "measure_get_set.lua",
+                "get_source_voltage.lua",
+                "set_source_voltage.lua",
+            },
+    };
+  }
+};
+
+TEST_F(MeasureSetGetTest, measure_set_get) {
   const auto setter = PublishedKnob(Connection::ScreeningGate("S1"));
   const auto getter_connection = Connection::Ohmic("O1");
   InstrumentPortSP getter;
@@ -1043,17 +1116,110 @@ TEST_F(DataRetrievalTest, measure_set_get) {
   EXPECT_DOUBLE_EQ((*array)(0), ReadFirstScalarFromFile(TEST_DATA_FILE));
 }
 
-TEST_F(DataRetrievalTest, measure_1D_buffered) {
+class BufferedMeasurementTest : public DataRetrievalTest {
+protected:
+  [[nodiscard]] ScriptFixtureConfig ConfigureScripts() const override {
+    return {
+        .staged_files =
+            {
+                "get_source_voltage.lua",
+                "set_source_voltage.lua",
+                "get_number_of_samples.lua",
+                "set_number_of_samples.lua",
+            },
+        .stage_sweep_math = true,
+    };
+  }
+};
+
+class Buffered1DTest : public BufferedMeasurementTest {
+protected:
+  [[nodiscard]] ScriptFixtureConfig ConfigureScripts() const override {
+    auto cfg = BufferedMeasurementTest::ConfigureScripts();
+    cfg.staged_files.emplace_back("measure_1D_buffered.lua");
+    return cfg;
+  }
+};
+
+TEST_F(Buffered1DTest, measure_1D_buffered) {
   ExpectBufferedMeasurement({Connection::ScreeningGate("S1")}, {4});
 }
 
-TEST_F(DataRetrievalTest, measure_2D_buffered) {
-  ExpectBufferedMeasurement(
-      {Connection::ScreeningGate("S1"), Connection::ScreeningGate("S2")},
-      {3, 2});
+TEST_F(Buffered1DTest, measure_1D_buffered_with_averaging) {
+  constexpr int bins = 10;
+
+  const auto sample_setting = PublishedSetting(
+      Connection::Ohmic("O1"), InstrumentCharacteristic::Number_Of_Samples);
+  ASSERT_NE(sample_setting, nullptr);
+  auto setters =
+      std::make_shared<Map<InstrumentPort, falcon_core::math::Quantity>>();
+  setters->insert(sample_setting, std::make_shared<falcon_core::math::Quantity>(
+                                      bins, SymbolUnit::Dimensionless()));
+  auto settingRequest = MakeSettingRequest("set number of samples",
+                                           std::make_shared<Ports>(), setters);
+  auto settingResponse = request_setting(settingRequest, TIMEOUT_MS);
+  ASSERT_NE(settingResponse, nullptr);
+
+  // Build the same request as measure_1D_buffered
+  const auto getter_connection = Connection::Ohmic("O1");
+  InstrumentPortSP getter;
+  for (const auto &port : published_meters_->items()) {
+    if (*port->pseudo_name() == *getter_connection &&
+        port->default_name().find(".stream") != std::string::npos) {
+      getter = port;
+      break;
+    }
+  }
+  ASSERT_NE(getter, nullptr);
+  const auto setterPort = PublishedKnob(Connection::ScreeningGate("S1"));
+  auto transforms = std::make_shared<Map<InstrumentPort, PortTransform>>();
+  transforms->insert(setterPort, PortTransform::IdentityTransform(setterPort));
+  auto domain =
+      std::make_shared<CoupledLabelledDomain>(std::vector<LabelledDomainSP>{
+          LabelledDomain::from_port({-0.1, 0.1}, setterPort),
+      });
+  auto direction = std::make_shared<Map<std::string, bool>>();
+  direction->insert(setterPort->instrument_facing_name(), true);
+  auto waveform = Waveform::CartesianIdentityWaveform(
+      std::make_shared<falcon_core::math::Axes<int>>(std::vector<int>{4}),
+      std::make_shared<falcon_core::math::Axes<CoupledLabelledDomain>>(
+          std::vector<CoupledLabelledDomainSP>{domain}),
+      std::make_shared<falcon_core::math::Axes<Map<std::string, bool>>>(
+          std::vector<MapSP<std::string, bool>>{direction}));
+  auto request = std::make_shared<MeasurementRequest>(
+      "buffered averaged sweep",
+      std::make_shared<List<Waveform>>(std::vector<WaveformSP>{waveform}),
+      std::make_shared<Ports>(std::vector<InstrumentPortSP>{getter}),
+      transforms,
+      LabelledDomain::from_port({0.0, 1.0}, InstrumentPort::ExecutionClock()));
+
+  const auto response = request_measurement(request, TIMEOUT_MS);
+  ASSERT_NE(response, nullptr);
+  ASSERT_NE(response->arrays(), nullptr);
+  ASSERT_EQ(response->arrays()->size(), 1);
+  const auto array = response->arrays()->arrays()[0];
+  ASSERT_NE(array, nullptr);
+  // Verify averaged values
+  ASSERT_EQ(array->size(), 5u);
+
+  std::ifstream expected_data(TEST_DATA_FILE);
+  ASSERT_TRUE(expected_data.is_open());
+
+  for (size_t point = 0; point < 5; ++point) {
+    double sum = 0.0;
+
+    for (int i = 0; i < bins; ++i) {
+      double value;
+      ASSERT_TRUE(static_cast<bool>(expected_data >> value));
+      sum += value;
+    }
+    const double expected = sum / bins;
+    EXPECT_NEAR(array->raw_data()[point], expected, ABS_ERROR)
+        << "point " << point;
+  }
 }
 
-TEST_F(DataRetrievalTest, measure_1D_many_knobs_and_meters) {
+TEST_F(Buffered1DTest, measure_1D_many_knobs_and_meters) {
   std::vector<ConnectionSP> connections = {
       Connection::ScreeningGate("S1"),
       Connection::ScreeningGate("S2"),
@@ -1181,8 +1347,23 @@ TEST_F(DataRetrievalTest, measure_1D_many_knobs_and_meters) {
   EXPECT_TRUE(expected_files.empty());
 }
 
-TEST_F(DataRetrievalTest, measure_2D_buffered_with_only_1D) {
+TEST_F(Buffered1DTest, measure_2D_buffered_with_only_1D) {
   // The fixture stages only the 1D primitive for this 2D request.
+  ExpectBufferedMeasurement(
+      {Connection::ScreeningGate("S1"), Connection::ScreeningGate("S2")},
+      {3, 2});
+}
+
+class Buffered2DTest : public BufferedMeasurementTest {
+protected:
+  [[nodiscard]] ScriptFixtureConfig ConfigureScripts() const override {
+    auto cfg = BufferedMeasurementTest::ConfigureScripts();
+    cfg.staged_files.emplace_back("measure_2D_buffered.lua");
+    return cfg;
+  }
+};
+
+TEST_F(Buffered2DTest, measure_2D_buffered) {
   ExpectBufferedMeasurement(
       {Connection::ScreeningGate("S1"), Connection::ScreeningGate("S2")},
       {3, 2});
