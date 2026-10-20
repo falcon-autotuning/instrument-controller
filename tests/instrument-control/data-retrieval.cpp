@@ -5,6 +5,7 @@
 #include <cmath>
 #include <falcon-comms/natsManager.hpp>
 #include <falcon-comms/runtime_comms.hpp>
+#include <falcon-core/communications/HDF5Data.hpp>
 #include <falcon-core/generic/Map.hpp>
 #include <falcon-core/instrument_interfaces/Waveform.hpp>
 #include <falcon-core/instrument_interfaces/names/InstrumentPort.hpp>
@@ -111,6 +112,7 @@ protected:
   fs::path current_config_path_;
   fs::path current_scripts_dir_ = LUA_SCRIPTS_DIR;
   fs::path current_tmp_dir_;
+  std::string current_data_catalog_;
   std::string previous_tmpdir_;
   std::string previous_tmp_;
   std::string previous_temp_;
@@ -181,6 +183,7 @@ protected:
     current_run_dir_ = MakeCurrentRunDir();
     current_working_dir_ = current_run_dir_ / "hub";
     current_data_dir_ = current_run_dir_ / "data";
+    current_data_catalog_ = "measurements.db";
     current_config_path_ = current_run_dir_ / "test-config.yaml";
     current_tmp_dir_ = current_run_dir_ / "tmp";
 
@@ -493,6 +496,7 @@ protected:
     ofs << "database:\n";
     ofs << "  local-database: " << current_data_dir_.string() << "\n";
     ofs << "  local-cache: " << current_data_dir_.string() << "/cache\n";
+    ofs << "  catalog-file: " << current_data_catalog_ << "\n";
     ofs << "  owner: integration-test\n";
 
     ofs << "working-directory: " << current_data_dir_.string() << "\n";
@@ -1202,6 +1206,73 @@ protected:
 
 TEST_F(Buffered1DTest, measure_1D_buffered) {
   ExpectBufferedMeasurement({Connection::ScreeningGate("S1")}, {4});
+}
+
+TEST_F(Buffered1DTest, measure_1D_buffered_persists_data) {
+  // Four divisions include both endpoints, giving five measured samples.
+  // The hub writes its measurement store before acknowledging this request.
+  constexpr size_t sample_count = 5;
+  ASSERT_NO_FATAL_FAILURE(
+      ExpectBufferedMeasurement({Connection::ScreeningGate("S1")}, {4}));
+
+  // Reopen the persisted data after the writer has exited, rather than
+  // inspecting only the in-memory measurement response.
+  StopInstrumentHub();
+  ASSERT_TRUE(fs::is_regular_file(current_data_dir_ / "measurements.db"));
+  std::vector<fs::path> measurement_files;
+  for (const auto &entry : fs::recursive_directory_iterator(current_data_dir_)) {
+    if (entry.is_regular_file() && entry.path().extension() == ".h5") {
+      measurement_files.push_back(entry.path());
+    }
+  }
+  // This test has a private store and performs exactly one measurement.
+  ASSERT_EQ(measurement_files.size(), 1);
+  SCOPED_TRACE(measurement_files.front().string());
+  std::cout << "Reading persisted measurement: " << measurement_files.front()
+            << '\n';
+  const auto stored = falcon_core::communications::HDF5Data::from_file(
+      measurement_files.front().string());
+  ASSERT_NE(stored, nullptr);
+  ASSERT_NE(stored->shape(), nullptr);
+  ASSERT_EQ(stored->shape()->size(), 1);
+  EXPECT_EQ(stored->shape()->at(0), sample_count);
+
+  // Check that the saved sweep identifies S1 and preserves its voltage bounds.
+  ASSERT_NE(stored->domain_labels(), nullptr);
+  ASSERT_EQ(stored->domain_labels()->size(), 1);
+  const auto axis = stored->domain_labels()->at(0);
+  ASSERT_NE(axis, nullptr);
+  ASSERT_EQ(axis->size(), 1);
+  const auto domain = axis->at(0);
+  ASSERT_NE(domain, nullptr);
+  ASSERT_NE(domain->port(), nullptr);
+  ASSERT_NE(domain->port()->pseudo_name(), nullptr);
+  EXPECT_EQ(*domain->port()->pseudo_name(), *Connection::ScreeningGate("S1"));
+  EXPECT_DOUBLE_EQ(domain->lesser_bound(), -0.1);
+  EXPECT_DOUBLE_EQ(domain->greater_bound(), 0.1);
+
+  // Read the measured range through the same public HDF5 API used by clients.
+  ASSERT_NE(stored->ranges(), nullptr);
+  ASSERT_EQ(stored->ranges()->size(), 1);
+  const auto array = stored->ranges()->arrays()[0];
+  ASSERT_NE(array, nullptr);
+  ASSERT_NE(array->connection(), nullptr);
+  EXPECT_EQ(*array->connection(), *Connection::Ohmic("O1"));
+  EXPECT_EQ(array->instrument_type(), Instrument::Amnmeter);
+  ASSERT_NE(array->units(), nullptr);
+  EXPECT_EQ(*array->units(), *SymbolUnit::Volt());
+  ASSERT_EQ(array->shape().size(), 1);
+  ASSERT_EQ(array->shape()[0], sample_count);
+  ASSERT_EQ(array->size(), sample_count);
+
+  // Use the generated input file as an independent reference for every value.
+  std::ifstream expected_data(TEST_DATA_FILE);
+  ASSERT_TRUE(expected_data.is_open());
+  for (size_t i = 0; i < sample_count; ++i) {
+    double expected;
+    ASSERT_TRUE(static_cast<bool>(expected_data >> expected));
+    EXPECT_DOUBLE_EQ(array->raw_data()[i], expected) << "saved sample " << i;
+  }
 }
 
 TEST_F(Buffered1DTest, measure_1D_buffered_with_averaging) {

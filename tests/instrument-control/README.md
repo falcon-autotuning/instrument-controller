@@ -148,3 +148,24 @@ The tests depend on the hub's pending characteristic-port unit refactor:
 `source_voltage` must carry volts and `number_of_samples` must be dimensionless.
 They still traverse source-voltage readback and sample-count decoding, so the
 known unit-metadata bug can prevent completion until that hub fix is installed.
+
+## Read back a stored 1D measurement
+
+`Buffered1DTest.measure_1D_buffered_persists_data` performs a buffered S1 sweep
+with four divisions (five endpoint-inclusive samples) and reads O1. The hub
+automatically writes the measurement to its local store before responding.
+The test then stops the hub, checks that the SQLite catalog exists, locates the
+single `.h5` file in its private data directory, and reopens it using
+`falcon_core::communications::HDF5Data::from_file()`.
+
+It checks the stored shape, S1 sweep label and bounds, O1 connection, instrument
+type, volts, and every saved sample against `TEST_DATA_FILE`. This verifies the
+persisted measurement payload; it does not query the SQLite catalog's records.
+The file path is printed and retained under `tests/test-runs/` for inspection.
+
+After your manual build and environment setup:
+
+```sh
+ctest --preset linux-clang-release \
+  -R '^Buffered1DTest\.measure_1D_buffered_persists_data$' --output-on-failure -V
+```
