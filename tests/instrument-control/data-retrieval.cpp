@@ -84,6 +84,24 @@ struct ScriptFixtureConfig {
   bool stage_sweep_math = false;
 };
 
+struct VoltageStateConfig {
+  std::string connection;
+  double voltage;
+  int unit;
+};
+
+std::map<std::string, double>
+VoltageStateMap(const VoltageStatesResponseSP &response) {
+  std::map<std::string, double> out;
+
+  for (const auto &state : response->states()->items()) {
+
+    out[state->connection()->name()] = state->voltage();
+  }
+
+  return out;
+}
+
 class DataRetrievalTest : public ::testing::Test {
 protected:
   fs::path current_run_dir_;
@@ -303,6 +321,10 @@ protected:
   [[nodiscard]] virtual ScriptFixtureConfig ConfigureScripts() const {
     return {};
   }
+  [[nodiscard]] virtual std::vector<VoltageStateConfig>
+  InitialVoltageStates() const {
+    return {};
+  }
   void ConfigurePerTestTempDir() {
     if (const char *value = std::getenv("TMPDIR")) {
       had_tmpdir_ = true;
@@ -487,7 +509,18 @@ protected:
                .string()
         << "\n";
 
-    ofs << "initial-voltage-state: []\n";
+    const auto initialStates = InitialVoltageStates();
+
+    if (initialStates.empty()) {
+      ofs << "initial-voltage-state: []\n";
+    } else {
+      ofs << "initial-voltage-state:\n";
+      for (const auto &state : initialStates) {
+        ofs << "  - name: " << state.connection << "\n";
+        ofs << "    voltage: " << state.voltage << "\n";
+        ofs << "    unit: " << state.unit << "\n";
+      }
+    }
 
     ofs << "nats:\n";
     ofs << "  host: 127.0.0.1\n";
@@ -760,7 +793,8 @@ protected:
     for (size_t axis = 0; axis < connections.size(); ++axis) {
       const auto setter = PublishedKnob(connections[axis]);
       // Label the voltage range with its source port. A coupled domain can
-      // describe several sources moving together; this test uses one per axis.
+      // describe several sources moving together; this test uses one per
+      // axis.
       domains.push_back(std::make_shared<CoupledLabelledDomain>(
           std::vector<LabelledDomainSP>{LabelledDomain::from_port(
               std::pair<double, double>{-0.1, 0.1}, setter)}));
@@ -794,8 +828,9 @@ protected:
         std::make_shared<List<Waveform>>(std::vector<WaveformSP>{waveform}),
         std::make_shared<Ports>(std::vector<InstrumentPortSP>{getter}),
         transforms, time_domain);
-    // Send the request through NATS -> hub -> ISS -> Lua -> mock plugins, then
-    // validate the response returned through the controller's public API.
+    // Send the request through NATS -> hub -> ISS -> Lua -> mock plugins,
+    // then validate the response returned through the controller's public
+    // API.
     const auto response = request_measurement(request, TIMEOUT_MS);
     ASSERT_NE(response, nullptr);
     ASSERT_NE(response->arrays(), nullptr);
@@ -818,7 +853,8 @@ protected:
     }
     // Each fresh mock meter reads O1 sequentially from gaussian-1d.txt.
     // Compare every transported sample, including buffer concatenation order.
-    // These file-backed readings are independent of the applied source voltage.
+    // These file-backed readings are independent of the applied source
+    // voltage.
     std::ifstream expected_data(TEST_DATA_FILE);
     ASSERT_TRUE(expected_data.is_open());
     for (size_t i = 0; i < sample_count; ++i) {
@@ -929,6 +965,19 @@ protected:
     }
     return value;
   }
+  void ExpectVoltageState(const VoltageStatesResponseSP &response,
+                          const std::map<std::string, double> &expected) {
+
+    const auto actual = VoltageStateMap(response);
+
+    for (const auto &[connection, voltage] : expected) {
+      auto it = actual.find(connection);
+
+      ASSERT_NE(it, actual.end()) << "Missing connection " << connection;
+
+      EXPECT_DOUBLE_EQ(it->second, voltage) << connection;
+    }
+  }
   void WaitForHubReady(int timeout_ms) {
     // Subscribe to STATUS.instrument-server which the hub publishes after
     // all handlers are set up (completing Phase 3 of hub startup).
@@ -1025,9 +1074,7 @@ TEST_F(SettingVoltageTest, set_then_get_then_set_and_get) {
     EXPECT_NEAR(quantity->value(), expectedValue, ABS_ERROR);
   };
 
-  //
   // Set 0.123
-  //
   {
     auto setters =
         std::make_shared<Map<InstrumentPort, falcon_core::math::Quantity>>();
@@ -1043,14 +1090,10 @@ TEST_F(SettingVoltageTest, set_then_get_then_set_and_get) {
     ASSERT_NE(response, nullptr);
   }
 
-  //
   // Get only
-  //
   performGet(0.123);
 
-  //
   // Set 0.456
-  //
   {
     auto setters =
         std::make_shared<Map<InstrumentPort, falcon_core::math::Quantity>>();
@@ -1070,6 +1113,58 @@ TEST_F(SettingVoltageTest, set_then_get_then_set_and_get) {
   // Get again
   //
   performGet(0.456);
+}
+
+TEST_F(SettingVoltageTest, device_state_is_stable) {
+  const auto state1 = request_device_state(TIMEOUT_MS);
+  const auto state2 = request_device_state(TIMEOUT_MS);
+
+  ASSERT_NE(state1, nullptr);
+  ASSERT_NE(state2, nullptr);
+
+  EXPECT_EQ(VoltageStateMap(state1), VoltageStateMap(state2));
+}
+
+TEST_F(SettingVoltageTest, initial_voltage_state_defaults_to_zero) {
+  const auto response = request_device_state(TIMEOUT_MS);
+
+  ASSERT_NE(response, nullptr);
+
+  const auto states = VoltageStateMap(response);
+
+  for (const auto &[connection, voltage] : states) {
+    EXPECT_DOUBLE_EQ(voltage, 0.0) << connection;
+  }
+}
+
+class SeededVoltageStateTest : public SettingVoltageTest {
+protected:
+  [[nodiscard]] std::vector<VoltageStateConfig>
+  InitialVoltageStates() const override {
+    return {
+        {
+            .connection = "S1",
+            .voltage = 0.123,
+            .unit = 0,
+        },
+        {
+            .connection = "S2",
+            .voltage = -0.456,
+            .unit = 0,
+        },
+    };
+  }
+};
+
+TEST_F(SeededVoltageStateTest, startup_state_matches_config) {
+  const auto response = request_device_state(TIMEOUT_MS);
+
+  ASSERT_NE(response, nullptr);
+
+  ExpectVoltageState(response, {
+                                   {"S1", 0.123},
+                                   {"S2", -0.456},
+                               });
 }
 
 class MeasureSetGetTest : public DataRetrievalTest {
