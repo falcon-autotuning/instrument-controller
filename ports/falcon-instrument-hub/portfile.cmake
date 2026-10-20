@@ -3,7 +3,7 @@ vcpkg_from_github(
         OUT_SOURCE_PATH SOURCE_PATH
         REPO falcon-autotuning/falcon-instrument-hub
         REF v${VERSION}
-        SHA512  57665aaa8282f78c78e04ed49812ece1933c7e157dcc547ff68d9bfa9bf9021f46351a6c30d65cff9426eda15cfeda18e7848fa9bc42d8c66fc40ec08addb4b1
+        SHA512  79c71d7e481ca61ea4b7d0609766ab96112f93e570299bded34f33964327ea951e479f2f502f7ce9c8d141cf0cb399eff9a4bb342b2a7bc34e04e93bc250a278
         PATCHES
             fix-measurement-catalog-path.patch
 )

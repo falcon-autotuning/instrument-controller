@@ -162,7 +162,7 @@ static int handle_get_bins(const PluginCommand *cmd, PluginResponse *resp) {
   if (index == NULL_CHANNEL) {
     return CHANNEL_OUT_OF_RANGE_ERROR;
   }
-  return push_int_response(resp, "bins", g_num_bins[channel]);
+  return push_int_response(resp, "bins", g_num_bins[index]);
 }
 
 static int handle_set_sample_rate(const PluginCommand *cmd,
@@ -376,6 +376,8 @@ INSTRUMENT_PLUGIN_API uint8_t plugin_initialize(const PluginConfig *config) {
     payloadCopy(g_instrument_name, config->instrument_name);
   }
   for (int i = 0; i < MAX_CHANNEL - MIN_CHANNEL + 1; ++i) {
+    // Start with one sample per buffer; SET_BINS can enable averaging.
+    g_num_bins[i] = 1;
     g_current_index[i] = 0;
     g_sample_rate[i] = 0;
   }

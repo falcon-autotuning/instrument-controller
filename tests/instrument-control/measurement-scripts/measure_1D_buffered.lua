@@ -1,4 +1,4 @@
--- Scalar fallback for a 1D sweep: one recorded GET_DATAPOINT per step/getter.
+-- Software-stepped 1D sweep: one MEASURE_STREAM buffer per step/getter.
 -- Domain arrays are positional, in setter order, and contain native domains.
 local sweepMath = require("sweep_math")
 
@@ -21,7 +21,7 @@ local function readGetters(ctx, getters)
 			instrument = getter:get_instrument_name(),
 			group = getter:get_channel_group(),
 			channel = getter:get_channel(),
-			command = "GET_DATAPOINT",
+			command = "MEASURE_STREAM",
 		})
 		ctx:call(command)
 	end

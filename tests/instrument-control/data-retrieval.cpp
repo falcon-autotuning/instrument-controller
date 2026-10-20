@@ -7,6 +7,7 @@
 #include <falcon-core/generic/Map.hpp>
 #include <falcon-core/instrument_interfaces/Waveform.hpp>
 #include <falcon-core/instrument_interfaces/names/InstrumentPort.hpp>
+#include <falcon-core/math/Axes.hpp>
 #include <falcon-core/physics/device_structures/Connection.hpp>
 #include <falcon-routine/hub.hpp>
 #include <filesystem>
@@ -58,7 +59,7 @@ namespace fs = std::filesystem;
 const fs::path DATA_1D_DIR = fs::path(__FILE__).parent_path();
 const fs::path TEST_ROOT_DIR = DATA_1D_DIR.parent_path();
 const fs::path TEST_DATA_DIR_PATH = TEST_ROOT_DIR / "test-data";
-const fs::path TEST_DATA_FILE = TEST_DATA_DIR_PATH / "gaussian-1d.txt";
+const fs::path TEST_DATA_FILE = TEST_DATA_DIR_PATH / "linear-1d.txt";
 
 // These will be initialized in SetUp() since they depend on environment
 // variables
@@ -93,6 +94,7 @@ protected:
   PortsSP published_knobs_;
   PortsSP published_meters_;
   PortsSP published_settings_;
+  bool buffered_measurement_ = false;
 
   void SetUp() override {
     // Initialize paths from environment variables here, not at global scope
@@ -127,20 +129,32 @@ protected:
     BuildTestData(TEST_DATA_DIR_PATH / "gen_data.cpp",
                   TEST_DATA_DIR_PATH / "gen_data");
     RunTestDataGenerator(TEST_DATA_DIR_PATH / "gen_data");
-    if (std::string(
-            ::testing::UnitTest::GetInstance()->current_test_info()->name()) ==
-        "measure_set_get") {
-      // Enable only the scalar primitive, avoiding sweep/sample-count
-      // prerequisites.
+    const std::string test_name =
+        ::testing::UnitTest::GetInstance()->current_test_info()->name();
+    buffered_measurement_ = test_name == "measure_1D_buffered" ||
+                             test_name == "measure_2D_buffered";
+    if (test_name == "measure_set_get" || buffered_measurement_) {
+      // Enable only the primitive under test so the hub cannot fall back to
+      // lower-dimensional scripts.
       current_scripts_dir_ = current_run_dir_ / "scripts";
       fs::create_directories(current_scripts_dir_);
-      fs::copy_file(MEASUREMENT_SCRIPTS_DIR / "measure_get_set.lua",
-                    current_scripts_dir_ / "measure_get_set.lua");
+      const std::string script = buffered_measurement_
+                                     ? test_name + ".lua"
+                                     : "measure_get_set.lua";
+      fs::copy_file(MEASUREMENT_SCRIPTS_DIR / script,
+                    current_scripts_dir_ / script);
       for (const char *action : {"get", "set"}) {
         fs::copy_file(DATA_1D_DIR / "settings-scripts" /
                           (std::string(action) + "_voltage.lua"),
                       current_scripts_dir_ /
                           (std::string(action) + "_source_voltage.lua"));
+      }
+      if (buffered_measurement_) {
+        fs::copy_file(DATA_1D_DIR / "settings-scripts/get_number_of_samples.lua",
+                      current_scripts_dir_ / "get_number_of_samples.lua");
+        fs::create_directories(current_run_dir_ / "lua-utils");
+        fs::copy_file(DATA_1D_DIR / "lua-utils/sweep_math.lua",
+                      current_run_dir_ / "lua-utils/sweep_math.lua");
       }
     }
     WriteConfigFile(current_config_path_);
@@ -281,6 +295,14 @@ protected:
 #else
     pid_t pid = fork();
     if (pid == 0) {
+      if (buffered_measurement_) {
+        std::string helpers = (current_run_dir_ / "lua-utils").string();
+        if (const char *existing =
+                std::getenv("INSTRUMENT_SCRIPT_SERVER_OPT_LUA_LIB")) {
+          helpers += ";" + std::string(existing);
+        }
+        setenv("INSTRUMENT_SCRIPT_SERVER_OPT_LUA_LIB", helpers.c_str(), 1);
+      }
       execv(argv.front(), argv.data());
       std::cerr << "Failed to exec Instrument Hub\n";
       std::exit(1);
@@ -601,6 +623,97 @@ protected:
         message, waveforms, std::make_shared<Ports>(getters), transforms,
         time_domain);
   }
+  void ExpectBufferedMeasurement(const std::vector<ConnectionSP> &connections,
+                                const std::vector<int> &points) {
+    // Each source connection supplies one independent voltage axis. points[i]
+    // is the number of positions along that axis, e.g. {4} or {3, 2}.
+    ASSERT_EQ(connections.size(), points.size());
+
+    // O1 publishes both scalar-voltage and stream ports. Select the stream
+    // metadata supplied by the hub so the request identifies a buffer getter.
+    const auto getter_connection = Connection::Ohmic("O1");
+    InstrumentPortSP getter;
+    for (const auto &port : published_meters_->items()) {
+      if (*port->pseudo_name() == *getter_connection &&
+          port->default_name().find(".stream") != std::string::npos) {
+        getter = port;
+        break;
+      }
+    }
+    ASSERT_NE(getter, nullptr) << "No buffer stream port published for O1";
+
+    std::vector<CoupledLabelledDomainSP> domains;
+    std::vector<MapSP<std::string, bool>> increasing;
+    auto transforms = std::make_shared<Map<InstrumentPort, PortTransform>>();
+    size_t sample_count = 1;
+    for (size_t axis = 0; axis < connections.size(); ++axis) {
+      const auto setter = PublishedKnob(connections[axis]);
+      // Label the voltage range with its source port. A coupled domain can
+      // describe several sources moving together; this test uses one per axis.
+      domains.push_back(std::make_shared<CoupledLabelledDomain>(
+          std::vector<LabelledDomainSP>{LabelledDomain::from_port(
+              std::pair<double, double>{-0.1, 0.1}, setter)}));
+      auto direction = std::make_shared<Map<std::string, bool>>();
+      // Direction keys use device connection names (S1/S2), as expected by
+      // falcon-core and the hub planner, rather than fully qualified port names.
+      direction->insert(setter->instrument_facing_name(), true);
+      increasing.push_back(direction);
+      // Identity transforms leave the requested voltages unchanged.
+      transforms->insert(setter, PortTransform::IdentityTransform(setter));
+      // The mock meter starts with one sample per buffer, so the total number
+      // of returned samples is the product of the axis lengths.
+      sample_count *= static_cast<size_t>(points[axis]);
+    }
+
+    // One waveform with all axes; two separate 1D waveforms would not test
+    // the hub's 2D primitive.
+    const auto waveform = Waveform::CartesianIdentityWaveform(
+        std::make_shared<falcon_core::math::Axes<int>>(points),
+        std::make_shared<falcon_core::math::Axes<CoupledLabelledDomain>>(domains),
+        std::make_shared<falcon_core::math::Axes<Map<std::string, bool>>>(
+            increasing));
+    // MeasurementRequest also requires a labelled time domain. This clock
+    // describes execution time; it does not add another voltage sweep axis.
+    const auto time_domain = LabelledDomain::from_port(
+        std::pair<double, double>{0.0, 1.0}, InstrumentPort::ExecutionClock());
+    const auto request = std::make_shared<MeasurementRequest>(
+        "buffered voltage sweep at O1",
+        std::make_shared<List<Waveform>>(std::vector<WaveformSP>{waveform}),
+        std::make_shared<Ports>(std::vector<InstrumentPortSP>{getter}),
+        transforms, time_domain);
+    // Send the request through NATS -> hub -> ISS -> Lua -> mock plugins, then
+    // validate the response returned through the controller's public API.
+    const auto response = request_measurement(request, TIMEOUT_MS);
+    ASSERT_NE(response, nullptr);
+    ASSERT_NE(response->arrays(), nullptr);
+    ASSERT_TRUE(response->arrays()->is_measured_arrays());
+    // One getter produces one measured array, regardless of sweep dimension.
+    ASSERT_EQ(response->arrays()->size(), 1);
+    const auto array = response->arrays()->arrays()[0];
+    ASSERT_NE(array, nullptr);
+    ASSERT_NE(array->connection(), nullptr);
+    EXPECT_EQ(*array->connection(), *getter_connection);
+    EXPECT_EQ(array->instrument_type(), Instrument::Voltmeter);
+    ASSERT_NE(array->units(), nullptr);
+    EXPECT_EQ(*array->units(), *SymbolUnit::Volt());
+    ASSERT_EQ(array->size(), sample_count);
+    // Check dimensions as well as sample count: a flattened six-point trace
+    // must not pass as the requested 3-by-2 measurement.
+    ASSERT_EQ(array->shape().size(), points.size());
+    for (size_t axis = 0; axis < points.size(); ++axis) {
+      EXPECT_EQ(array->shape()[axis], static_cast<size_t>(points[axis]));
+    }
+    // Each fresh mock meter reads O1 sequentially from gaussian-1d.txt.
+    // Compare every transported sample, including buffer concatenation order.
+    // These file-backed readings are independent of the applied source voltage.
+    std::ifstream expected_data(TEST_DATA_FILE);
+    ASSERT_TRUE(expected_data.is_open());
+    for (size_t i = 0; i < sample_count; ++i) {
+      double expected;
+      ASSERT_TRUE(static_cast<bool>(expected_data >> expected));
+      EXPECT_DOUBLE_EQ(array->raw_data()[i], expected) << "sample " << i;
+    }
+  }
   MeasurementRequestSP MakeMultiTargetPointRequest(
       const std::string &message, const std::string &measurement_name,
       const std::vector<std::pair<InstrumentPortSP, double>> &targets) {
@@ -857,6 +970,16 @@ TEST_F(DataRetrievalTest, measure_set_get) {
   EXPECT_EQ(*array->units(), *SymbolUnit::Volt());
   ASSERT_EQ(array->size(), 1);
   EXPECT_DOUBLE_EQ((*array)(0), ReadFirstScalarFromFile(TEST_DATA_FILE));
+}
+
+TEST_F(DataRetrievalTest, measure_1D_buffered) {
+  ExpectBufferedMeasurement({Connection::ScreeningGate("S1")}, {4});
+}
+
+TEST_F(DataRetrievalTest, measure_2D_buffered) {
+  ExpectBufferedMeasurement(
+      {Connection::ScreeningGate("S1"), Connection::ScreeningGate("S2")},
+      {3, 2});
 }
 
 TEST_F(DataRetrievalTest, VoltageSweepCurrent) {

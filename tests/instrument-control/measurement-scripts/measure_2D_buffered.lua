@@ -1,4 +1,4 @@
--- Scalar raster fallback: sweep X (fast) inside each Y (slow) step.
+-- Software-stepped raster: sweep X inside each Y step and record buffers.
 -- Parameter names and order match the hub's encode2DBuffered manifest.
 local sweepMath = require("sweep_math")
 
@@ -21,7 +21,7 @@ local function readGetters(ctx, getters)
 			instrument = getter:get_instrument_name(),
 			group = getter:get_channel_group(),
 			channel = getter:get_channel(),
-			command = "GET_DATAPOINT",
+			command = "MEASURE_STREAM",
 		})
 		ctx:call(command)
 	end
