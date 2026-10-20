@@ -6,7 +6,7 @@
     "yaml-config-validator",
     {
       "name": "falcon-routine",
-      "version>=": "1.0.5"
+      "version>=": "1.0.13"
     },
     {
       "name": "falcon-core",
@@ -60,18 +60,5 @@
       "name": "xtl",
       "version": "0.7.5"
     }
-  ],
-  "features": {
-    "local-teal-api-gen": {
-      "description": "Build teal-api-gen from the sibling workspace checkout",
-      "dependencies": [
-        {
-          "name": "teal-api-gen",
-          "features": [
-            "local-source"
-          ]
-        }
-      ]
-    }
-  }
+  ]
 }

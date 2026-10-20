@@ -14,8 +14,8 @@
     "instrument-script-server",
     "falcon-instrument-hub",
     "instrument-data",
-    "teal-api-gen",
     "cjson",
+    "boost-process",
     {
       "name": "instrument-plugin-api",
       "version>=": "2.0.4"
