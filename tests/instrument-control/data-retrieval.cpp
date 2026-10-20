@@ -136,8 +136,9 @@ protected:
     RunTestDataGenerator(TEST_DATA_DIR_PATH / "gen_data");
     const std::string test_name =
         ::testing::UnitTest::GetInstance()->current_test_info()->name();
+    const bool only_1D = test_name == "measure_2D_buffered_with_only_1D";
     buffered_measurement_ = test_name == "measure_1D_buffered" ||
-                            test_name == "measure_2D_buffered";
+                            test_name == "measure_2D_buffered" || only_1D;
     const bool settings_test = test_name == "set_then_get_then_set_and_get";
     if (test_name == "measure_set_get" || buffered_measurement_ ||
         settings_test) {
@@ -146,8 +147,11 @@ protected:
       // Settings requests need only get/set scripts. Measurement tests stage
       // just their selected primitive, preventing lower-dimensional fallback.
       if (!settings_test) {
-        const std::string script =
-            buffered_measurement_ ? test_name + ".lua" : "measure_get_set.lua";
+        const std::string script = only_1D
+                                       ? "measure_1D_buffered.lua"
+                                       : (buffered_measurement_
+                                              ? test_name + ".lua"
+                                              : "measure_get_set.lua");
         fs::copy_file(MEASUREMENT_SCRIPTS_DIR / script,
                       current_scripts_dir_ / script);
       }
@@ -1167,7 +1171,7 @@ TEST_F(DataRetrievalTest, measure_1D_many_knobs_and_meters) {
 }
 
 TEST_F(DataRetrievalTest, measure_2D_buffered_with_only_1D) {
-  // TODO: remove the 2D measured script from teh execution folder
+  // The fixture stages only the 1D primitive for this 2D request.
   ExpectBufferedMeasurement(
       {Connection::ScreeningGate("S1"), Connection::ScreeningGate("S2")},
       {3, 2});
