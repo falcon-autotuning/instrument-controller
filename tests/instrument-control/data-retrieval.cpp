@@ -139,7 +139,8 @@ protected:
     buffered_measurement_ = test_name == "measure_1D_buffered" ||
                             test_name == "measure_2D_buffered";
     const bool settings_test = test_name == "set_then_get_then_set_and_get";
-    if (test_name == "measure_set_get" || buffered_measurement_ || settings_test) {
+    if (test_name == "measure_set_get" || buffered_measurement_ ||
+        settings_test) {
       current_scripts_dir_ = current_run_dir_ / "scripts";
       fs::create_directories(current_scripts_dir_);
       // Settings requests need only get/set scripts. Measurement tests stage
@@ -183,7 +184,8 @@ protected:
     setenv("NATS_URL", "nats://localhost:4222", 1);
 
     // The ISS CLI defaults to a different port than this fixture's hub config.
-    // Save the caller's value and target the test daemon for start/stop commands.
+    // Save the caller's value and target the test daemon for start/stop
+    // commands.
     if (const char *value = std::getenv("INSTRUMENT_SCRIPT_SERVER_RPC_PORT")) {
       had_iss_rpc_port_ = true;
       previous_iss_rpc_port_ = value;
@@ -362,8 +364,8 @@ protected:
     proc.wait();
     // The stop RPC returns before asynchronous shutdown finishes. Do not let
     // the next test attach until the daemon has released its listening port.
-    const auto deadline = std::chrono::steady_clock::now() +
-                          std::chrono::seconds(10);
+    const auto deadline =
+        std::chrono::steady_clock::now() + std::chrono::seconds(10);
     while (port_open()) {
       if (std::chrono::steady_clock::now() >= deadline) {
         throw std::runtime_error(
@@ -721,7 +723,7 @@ protected:
       transforms->insert(setter, PortTransform::IdentityTransform(setter));
       // The mock meter starts with one sample per buffer, so the total number
       // of returned samples is the product of the axis lengths.
-      sample_count *= static_cast<size_t>(points[axis]+1);
+      sample_count *= static_cast<size_t>(points[axis] + 1);
     }
 
     // One waveform with all axes; two separate 1D waveforms would not test
@@ -761,7 +763,7 @@ protected:
     // must not pass as the requested 3-by-2 measurement.
     ASSERT_EQ(array->shape().size(), points.size());
     for (size_t axis = 0; axis < points.size(); ++axis) {
-      EXPECT_EQ(array->shape()[axis], static_cast<size_t>(points[axis]+1));
+      EXPECT_EQ(array->shape()[axis], static_cast<size_t>(points[axis] + 1));
     }
     // Each fresh mock meter reads O1 sequentially from gaussian-1d.txt.
     // Compare every transported sample, including buffer concatenation order.
@@ -1045,156 +1047,128 @@ TEST_F(DataRetrievalTest, measure_2D_buffered) {
       {3, 2});
 }
 
-TEST_F(DataRetrievalTest, VoltageSweepCurrent) {
-  GTEST_SKIP() << "Skipping all tests for this fixture";
-  const int NUM_POINTS = 100;
-  const double START_TIME_SECONDS = 0.0;
-  const double MAX_TIME_SECONDS = 1.0;
-  const char *SWEEP_NAME = "P1";
-  const char *GETTER_NAME = "O2";
-  const double MIN_SWEEP_VOLTAGE = 0.0;
-  const double MAX_SWEEP_VOLTAGE = 0.5;
-  ConfigSP config = request_config(TIMEOUT_MS);
-  ASSERT_NE(config, nullptr) << "Failed to get config from request_config";
+TEST_F(DataRetrievalTest, measure_1D_many_knobs_and_meters) {
+  std::vector<ConnectionSP> connections = {
+      Connection::ScreeningGate("S1"),
+      Connection::ScreeningGate("S2"),
+  };
+  std::vector<int> points = {4};
+  // Each source connection supplies one independent voltage axis. points[i]
+  // is the number of positions along that axis, e.g. {4} or {3, 2}.
+  ASSERT_EQ(connections.size(), points.size());
 
-  ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP currentMeter = PublishedMeter(getter_connection);
-  PortsSP getters =
-      std::make_shared<Ports>(std::vector<InstrumentPortSP>{currentMeter});
+  // O1 publishes both scalar-voltage and stream ports. Select the stream
+  // metadata supplied by the hub so the request identifies a buffer getter.
+  const auto getter_connection = Connection::Ohmic("O1");
+  InstrumentPortSP getter;
+  for (const auto &port : published_meters_->items()) {
+    if (*port->pseudo_name() == *getter_connection &&
+        port->default_name().find(".stream") != std::string::npos) {
+      getter = port;
+      break;
+    }
+  }
+  ASSERT_NE(getter, nullptr) << "No buffer stream port published for O1";
 
-  // O2 shares Meter1 (VOLTMETER) with O1. PORT_PAYLOAD now publishes the
-  // canonical getter metadata directly, including the expected mV units.
-  // In a physical setup the raw mV reading would be scaled to nA by the
-  // transresistance amplifier gain; the test data (linear-1d.txt) represents
-  // that conceptual current sweep.
-  ConnectionSP sweep_connection = Connection::PlungerGate(SWEEP_NAME);
-  InstrumentPortSP voltageKnob = PublishedKnob(sweep_connection);
-  InstrumentPortSP clock = InstrumentPort::ExecutionClock();
+  const auto getter_connection1 = Connection::Ohmic("O2");
+  InstrumentPortSP getter1;
+  for (const auto &port : published_meters_->items()) {
+    if (*port->pseudo_name() == *getter_connection &&
+        port->default_name().find(".stream") != std::string::npos) {
+      getter1 = port;
+      break;
+    }
+  }
+  ASSERT_NE(getter1, nullptr) << "No buffer stream port published for O2";
 
-  MapSP<InstrumentPort, PortTransform> transforms =
-      std::make_shared<Map<InstrumentPort, PortTransform>>(
-          std::vector<std::pair<InstrumentPortSP, PortTransformSP>>{
-              {voltageKnob, PortTransform::IdentityTransform(voltageKnob)}});
-  LabelledDomainSP time_domain = LabelledDomain::from_port(
-      std::pair<double, double>{START_TIME_SECONDS, MAX_TIME_SECONDS}, clock);
-  LabelledDomainSP sweepDomain = LabelledDomain::from_port(
-      std::pair<double, double>{MIN_SWEEP_VOLTAGE, MAX_SWEEP_VOLTAGE},
-      voltageKnob);
-  CoupledLabelledDomainSP coupledDomain =
-      std::make_shared<CoupledLabelledDomain>(
-          std::vector<LabelledDomainSP>{sweepDomain});
-  MapSP<std::string, bool> increasing =
-      std::make_shared<Map<std::string, bool>>(
-          std::vector<std::pair<std::string, bool>>{
-              {voltageKnob->default_name(), true}});
+  std::vector<CoupledLabelledDomainSP> domains;
+  std::vector<MapSP<std::string, bool>> increasing;
+  auto transforms = std::make_shared<Map<InstrumentPort, PortTransform>>();
+  size_t sample_count = 1;
+  for (size_t axis = 0; axis < connections.size(); ++axis) {
+    const auto setter = PublishedKnob(connections[axis]);
+    // Label the voltage range with its source port. A coupled domain can
+    // describe several sources moving together; this test uses one per axis.
+    domains.push_back(std::make_shared<CoupledLabelledDomain>(
+        std::vector<LabelledDomainSP>{LabelledDomain::from_port(
+            std::pair<double, double>{-0.1, 0.1}, setter)}));
+    auto direction = std::make_shared<Map<std::string, bool>>();
+    // Direction keys use device connection names (S1/S2), as expected by
+    // falcon-core and the hub planner, rather than fully qualified port
+    // names.
+    direction->insert(setter->instrument_facing_name(), true);
+    increasing.push_back(direction);
+    // Identity transforms leave the requested voltages unchanged.
+    transforms->insert(setter, PortTransform::IdentityTransform(setter));
+    // The mock meter starts with one sample per buffer, so the total number
+    // of returned samples is the product of the axis lengths.
+    sample_count *= static_cast<size_t>(points[axis] + 1);
+  }
 
-  auto waveform = Waveform::CartesianIdentityWaveform1D(
-      NUM_POINTS, coupledDomain, increasing);
-  ListSP<Waveform> waveforms =
-      std::make_shared<List<Waveform>>(std::vector<WaveformSP>{waveform});
-
-  MeasurementRequestSP request = std::make_shared<MeasurementRequest>(
-      "1D voltage sweep recording current at O2", waveforms, getters,
+  // One waveform with all axes; two separate 1D waveforms would not test
+  // the hub's 2D primitive.
+  const auto waveform = Waveform::CartesianIdentityWaveform(
+      std::make_shared<falcon_core::math::Axes<int>>(points),
+      std::make_shared<falcon_core::math::Axes<CoupledLabelledDomain>>(domains),
+      std::make_shared<falcon_core::math::Axes<Map<std::string, bool>>>(
+          increasing));
+  // MeasurementRequest also requires a labelled time domain. This clock
+  // describes execution time; it does not add another voltage sweep axis.
+  const auto time_domain = LabelledDomain::from_port(
+      std::pair<double, double>{0.0, 1.0}, InstrumentPort::ExecutionClock());
+  const auto request = std::make_shared<MeasurementRequest>(
+      "buffered voltage sweep at O1",
+      std::make_shared<List<Waveform>>(std::vector<WaveformSP>{waveform}),
+      std::make_shared<Ports>(std::vector<InstrumentPortSP>{getter, getter1}),
       transforms, time_domain);
-  auto resp = request_measurement(request, TIMEOUT_MS);
+  // Send the request through NATS -> hub -> ISS -> Lua -> mock plugins, then
+  // validate the response returned through the controller's public API.
+  const auto response = request_measurement(request, TIMEOUT_MS);
+  ASSERT_NE(response, nullptr);
+  ASSERT_NE(response->arrays(), nullptr);
+  ASSERT_TRUE(response->arrays()->is_measured_arrays());
+  // One getter produces one measured array, regardless of sweep dimension.
+  ASSERT_EQ(response->arrays()->size(), 2);
 
-  EXPECT_TRUE(resp->arrays()->is_measured_arrays())
-      << "The arrays were not measured arrays";
-  EXPECT_EQ(resp->arrays()->size(), 1) << "Expected exactly one measured array";
-  auto labelledArray = resp->arrays()->arrays()[0];
-  EXPECT_EQ(*labelledArray->connection(), *Connection::PlungerGate(SWEEP_NAME))
-      << "Expected connection to be P1, but got "
-      << labelledArray->connection()->name() << " instead";
-  EXPECT_EQ(labelledArray->instrument_type(), Instrument::Voltmeter)
-      << "Expected instrument type to be VOLTMETER, but got "
-      << ToString(labelledArray->instrument_type()) << " instead";
-  EXPECT_EQ(*labelledArray->units(), *SymbolUnit::Volt())
-      << "Expected units to be mV, but got " << labelledArray->units()
-      << " instead";
-  EXPECT_EQ(labelledArray->size(), NUM_POINTS)
-      << "Expected 100 data points, but got " << labelledArray->size()
-      << " instead";
+  // Open once and consume sequentially across all arrays.
+  std::ifstream expected_data(TEST_DATA_FILE);
+  ASSERT_TRUE(expected_data.is_open());
+
+  for (size_t i = 0; i < response->arrays()->arrays().size(); ++i) {
+    const auto array = response->arrays()->arrays()[i];
+
+    ASSERT_NE(array, nullptr);
+    ASSERT_NE(array->connection(), nullptr);
+    EXPECT_EQ(*array->connection(), *getter_connection);
+    EXPECT_EQ(array->instrument_type(), Instrument::Voltmeter);
+
+    ASSERT_NE(array->units(), nullptr);
+    EXPECT_EQ(*array->units(), *SymbolUnit::Volt());
+
+    ASSERT_EQ(array->size(), sample_count);
+
+    // Check dimensions as well as sample count: a flattened six-point trace
+    // must not pass as the requested 3-by-2 measurement.
+    ASSERT_EQ(array->shape().size(), points.size());
+    for (size_t axis = 0; axis < points.size(); ++axis) {
+      EXPECT_EQ(array->shape()[axis], static_cast<size_t>(points[axis] + 1));
+    }
+
+    // Compare every transported sample. The expected data stream advances
+    // across arrays rather than restarting for each one.
+    for (size_t sample = 0; sample < sample_count; ++sample) {
+      double expected;
+      ASSERT_TRUE(static_cast<bool>(expected_data >> expected));
+
+      EXPECT_DOUBLE_EQ(array->raw_data()[sample], expected)
+          << "array " << i << ", sample " << sample;
+    }
+  }
 }
 
-TEST_F(DataRetrievalTest, VoltageSweepCurrent2D) {
-  GTEST_SKIP() << "Skipping all tests for this fixture";
-  const int N_FAST = 10;
-  const int N_SLOW = 10;
-  const double START_TIME_SECONDS = 0.0;
-  const double MAX_TIME_SECONDS = 2.0;
-  const char *FAST_GATE = "P1";
-  const char *SLOW_GATE = "P2";
-  const char *GETTER_NAME = "O2";
-  const double FAST_MIN_V = 0.0, FAST_MAX_V = 0.5;
-  const double SLOW_MIN_V = -0.1, SLOW_MAX_V = 0.1;
-
-  ConfigSP config = request_config(TIMEOUT_MS);
-  ASSERT_NE(config, nullptr) << "Failed to get config from request_config";
-
-  ConnectionSP getter_connection = Connection::Ohmic(GETTER_NAME);
-  InstrumentPortSP currentMeter = PublishedMeter(getter_connection);
-  PortsSP getters =
-      std::make_shared<Ports>(std::vector<InstrumentPortSP>{currentMeter});
-
-  ConnectionSP fast_connection = Connection::PlungerGate(FAST_GATE);
-  ConnectionSP slow_connection = Connection::PlungerGate(SLOW_GATE);
-  InstrumentPortSP fastKnob = PublishedKnob(fast_connection);
-  InstrumentPortSP slowKnob = PublishedKnob(slow_connection);
-  InstrumentPortSP clock = InstrumentPort::ExecutionClock();
-
-  MapSP<InstrumentPort, PortTransform> transforms =
-      std::make_shared<Map<InstrumentPort, PortTransform>>(
-          std::vector<std::pair<InstrumentPortSP, PortTransformSP>>{
-              {fastKnob, PortTransform::IdentityTransform(fastKnob)},
-              {slowKnob, PortTransform::IdentityTransform(slowKnob)}});
-
-  LabelledDomainSP time_domain = LabelledDomain::from_port(
-      std::pair<double, double>{START_TIME_SECONDS, MAX_TIME_SECONDS}, clock);
-  LabelledDomainSP fastDomain = LabelledDomain::from_port(
-      std::pair<double, double>{FAST_MIN_V, FAST_MAX_V}, fastKnob);
-  LabelledDomainSP slowDomain = LabelledDomain::from_port(
-      std::pair<double, double>{SLOW_MIN_V, SLOW_MAX_V}, slowKnob);
-
-  CoupledLabelledDomainSP fastCoupled = std::make_shared<CoupledLabelledDomain>(
-      std::vector<LabelledDomainSP>{fastDomain});
-  CoupledLabelledDomainSP slowCoupled = std::make_shared<CoupledLabelledDomain>(
-      std::vector<LabelledDomainSP>{slowDomain});
-
-  MapSP<std::string, bool> fastIncreasing =
-      std::make_shared<Map<std::string, bool>>(
-          std::vector<std::pair<std::string, bool>>{
-              {fastKnob->default_name(), true}});
-  MapSP<std::string, bool> slowIncreasing =
-      std::make_shared<Map<std::string, bool>>(
-          std::vector<std::pair<std::string, bool>>{
-              {slowKnob->default_name(), true}});
-
-  WaveformSP fastWaveform = Waveform::CartesianIdentityWaveform1D(
-      N_FAST, fastCoupled, fastIncreasing);
-  WaveformSP slowWaveform = Waveform::CartesianIdentityWaveform1D(
-      N_SLOW, slowCoupled, slowIncreasing);
-  ListSP<Waveform> waveforms = std::make_shared<List<Waveform>>(
-      std::vector<WaveformSP>{fastWaveform, slowWaveform});
-
-  MeasurementRequestSP request = std::make_shared<MeasurementRequest>(
-      "2D voltage sweep recording current at O2", waveforms, getters,
-      transforms, time_domain);
-  auto resp = request_measurement(request, TIMEOUT_MS);
-
-  EXPECT_TRUE(resp->arrays()->is_measured_arrays())
-      << "The arrays were not measured arrays";
-  EXPECT_EQ(resp->arrays()->size(), 1) << "Expected exactly one measured array";
-  auto labelledArray = resp->arrays()->arrays()[0];
-  EXPECT_EQ(*labelledArray->connection(), *Connection::PlungerGate(FAST_GATE))
-      << "Expected connection to be P1, but got "
-      << labelledArray->connection()->name() << " instead";
-  EXPECT_EQ(labelledArray->instrument_type(), Instrument::Voltmeter)
-      << "Expected instrument type to be VOLTMETER, but got "
-      << ToString(labelledArray->instrument_type()) << " instead";
-  EXPECT_EQ(*labelledArray->units(), *SymbolUnit::Volt())
-      << "Expected units to be mV, but got " << labelledArray->units()
-      << " instead";
-  EXPECT_EQ(labelledArray->size(), N_FAST * N_SLOW)
-      << "Expected " << N_FAST * N_SLOW << " data points, but got "
-      << labelledArray->size() << " instead";
+TEST_F(DataRetrievalTest, measure_2D_buffered_with_only_1D) {
+  // TODO: remove the 2D measured script from teh execution folder
+  ExpectBufferedMeasurement(
+      {Connection::ScreeningGate("S1"), Connection::ScreeningGate("S2")},
+      {3, 2});
 }
