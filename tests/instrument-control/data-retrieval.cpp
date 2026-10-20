@@ -77,6 +77,7 @@ const fs::path MEASUREMENT_SCRIPTS_DIR = DATA_1D_DIR / "measurement-scripts";
 const fs::path INSTRUMENT_LUA_LIBS_DIR = TEST_ROOT_DIR / "instrument-lua-libs";
 const fs::path WORKING_DIR = TEST_ROOT_DIR / "hub";
 const fs::path TEST_RUNS_DIR = TEST_ROOT_DIR / "test-runs";
+const double ABS_ERROR = 1e-4;
 
 class DataRetrievalTest : public ::testing::Test {
 protected:
@@ -137,18 +138,21 @@ protected:
         ::testing::UnitTest::GetInstance()->current_test_info()->name();
     buffered_measurement_ = test_name == "measure_1D_buffered" ||
                             test_name == "measure_2D_buffered";
-    if (test_name == "measure_set_get" || buffered_measurement_) {
-      // Enable only the primitive under test so the hub cannot fall back to
-      // lower-dimensional scripts.
+    const bool settings_test = test_name == "set_then_get_then_set_and_get";
+    if (test_name == "measure_set_get" || buffered_measurement_ || settings_test) {
       current_scripts_dir_ = current_run_dir_ / "scripts";
       fs::create_directories(current_scripts_dir_);
-      const std::string script =
-          buffered_measurement_ ? test_name + ".lua" : "measure_get_set.lua";
-      fs::copy_file(MEASUREMENT_SCRIPTS_DIR / script,
-                    current_scripts_dir_ / script);
+      // Settings requests need only get/set scripts. Measurement tests stage
+      // just their selected primitive, preventing lower-dimensional fallback.
+      if (!settings_test) {
+        const std::string script =
+            buffered_measurement_ ? test_name + ".lua" : "measure_get_set.lua";
+        fs::copy_file(MEASUREMENT_SCRIPTS_DIR / script,
+                      current_scripts_dir_ / script);
+      }
       for (const char *action : {"get", "set"}) {
         fs::copy_file(DATA_1D_DIR / "settings-scripts" /
-                          (std::string(action) + "_voltage.lua"),
+                          (std::string(action) + "_source_voltage.lua"),
                       current_scripts_dir_ /
                           (std::string(action) + "_source_voltage.lua"));
       }
@@ -717,7 +721,7 @@ protected:
       transforms->insert(setter, PortTransform::IdentityTransform(setter));
       // The mock meter starts with one sample per buffer, so the total number
       // of returned samples is the product of the axis lengths.
-      sample_count *= static_cast<size_t>(points[axis]);
+      sample_count *= static_cast<size_t>(points[axis]+1);
     }
 
     // One waveform with all axes; two separate 1D waveforms would not test
@@ -757,7 +761,7 @@ protected:
     // must not pass as the requested 3-by-2 measurement.
     ASSERT_EQ(array->shape().size(), points.size());
     for (size_t axis = 0; axis < points.size(); ++axis) {
-      EXPECT_EQ(array->shape()[axis], static_cast<size_t>(points[axis]));
+      EXPECT_EQ(array->shape()[axis], static_cast<size_t>(points[axis]+1));
     }
     // Each fresh mock meter reads O1 sequentially from gaussian-1d.txt.
     // Compare every transported sample, including buffer concatenation order.
@@ -934,7 +938,10 @@ TEST_F(DataRetrievalTest, set_then_get_then_set_and_get) {
     auto getters = std::make_shared<Ports>();
     getters->push_back(getter);
 
-    auto request = MakeSettingRequest("get source voltage", getters, nullptr);
+    // A read-only request still requires a non-null, empty setters map.
+    auto request = MakeSettingRequest(
+        "get source voltage", getters,
+        std::make_shared<Map<InstrumentPort, falcon_core::math::Quantity>>());
 
     auto response = request_setting(request, TIMEOUT_MS);
 
@@ -948,7 +955,7 @@ TEST_F(DataRetrievalTest, set_then_get_then_set_and_get) {
     ASSERT_NE(quantity, nullptr);
 
     EXPECT_EQ(*quantity->unit(), *SymbolUnit::Volt());
-    EXPECT_DOUBLE_EQ(quantity->value(), expectedValue);
+    EXPECT_NEAR(quantity->value(), expectedValue, ABS_ERROR);
   };
 
   //

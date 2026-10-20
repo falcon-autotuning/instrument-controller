@@ -1,5 +1,5 @@
 -- Set a source voltage in V. ISS supplies a native InstrumentTarget setter.
-local function Set_Voltage(ctx, setter, setVoltage)
+local function Set_Source_Voltage(ctx, setter, setVoltage)
 	local command = instrument_call_stack.new({
 		instrument = setter:get_instrument_name(),
 		group = setter:get_channel_group(),
@@ -9,4 +9,4 @@ local function Set_Voltage(ctx, setter, setVoltage)
 	return ctx:call(command, setVoltage)
 end
 
-return { main = Set_Voltage }
+return { main = Set_Source_Voltage }

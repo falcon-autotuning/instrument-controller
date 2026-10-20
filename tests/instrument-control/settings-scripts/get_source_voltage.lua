@@ -1,5 +1,5 @@
 -- Read a source voltage in V. ISS supplies a native InstrumentTarget getter.
-local function Get_Voltage(ctx, getter)
+local function Get_Source_Voltage(ctx, getter)
 	local command = instrument_call_stack.new({
 		instrument = getter:get_instrument_name(),
 		group = getter:get_channel_group(),
@@ -10,4 +10,4 @@ local function Get_Voltage(ctx, getter)
 	return ctx:call(command)
 end
 
-return { main = Get_Voltage }
+return { main = Get_Source_Voltage }
