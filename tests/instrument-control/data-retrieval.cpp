@@ -1053,9 +1053,6 @@ TEST_F(DataRetrievalTest, measure_1D_many_knobs_and_meters) {
       Connection::ScreeningGate("S2"),
   };
   std::vector<int> points = {4};
-  // Each source connection supplies one independent voltage axis. points[i]
-  // is the number of positions along that axis, e.g. {4} or {3, 2}.
-  ASSERT_EQ(connections.size(), points.size());
 
   // O1 publishes both scalar-voltage and stream ports. Select the stream
   // metadata supplied by the hub so the request identifies a buffer getter.
@@ -1085,25 +1082,29 @@ TEST_F(DataRetrievalTest, measure_1D_many_knobs_and_meters) {
   std::vector<MapSP<std::string, bool>> increasing;
   auto transforms = std::make_shared<Map<InstrumentPort, PortTransform>>();
   size_t sample_count = 1;
-  for (size_t axis = 0; axis < connections.size(); ++axis) {
-    const auto setter = PublishedKnob(connections[axis]);
-    // Label the voltage range with its source port. A coupled domain can
-    // describe several sources moving together; this test uses one per axis.
-    domains.push_back(std::make_shared<CoupledLabelledDomain>(
-        std::vector<LabelledDomainSP>{LabelledDomain::from_port(
-            std::pair<double, double>{-0.1, 0.1}, setter)}));
-    auto direction = std::make_shared<Map<std::string, bool>>();
-    // Direction keys use device connection names (S1/S2), as expected by
-    // falcon-core and the hub planner, rather than fully qualified port
-    // names.
-    direction->insert(setter->instrument_facing_name(), true);
-    increasing.push_back(direction);
-    // Identity transforms leave the requested voltages unchanged.
-    transforms->insert(setter, PortTransform::IdentityTransform(setter));
-    // The mock meter starts with one sample per buffer, so the total number
-    // of returned samples is the product of the axis lengths.
-    sample_count *= static_cast<size_t>(points[axis] + 1);
-  }
+  int axis = 0;
+  const auto setter = PublishedKnob(connections[0]);
+  const auto setter1 = PublishedKnob(connections[1]);
+  // Label the voltage range with its source port. A coupled domain can
+  // describe several sources moving together; this test uses one per axis.
+  domains.push_back(
+      std::make_shared<CoupledLabelledDomain>(std::vector<LabelledDomainSP>{
+          LabelledDomain::from_port(std::pair<double, double>{-0.1, 0.1},
+                                    setter),
+          LabelledDomain::from_port(std::pair<double, double>{-0.1, 0.5},
+                                    setter1)}));
+  auto direction = std::make_shared<Map<std::string, bool>>();
+  // Direction keys use device connection names (S1/S2), as expected by
+  // falcon-core and the hub planner, rather than fully qualified port
+  // names.
+  direction->insert(setter->instrument_facing_name(), true);
+  direction->insert(setter1->instrument_facing_name(), true);
+  increasing.push_back(direction);
+  // Identity transforms leave the requested voltages unchanged.
+  transforms->insert(setter, PortTransform::IdentityTransform(setter));
+  // The mock meter starts with one sample per buffer, so the total number
+  // of returned samples is the product of the axis lengths.
+  sample_count *= static_cast<size_t>(points[axis] + 1);
 
   // One waveform with all axes; two separate 1D waveforms would not test
   // the hub's 2D primitive.
