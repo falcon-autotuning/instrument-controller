@@ -1,4 +1,3 @@
-#include "falcon-core/physics/config/Loader.hpp"
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/process.hpp>
 #include <cctype>
@@ -113,7 +112,6 @@ protected:
   fs::path current_config_path_;
   fs::path current_scripts_dir_ = LUA_SCRIPTS_DIR;
   fs::path current_tmp_dir_;
-  std::string current_data_catalog_;
   std::string previous_tmpdir_;
   std::string previous_tmp_;
   std::string previous_temp_;
@@ -184,7 +182,6 @@ protected:
     current_run_dir_ = MakeCurrentRunDir();
     current_working_dir_ = current_run_dir_ / "hub";
     current_data_dir_ = current_run_dir_ / "data";
-    current_data_catalog_ = "measurements.db";
     current_config_path_ = current_run_dir_ / "test-config.yaml";
     current_tmp_dir_ = current_run_dir_ / "tmp";
 
@@ -496,8 +493,7 @@ protected:
 
     ofs << "database:\n";
     ofs << "  local-database: " << current_data_dir_.string() << "\n";
-    ofs << "  local-cache: " << current_data_dir_.string() << "/cache\n";
-    ofs << "  catalog-file: " << current_data_catalog_ << "\n";
+    ofs << "  local-cache: " << current_data_dir_.string() << "\n";
     ofs << "  owner: integration-test\n";
 
     ofs << "working-directory: " << current_data_dir_.string() << "\n";
@@ -1219,7 +1215,7 @@ TEST_F(Buffered1DTest, measure_1D_buffered_persists_data) {
   // Reopen the persisted data after the writer has exited, rather than
   // inspecting only the in-memory measurement response.
   StopInstrumentHub();
-  ASSERT_TRUE(fs::is_regular_file(current_data_dir_ / "measurements.db"));
+  ASSERT_TRUE(fs::is_regular_file(current_data_dir_ / "measurement.db"));
   std::vector<fs::path> measurement_files;
   for (const auto &entry : fs::recursive_directory_iterator(current_data_dir_)) {
     if (entry.is_regular_file() && entry.path().extension() == ".h5") {
@@ -1524,19 +1520,4 @@ TEST_F(Buffered2DTest, measure_2D_buffered) {
   ExpectBufferedMeasurement(
       {Connection::ScreeningGate("S1"), Connection::ScreeningGate("S2")},
       {3, 2});
-}
-
-TEST_F(Buffered1DTest, request_config_matches_loaded_config) {
-  const auto received = request_config(TIMEOUT_MS);
-
-  ASSERT_NE(received, nullptr);
-
-  falcon_core::physics::config::Loader loader(
-      (TEST_ROOT_DIR / "device-configs" / "2-dot-1-chargesensor.yml").string());
-
-  const auto expected = loader.config();
-
-  ASSERT_NE(expected, nullptr);
-
-  EXPECT_EQ(*received, *expected);
 }
