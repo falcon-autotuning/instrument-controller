@@ -1,3 +1,4 @@
+#include <boost/asio/ip/tcp.hpp>
 #include <boost/process.hpp>
 #include <cctype>
 #include <chrono>
@@ -88,6 +89,9 @@ protected:
   std::string previous_tmpdir_;
   std::string previous_tmp_;
   std::string previous_temp_;
+  std::string previous_iss_rpc_port_;
+  bool iss_rpc_port_configured_ = false;
+  bool had_iss_rpc_port_ = false;
   bool had_tmpdir_ = false;
   bool had_tmp_ = false;
   bool had_temp_ = false;
@@ -174,6 +178,17 @@ protected:
     setenv("MOCK_MULTIMETER_DATA_FILE", multimeter_data_files.c_str(), 1);
     setenv("NATS_URL", "nats://localhost:4222", 1);
 
+    // The ISS CLI defaults to a different port than this fixture's hub config.
+    // Save the caller's value and target the test daemon for start/stop commands.
+    if (const char *value = std::getenv("INSTRUMENT_SCRIPT_SERVER_RPC_PORT")) {
+      had_iss_rpc_port_ = true;
+      previous_iss_rpc_port_ = value;
+    }
+    setenv("INSTRUMENT_SCRIPT_SERVER_RPC_PORT", "5555", 1);
+    iss_rpc_port_configured_ = true;
+    // Remove a daemon left by an earlier run before the hub can attach to it.
+    // Fresh plugin initialization loads this test's data and resets its cursor.
+    StopInstrumentServer();
     StartInstrumentHub(VCPKG_BIN_DIR / "instrument-hub", current_config_path_);
     WaitForHubReady(10000); // Wait for hub to finish setting up handlers
     LoadPublishedPorts();
@@ -181,9 +196,19 @@ protected:
   }
 
   void TearDown() override {
+    StopInstrumentHub();
+    if (iss_rpc_port_configured_) {
+      // Also stop daemons the hub did not own, including after a test failure.
+      EXPECT_NO_THROW(StopInstrumentServer());
+      if (had_iss_rpc_port_) {
+        setenv("INSTRUMENT_SCRIPT_SERVER_RPC_PORT",
+               previous_iss_rpc_port_.c_str(), 1);
+      } else {
+        unsetenv("INSTRUMENT_SCRIPT_SERVER_RPC_PORT");
+      }
+    }
     unsetenv("MOCK_MULTIMETER_DATA_FILE");
     unsetenv("NATS_URL");
-    StopInstrumentHub();
     RestorePerTestTempDir();
     // TODO: Uncomment these when no more debugging necessary - currently we
     // want to inspect the generated files after the test runs
@@ -314,6 +339,35 @@ protected:
       std::exit(1);
     }
 #endif
+  }
+  void StopInstrumentServer() {
+    auto port_open = [] {
+      boost::asio::io_context ctx;
+      boost::asio::ip::tcp::socket socket(ctx);
+      boost::system::error_code error;
+      socket.connect({boost::asio::ip::address_v4::loopback(), 5555}, error);
+      return !error;
+    };
+    if (!port_open()) {
+      return; // The hub may already have stopped the daemon it started.
+    }
+
+    boost::asio::io_context ctx;
+    bp::process proc(ctx, (VCPKG_BIN_DIR / "instrument-script-server").string(),
+                     {"daemon", "stop"});
+    proc.wait();
+    // The stop RPC returns before asynchronous shutdown finishes. Do not let
+    // the next test attach until the daemon has released its listening port.
+    const auto deadline = std::chrono::steady_clock::now() +
+                          std::chrono::seconds(10);
+    while (port_open()) {
+      if (std::chrono::steady_clock::now() >= deadline) {
+        throw std::runtime_error(
+            "ISS did not stop on port 5555; daemon stop exit code: " +
+            std::to_string(proc.exit_code()));
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
   }
   void StopInstrumentHub() {
 #ifdef _WIN32
@@ -950,7 +1004,7 @@ TEST_F(DataRetrievalTest, measure_set_get) {
   InstrumentPortSP getter;
   for (const auto &port : published_meters_->items()) {
     if (*port->pseudo_name() == *getter_connection &&
-        port->default_name().find(".analog1_voltage") != std::string::npos) {
+        port->default_name().find(".analog.1.voltage") != std::string::npos) {
       getter = port;
       break;
     }
@@ -970,7 +1024,7 @@ TEST_F(DataRetrievalTest, measure_set_get) {
   EXPECT_EQ(array->instrument_type(), Instrument::Voltmeter);
   ASSERT_NE(array->units(), nullptr);
   EXPECT_EQ(*array->units(), *SymbolUnit::Volt());
-  ASSERT_EQ(array->size(), 1);
+  ASSERT_EQ(array->size(), 2);
   EXPECT_DOUBLE_EQ((*array)(0), ReadFirstScalarFromFile(TEST_DATA_FILE));
 }
 

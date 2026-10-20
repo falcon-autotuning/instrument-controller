@@ -74,6 +74,14 @@ The fixture currently configures embedded NATS at `127.0.0.1:4222`, sets
 or port changes, update `NATS_URL` in the same fixture. Prefer deriving both
 from the same values when updating the setup.
 
+The fixture sets `INSTRUMENT_SCRIPT_SERVER_RPC_PORT=5555` for the test and
+restores its previous value afterward. Before starting the hub, it stops any
+existing ISS daemon on that test port. Teardown stops the hub, then explicitly
+stops any remaining ISS daemon and waits for its port to close. This prevents
+reusing mock instruments with cached data or a sample cursor from an earlier
+test. The tests use port 5555 exclusively and run under the existing CTest
+resource lock.
+
 The recent pull corrected YAML command spacing and the empty `readCommand`
 mapping. The following remaining issues concern the older tests and future
 settings/sweep coverage:
