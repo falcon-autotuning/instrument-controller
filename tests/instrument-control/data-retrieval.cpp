@@ -137,8 +137,10 @@ protected:
     const std::string test_name =
         ::testing::UnitTest::GetInstance()->current_test_info()->name();
     const bool only_1D = test_name == "measure_2D_buffered_with_only_1D";
+    const bool many_1D = test_name == "measure_1D_many_knobs_and_meters";
     buffered_measurement_ = test_name == "measure_1D_buffered" ||
-                            test_name == "measure_2D_buffered" || only_1D;
+                            test_name == "measure_2D_buffered" || only_1D ||
+                            many_1D;
     const bool settings_test = test_name == "set_then_get_then_set_and_get";
     if (test_name == "measure_set_get" || buffered_measurement_ ||
         settings_test) {
@@ -147,7 +149,7 @@ protected:
       // Settings requests need only get/set scripts. Measurement tests stage
       // just their selected primitive, preventing lower-dimensional fallback.
       if (!settings_test) {
-        const std::string script = only_1D
+        const std::string script = (only_1D || many_1D)
                                        ? "measure_1D_buffered.lua"
                                        : (buffered_measurement_
                                               ? test_name + ".lua"
@@ -1074,7 +1076,7 @@ TEST_F(DataRetrievalTest, measure_1D_many_knobs_and_meters) {
   const auto getter_connection1 = Connection::Ohmic("O2");
   InstrumentPortSP getter1;
   for (const auto &port : published_meters_->items()) {
-    if (*port->pseudo_name() == *getter_connection &&
+    if (*port->pseudo_name() == *getter_connection1 &&
         port->default_name().find(".stream") != std::string::npos) {
       getter1 = port;
       break;
@@ -1106,6 +1108,7 @@ TEST_F(DataRetrievalTest, measure_1D_many_knobs_and_meters) {
   increasing.push_back(direction);
   // Identity transforms leave the requested voltages unchanged.
   transforms->insert(setter, PortTransform::IdentityTransform(setter));
+  transforms->insert(setter1, PortTransform::IdentityTransform(setter1));
   // The mock meter starts with one sample per buffer, so the total number
   // of returned samples is the product of the axis lengths.
   sample_count *= static_cast<size_t>(points[axis] + 1);
@@ -1135,16 +1138,23 @@ TEST_F(DataRetrievalTest, measure_1D_many_knobs_and_meters) {
   // One getter produces one measured array, regardless of sweep dimension.
   ASSERT_EQ(response->arrays()->size(), 2);
 
-  // Open once and consume sequentially across all arrays.
-  std::ifstream expected_data(TEST_DATA_FILE);
-  ASSERT_TRUE(expected_data.is_open());
+  // The hub may return getters in either order. Each mock channel has its own
+  // data cursor and starts at the beginning of its configured file.
+  std::map<std::string, fs::path> expected_files = {
+      {getter_connection->name(), TEST_DATA_FILE},
+      {getter_connection1->name(), TEST_DATA_DIR_PATH / "linear-1d.txt"}};
 
   for (size_t i = 0; i < response->arrays()->arrays().size(); ++i) {
     const auto array = response->arrays()->arrays()[i];
 
     ASSERT_NE(array, nullptr);
     ASSERT_NE(array->connection(), nullptr);
-    EXPECT_EQ(*array->connection(), *getter_connection);
+    const auto expected_file = expected_files.find(array->connection()->name());
+    ASSERT_NE(expected_file, expected_files.end())
+        << "Unexpected or repeated connection " << array->connection()->name();
+    std::ifstream expected_data(expected_file->second);
+    ASSERT_TRUE(expected_data.is_open());
+    expected_files.erase(expected_file);
     EXPECT_EQ(array->instrument_type(), Instrument::Voltmeter);
 
     ASSERT_NE(array->units(), nullptr);
@@ -1159,8 +1169,7 @@ TEST_F(DataRetrievalTest, measure_1D_many_knobs_and_meters) {
       EXPECT_EQ(array->shape()[axis], static_cast<size_t>(points[axis] + 1));
     }
 
-    // Compare every transported sample. The expected data stream advances
-    // across arrays rather than restarting for each one.
+    // Compare this channel's samples against its own file, starting at zero.
     for (size_t sample = 0; sample < sample_count; ++sample) {
       double expected;
       ASSERT_TRUE(static_cast<bool>(expected_data >> expected));
@@ -1169,6 +1178,7 @@ TEST_F(DataRetrievalTest, measure_1D_many_knobs_and_meters) {
           << "array " << i << ", sample " << sample;
     }
   }
+  EXPECT_TRUE(expected_files.empty());
 }
 
 TEST_F(DataRetrievalTest, measure_2D_buffered_with_only_1D) {
