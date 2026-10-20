@@ -1,3 +1,4 @@
+#include "falcon-core/physics/config/Loader.hpp"
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/process.hpp>
 #include <cctype>
@@ -1523,4 +1524,19 @@ TEST_F(Buffered2DTest, measure_2D_buffered) {
   ExpectBufferedMeasurement(
       {Connection::ScreeningGate("S1"), Connection::ScreeningGate("S2")},
       {3, 2});
+}
+
+TEST_F(Buffered1DTest, request_config_matches_loaded_config) {
+  const auto received = request_config(TIMEOUT_MS);
+
+  ASSERT_NE(received, nullptr);
+
+  falcon_core::physics::config::Loader loader(
+      (TEST_ROOT_DIR / "device-configs" / "2-dot-1-chargesensor.yml").string());
+
+  const auto expected = loader.config();
+
+  ASSERT_NE(expected, nullptr);
+
+  EXPECT_EQ(*received, *expected);
 }
