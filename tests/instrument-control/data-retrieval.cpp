@@ -1453,3 +1453,7 @@ TEST_F(Buffered2DTest, measure_2D_buffered) {
       {Connection::ScreeningGate("S1"), Connection::ScreeningGate("S2")},
       {3, 2});
 }
+
+TEST_F(Buffered1DTest, request_config_returns_config) {
+  ASSERT_NE(request_config(TIMEOUT_MS), nullptr);
+}
