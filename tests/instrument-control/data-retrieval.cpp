@@ -132,15 +132,14 @@ protected:
     const std::string test_name =
         ::testing::UnitTest::GetInstance()->current_test_info()->name();
     buffered_measurement_ = test_name == "measure_1D_buffered" ||
-                             test_name == "measure_2D_buffered";
+                            test_name == "measure_2D_buffered";
     if (test_name == "measure_set_get" || buffered_measurement_) {
       // Enable only the primitive under test so the hub cannot fall back to
       // lower-dimensional scripts.
       current_scripts_dir_ = current_run_dir_ / "scripts";
       fs::create_directories(current_scripts_dir_);
-      const std::string script = buffered_measurement_
-                                     ? test_name + ".lua"
-                                     : "measure_get_set.lua";
+      const std::string script =
+          buffered_measurement_ ? test_name + ".lua" : "measure_get_set.lua";
       fs::copy_file(MEASUREMENT_SCRIPTS_DIR / script,
                     current_scripts_dir_ / script);
       for (const char *action : {"get", "set"}) {
@@ -150,7 +149,8 @@ protected:
                           (std::string(action) + "_source_voltage.lua"));
       }
       if (buffered_measurement_) {
-        fs::copy_file(DATA_1D_DIR / "settings-scripts/get_number_of_samples.lua",
+        fs::copy_file(DATA_1D_DIR /
+                          "settings-scripts/get_number_of_samples.lua",
                       current_scripts_dir_ / "get_number_of_samples.lua");
         fs::create_directories(current_run_dir_ / "lua-utils");
         fs::copy_file(DATA_1D_DIR / "lua-utils/sweep_math.lua",
@@ -624,7 +624,7 @@ protected:
         time_domain);
   }
   void ExpectBufferedMeasurement(const std::vector<ConnectionSP> &connections,
-                                const std::vector<int> &points) {
+                                 const std::vector<int> &points) {
     // Each source connection supplies one independent voltage axis. points[i]
     // is the number of positions along that axis, e.g. {4} or {3, 2}.
     ASSERT_EQ(connections.size(), points.size());
@@ -655,7 +655,8 @@ protected:
               std::pair<double, double>{-0.1, 0.1}, setter)}));
       auto direction = std::make_shared<Map<std::string, bool>>();
       // Direction keys use device connection names (S1/S2), as expected by
-      // falcon-core and the hub planner, rather than fully qualified port names.
+      // falcon-core and the hub planner, rather than fully qualified port
+      // names.
       direction->insert(setter->instrument_facing_name(), true);
       increasing.push_back(direction);
       // Identity transforms leave the requested voltages unchanged.
@@ -669,7 +670,8 @@ protected:
     // the hub's 2D primitive.
     const auto waveform = Waveform::CartesianIdentityWaveform(
         std::make_shared<falcon_core::math::Axes<int>>(points),
-        std::make_shared<falcon_core::math::Axes<CoupledLabelledDomain>>(domains),
+        std::make_shared<falcon_core::math::Axes<CoupledLabelledDomain>>(
+            domains),
         std::make_shared<falcon_core::math::Axes<Map<std::string, bool>>>(
             increasing));
     // MeasurementRequest also requires a labelled time domain. This clock
@@ -948,7 +950,7 @@ TEST_F(DataRetrievalTest, measure_set_get) {
   InstrumentPortSP getter;
   for (const auto &port : published_meters_->items()) {
     if (*port->pseudo_name() == *getter_connection &&
-        port->default_name().find(".voltage") != std::string::npos) {
+        port->default_name().find(".analog1_voltage") != std::string::npos) {
       getter = port;
       break;
     }
