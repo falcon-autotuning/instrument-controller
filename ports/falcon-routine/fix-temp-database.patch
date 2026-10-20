@@ -14,7 +14,7 @@ index fe1fd26..6703400 100644
  /**
   * @brief A dedicated ramp method for sending ramps to the instrument hub.
 diff --git a/src/hub.cpp b/src/hub.cpp
-index 6fa7e83..be6782c 100644
+index 6fa7e83..fc3f622 100644
 --- a/src/hub.cpp
 +++ b/src/hub.cpp
 @@ -17,6 +17,7 @@
@@ -167,7 +167,7 @@ index 6fa7e83..be6782c 100644
    auto time_domain = math::domains::LabelledDomain::from_port(
        std::make_pair(0.0, total_time), InstrumentPort::Timer());
    List<physics::device_structures::Connection> connections =
-@@ -313,20 +344,48 @@ bool ramp(const math::PointSP &end_point, double max_ramp_rate,
+@@ -313,20 +344,87 @@ bool ramp(const math::PointSP &end_point, double max_ramp_rate,
          std::make_pair(start_point->at(connection)->value(),
                         end_point->at(connection)->value()),
          found_knob));
@@ -180,7 +180,28 @@ index 6fa7e83..be6782c 100644
 +
 +  auto measurement_getters = std::make_shared<Ports>();
 +
-+  std::unordered_set<std::string> seen_port_names;
++  struct GetterKey {
++    std::string instrument;
++    std::string group;
++    int channel;
++
++    bool operator==(const GetterKey &other) const {
++      return instrument == other.instrument && group == other.group &&
++             channel == other.channel;
++    }
++  };
++
++  struct GetterKeyHash {
++    size_t operator()(const GetterKey &k) const {
++      size_t h1 = std::hash<std::string>{}(k.instrument);
++      size_t h2 = std::hash<std::string>{}(k.group);
++      size_t h3 = std::hash<int>{}(k.channel);
++
++      return h1 ^ (h2 << 1) ^ (h3 << 2);
++    }
++  };
++
++  std::unordered_set<GetterKey, GetterKeyHash> seen_getters;
 +
 +  for (const auto &port : meters) {
 +    if (port->instrument_type() !=
@@ -194,10 +215,28 @@ index 6fa7e83..be6782c 100644
 +      continue;
 +    }
 +
-+    const std::string port_name = port->default_name();
++    const std::string name = port->default_name();
 +
-+    if (!seen_port_names.insert(port_name).second) {
-+      continue; // duplicate default_name
++    std::vector<std::string> parts;
++    std::stringstream ss(name);
++    std::string piece;
++
++    while (std::getline(ss, piece, '.')) {
++      parts.push_back(piece);
++    }
++
++    if (parts.size() < 4) {
++      continue;
++    }
++
++    GetterKey key{
++        parts[0],
++        parts[1],
++        std::stoi(parts[2]),
++    };
++
++    if (!seen_getters.insert(key).second) {
++      continue;
 +    }
 +
 +    measurement_getters->push_back(port);
