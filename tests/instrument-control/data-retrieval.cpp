@@ -20,6 +20,8 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <nlohmann/json.hpp>
+#include <sqlite3.h>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -733,10 +735,28 @@ protected:
         time_domain);
   }
   void ExpectBufferedMeasurement(const std::vector<ConnectionSP> &connections,
-                                 const std::vector<int> &points) {
+                                 const std::vector<int> &points,
+                                 int samples_per_point = 1) {
     // Each source connection supplies one independent voltage axis. points[i]
-    // is the number of positions along that axis, e.g. {4} or {3, 2}.
+    // is the number of divisions along that axis, e.g. {4} or {3, 2}.
     ASSERT_EQ(connections.size(), points.size());
+    ASSERT_GT(samples_per_point, 0);
+
+    if (samples_per_point > 1) {
+      const auto sample_setting = PublishedSetting(
+          Connection::Ohmic("O1"), InstrumentCharacteristic::Number_Of_Samples);
+      ASSERT_NE(sample_setting, nullptr);
+      auto setters =
+          std::make_shared<Map<InstrumentPort, falcon_core::math::Quantity>>();
+      setters->insert(
+          sample_setting, std::make_shared<falcon_core::math::Quantity>(
+                              samples_per_point, SymbolUnit::Dimensionless()));
+      const auto setting_response = request_setting(
+          MakeSettingRequest("set number of samples", std::make_shared<Ports>(),
+                             setters),
+          TIMEOUT_MS);
+      ASSERT_NE(setting_response, nullptr);
+    }
 
     // O1 publishes both scalar-voltage and stream ports. Select the stream
     // metadata supplied by the hub so the request identifies a buffer getter.
@@ -771,8 +791,8 @@ protected:
       increasing.push_back(direction);
       // Identity transforms leave the requested voltages unchanged.
       transforms->insert(setter, PortTransform::IdentityTransform(setter));
-      // The mock meter starts with one sample per buffer, so the total number
-      // of returned samples is the product of the axis lengths.
+      // Each buffer is reduced to one value, so averaging must not add an
+      // extra dimension or multiply the returned sweep's point count.
       sample_count *= static_cast<size_t>(points[axis] + 1);
     }
 
@@ -816,16 +836,25 @@ protected:
     for (size_t axis = 0; axis < points.size(); ++axis) {
       EXPECT_EQ(array->shape()[axis], static_cast<size_t>(points[axis] + 1));
     }
-    // Each fresh mock meter reads O1 sequentially from gaussian-1d.txt.
-    // Compare every transported sample, including buffer concatenation order.
+    // Each fresh mock meter reads O1 sequentially from TEST_DATA_FILE.
+    // Compare every point, including buffer concatenation and row order.
     // These file-backed readings are independent of the applied source
     // voltage.
     std::ifstream expected_data(TEST_DATA_FILE);
     ASSERT_TRUE(expected_data.is_open());
     for (size_t i = 0; i < sample_count; ++i) {
-      double expected;
-      ASSERT_TRUE(static_cast<bool>(expected_data >> expected));
-      EXPECT_DOUBLE_EQ(array->raw_data()[i], expected) << "sample " << i;
+      double sum = 0.0;
+      for (int sample = 0; sample < samples_per_point; ++sample) {
+        double value;
+        ASSERT_TRUE(static_cast<bool>(expected_data >> value));
+        sum += value;
+      }
+      const double expected = sum / samples_per_point;
+      if (samples_per_point == 1) {
+        EXPECT_DOUBLE_EQ(array->raw_data()[i], expected) << "point " << i;
+      } else {
+        EXPECT_NEAR(array->raw_data()[i], expected, ABS_ERROR) << "point " << i;
+      }
     }
   }
 
@@ -1479,6 +1508,162 @@ TEST_F(Buffered1DTest, measure_2D_buffered_with_only_1D) {
   ExpectBufferedMeasurement(
       {Connection::ScreeningGate("S1"), Connection::ScreeningGate("S2")},
       {3, 2});
+}
+
+TEST_F(Buffered1DTest, measure_2D_buffered_with_only_1D_and_averaging) {
+  ASSERT_TRUE(fs::is_regular_file(current_scripts_dir_ /
+                                  "measure_1D_buffered.lua"));
+  ASSERT_FALSE(fs::exists(current_scripts_dir_ / "measure_2D_buffered.lua"));
+
+  // A non-square grid exposes swapped axes. Ten raw samples per point must
+  // produce one 4-by-3 measured array, with twelve means in sweep order.
+  ExpectBufferedMeasurement(
+      {Connection::ScreeningGate("S1"), Connection::ScreeningGate("S2")},
+      {3, 2}, 10);
+}
+
+TEST_F(Buffered1DTest, measure_2D_buffered_with_only_1D_and_averaging_persists_data) {
+  constexpr int samples_per_point = 10;
+  const std::vector<int> expected_shape{4, 3};
+  const std::vector<ConnectionSP> connections{
+      Connection::ScreeningGate("S1"), Connection::ScreeningGate("S2")};
+  ASSERT_TRUE(fs::is_regular_file(current_scripts_dir_ /
+                                  "measure_1D_buffered.lua"));
+  ASSERT_FALSE(fs::exists(current_scripts_dir_ / "measure_2D_buffered.lua"));
+  ASSERT_NO_FATAL_FAILURE(
+      ExpectBufferedMeasurement(connections, {3, 2}, samples_per_point));
+
+  // Reopen the store after the writer exits. Read the payload through the
+  // catalog's file_path so an orphaned HDF5 file cannot satisfy this test.
+  StopInstrumentHub();
+  const auto catalog_path = current_data_dir_ / "measurement.db";
+  SCOPED_TRACE(catalog_path.string());
+  ASSERT_TRUE(fs::is_regular_file(catalog_path));
+  sqlite3 *raw_db = nullptr;
+  const int open_result = sqlite3_open_v2(
+      catalog_path.string().c_str(), &raw_db, SQLITE_OPEN_READONLY, nullptr);
+  const std::unique_ptr<sqlite3, decltype(&sqlite3_close)> db(raw_db, sqlite3_close);
+  ASSERT_EQ(open_result, SQLITE_OK) << sqlite3_errstr(open_result);
+  ASSERT_NE(db, nullptr);
+
+  sqlite3_stmt *raw_statement = nullptr;
+  const int prepare_result = sqlite3_prepare_v2(
+      db.get(),
+      "SELECT shape_json, num_points, owner, run_id, measurement_id, "
+      "recorded_at, file_path, getters_json, setters_json, measurement_name "
+      "FROM measurements",
+      -1, &raw_statement, nullptr);
+  const std::unique_ptr<sqlite3_stmt, decltype(&sqlite3_finalize)> statement(
+      raw_statement, sqlite3_finalize);
+  ASSERT_EQ(prepare_result, SQLITE_OK) << sqlite3_errmsg(db.get());
+  ASSERT_EQ(sqlite3_step(statement.get()), SQLITE_ROW)
+      << "Expected a committed measurement catalog entry: "
+      << sqlite3_errmsg(db.get());
+  // The catalog schema stores JSON and identifiers as text, and point count
+  // as an integer. This private store should contain exactly one measurement.
+  for (const int column : {0, 2, 3, 4, 5, 6, 7, 8, 9}) {
+    ASSERT_EQ(sqlite3_column_type(statement.get(), column), SQLITE_TEXT)
+        << "column " << column;
+  }
+  ASSERT_EQ(sqlite3_column_type(statement.get(), 1), SQLITE_INTEGER);
+  EXPECT_EQ(sqlite3_column_int64(statement.get(), 1), 12);
+  const auto text = [&](int column) {
+    return std::string(reinterpret_cast<const char *>(
+        sqlite3_column_text(statement.get(), column)));
+  };
+  EXPECT_EQ(text(2), "integration-test");
+  EXPECT_FALSE(text(3).empty());
+  EXPECT_FALSE(text(4).empty());
+  EXPECT_FALSE(text(5).empty());
+  const auto catalog_shape = nlohmann::json::parse(text(0));
+  EXPECT_EQ(catalog_shape, nlohmann::json(expected_shape));
+  const auto getters = nlohmann::json::parse(text(7));
+  ASSERT_TRUE(getters.is_array());
+  ASSERT_EQ(getters.size(), 1);
+  EXPECT_EQ(getters.at(0).at("wiremap").at("connection"), "O1");
+  const auto setters = nlohmann::json::parse(text(8));
+  ASSERT_TRUE(setters.is_array());
+  ASSERT_EQ(setters.size(), 2);
+  for (size_t axis = 0; axis < connections.size(); ++axis) {
+    SCOPED_TRACE("catalog axis " + std::to_string(axis));
+    const auto &setter = setters.at(axis);
+    EXPECT_EQ(setter.at("axis"), axis);
+    EXPECT_EQ(setter.at("points"), expected_shape[axis]);
+    EXPECT_EQ(setter.at("wiremap").at("connection"), connections[axis]->name());
+    EXPECT_DOUBLE_EQ(setter.at("start").at("value").get<double>(), -0.1);
+    EXPECT_DOUBLE_EQ(setter.at("end").at("value").get<double>(), 0.1);
+  }
+  const fs::path measurement_file = text(6);
+  const auto measurement_name = text(9);
+  EXPECT_FALSE(measurement_name.empty());
+  ASSERT_EQ(sqlite3_step(statement.get()), SQLITE_DONE)
+      << "Expected exactly one persisted measurement";
+  ASSERT_TRUE(fs::is_regular_file(measurement_file)) << measurement_file;
+  EXPECT_EQ(measurement_file.extension(), ".h5");
+  const auto relative_path = fs::canonical(measurement_file).lexically_relative(
+      fs::canonical(current_data_dir_));
+  ASSERT_FALSE(relative_path.empty());
+  EXPECT_FALSE(relative_path.is_absolute());
+  EXPECT_NE(*relative_path.begin(), "..");
+
+  SCOPED_TRACE(measurement_file.string());
+  const auto stored = falcon_core::communications::HDF5Data::from_file(
+      measurement_file.string());
+  ASSERT_NE(stored, nullptr);
+  EXPECT_EQ(stored->measurement_title(), measurement_name);
+  ASSERT_NE(stored->shape(), nullptr);
+  ASSERT_EQ(stored->shape()->size(), expected_shape.size());
+  ASSERT_NE(stored->domain_labels(), nullptr);
+  ASSERT_EQ(stored->domain_labels()->size(), connections.size());
+  for (size_t axis = 0; axis < connections.size(); ++axis) {
+    SCOPED_TRACE("stored axis " + std::to_string(axis));
+    EXPECT_EQ(stored->shape()->at(axis), expected_shape[axis]);
+    const auto domains = stored->domain_labels()->at(axis);
+    ASSERT_NE(domains, nullptr);
+    ASSERT_EQ(domains->size(), 1);
+    const auto domain = domains->at(0);
+    ASSERT_NE(domain, nullptr);
+    ASSERT_NE(domain->port(), nullptr);
+    ASSERT_NE(domain->port()->pseudo_name(), nullptr);
+    EXPECT_EQ(*domain->port()->pseudo_name(), *connections[axis]);
+    ASSERT_NE(domain->port()->units(), nullptr);
+    EXPECT_EQ(*domain->port()->units(), *SymbolUnit::Volt());
+    EXPECT_DOUBLE_EQ(domain->lesser_bound(), -0.1);
+    EXPECT_DOUBLE_EQ(domain->greater_bound(), 0.1);
+  }
+
+  ASSERT_NE(stored->ranges(), nullptr);
+  ASSERT_TRUE(stored->ranges()->is_measured_arrays());
+  ASSERT_EQ(stored->ranges()->size(), 1);
+  const auto array = stored->ranges()->arrays()[0];
+  ASSERT_NE(array, nullptr);
+  ASSERT_NE(array->connection(), nullptr);
+  EXPECT_EQ(*array->connection(), *Connection::Ohmic("O1"));
+  EXPECT_EQ(array->instrument_type(), Instrument::Amnmeter);
+  ASSERT_NE(array->units(), nullptr);
+  EXPECT_EQ(*array->units(), *SymbolUnit::Volt());
+  ASSERT_EQ(array->shape().size(), 2);
+  ASSERT_EQ(array->shape()[0], 4u);
+  ASSERT_EQ(array->shape()[1], 3u);
+  ASSERT_EQ(array->size(), 12u);
+
+  // Recompute all means from the raw mock input rather than accepting a copy
+  // of the response. Traverse both axes to check order across row boundaries.
+  std::ifstream expected_data(TEST_DATA_FILE);
+  ASSERT_TRUE(expected_data.is_open());
+  for (size_t row = 0; row < 4; ++row) {
+    for (size_t column = 0; column < 3; ++column) {
+      double sum = 0.0;
+      for (int sample = 0; sample < samples_per_point; ++sample) {
+        double value;
+        ASSERT_TRUE(static_cast<bool>(expected_data >> value));
+        sum += value;
+      }
+      EXPECT_NEAR(array->raw_data()[row * 3 + column], sum / samples_per_point,
+                  ABS_ERROR)
+          << "saved point (" << row << ", " << column << ")";
+    }
+  }
 }
 
 TEST_F(Buffered1DTest, ramp_updates_device_state) {

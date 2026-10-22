@@ -19,6 +19,8 @@
     "falcon-instrument-hub",
     "instrument-data",
     "gtest",
+    "sqlite3",
+    "nlohmann-json",
     "teal-api-gen",
     "cjson",
     "boost-process",

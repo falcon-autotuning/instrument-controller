@@ -3,6 +3,8 @@ find_package(GTest                    CONFIG REQUIRED)
 find_package(falcon-routine           CONFIG REQUIRED)
 find_package(falcon-database          CONFIG REQUIRED)
 find_package(Boost REQUIRED COMPONENTS process)
+find_package(SQLite3 REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 include(GoogleTest)
 
 add_library(plugin-helpers INTERFACE)
@@ -39,6 +41,8 @@ target_link_libraries(integration_tests
     falcon::falcon-database
     falcon-core::falcon-core
     Boost::process
+    SQLite::SQLite3
+    nlohmann_json::nlohmann_json
 )
 target_compile_definitions(integration_tests
   PRIVATE

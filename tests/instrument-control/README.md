@@ -169,3 +169,24 @@ After your manual build and environment setup:
 ctest --preset linux-clang-release \
   -R '^Buffered1DTest\.measure_1D_buffered_persists_data$' --output-on-failure -V
 ```
+
+## Read back a stored 2D averaged measurement
+
+`Buffered1DTest.measure_2D_buffered_with_only_1D_and_averaging_persists_data`
+stages only the 1D measurement primitive and requests an S1/S2 sweep with shape
+`[4, 3]`, averaging ten raw O1 samples per point. After stopping the hub, it
+opens `measurement.db` read-only and checks that exactly one catalog row records
+the shape, twelve points, owner, identifiers, getter, and both sweep axes.
+
+The test follows the catalog's `file_path` to reopen the HDF5 payload. It checks
+the two axis labels and voltage bounds, O1 metadata and units, the `[4, 3]`
+measured array, and all twelve means against the raw mock input. This catches
+an unindexed file, flattened or swapped axes, and raw samples saved in place
+of averaged values. The test target links SQLite3 and nlohmann-json to inspect
+the catalog and its JSON fields.
+
+```sh
+ctest --preset linux-clang-release \
+  -R '^Buffered1DTest\.measure_2D_buffered_with_only_1D_and_averaging_persists_data$' \
+  --output-on-failure -V
+```
